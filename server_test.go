@@ -40,6 +40,11 @@ func (m *MockedStore) RemoveList(id string) error {
 	return args.Error(0)
 }
 
+func (m *MockedStore) UpdateList(id string, l *models.List) error {
+	args := m.Called(id, l)
+	return args.Error(0)
+}
+
 func TestLists(t *testing.T) {
 	testObj := new(MockedStore)
 
@@ -151,6 +156,67 @@ func TestLists(t *testing.T) {
 		server.ServeHTTP(response, request)
 
 		assertStatus(t, response.Result().StatusCode, http.StatusNoContent)
+	})
+
+	t.Run("PUT with invalid body should return 404", func(t *testing.T) {
+		request, _ := http.NewRequest(http.MethodPut, "/lists", strings.NewReader("wadus"))
+		response := httptest.NewRecorder()
+
+		server.ServeHTTP(response, request)
+
+		assertStatus(t, response.Result().StatusCode, http.StatusBadRequest)
+	})
+
+	t.Run("PUT returns 400 when the update fails", func(t *testing.T) {
+		listDto := models.ListDto{
+			Name: "updated list",
+			Items: []models.Item{
+				models.Item{
+					Title:       "replaced title",
+					Description: "replaced desc",
+				},
+			},
+		}
+
+		testObj.ExpectedCalls = []*mock.Call{}
+		testObj.On("UpdateList", "1", mock.Anything).Return(errors.New("wadus"))
+
+		body, _ := json.Marshal(listDto)
+		request, _ := http.NewRequest(http.MethodPut, "/lists/1", bytes.NewBuffer(body))
+		request.Header.Set("Content-type", "application/json")
+		response := httptest.NewRecorder()
+
+		server.ServeHTTP(response, request)
+
+		assertStatus(t, response.Result().StatusCode, http.StatusBadRequest)
+	})
+
+	t.Run("PUT updates a new list and returns it", func(t *testing.T) {
+		listDto := models.ListDto{
+			Name: "updated list",
+			Items: []models.Item{
+				models.Item{
+					Title:       "replaced title",
+					Description: "replaced desc",
+				},
+			},
+		}
+
+		data := models.List{
+			Name:  listDto.Name,
+			Items: listDto.Items,
+		}
+
+		testObj.On("UpdateList", "2", &data).Return(nil)
+
+		body, _ := json.Marshal(listDto)
+		request, _ := http.NewRequest(http.MethodPut, "/lists/2", bytes.NewBuffer(body))
+		request.Header.Set("Content-type", "application/json")
+		response := httptest.NewRecorder()
+
+		server.ServeHTTP(response, request)
+
+		assertStatus(t, response.Result().StatusCode, http.StatusOK)
 	})
 }
 

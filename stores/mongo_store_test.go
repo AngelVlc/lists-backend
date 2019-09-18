@@ -28,6 +28,10 @@ func (m *MockedMongoCollection) Remove(id bson.ObjectId) error {
 	return args.Error(0)
 }
 
+func (m *MockedMongoCollection) Update(id bson.ObjectId, l *models.List) error {
+	args := m.Called(id, l)
+	return args.Error(0)
+}
 type MockedMongoSession struct {
 	mock.Mock
 }
@@ -117,6 +121,51 @@ func TestStore(t *testing.T) {
 
 		assert.Nil(t, err)
 	})
+
+	t.Run("UpdateList() returns an error when the update fails", func(t *testing.T) {
+		testMongoCollection.ExpectedCalls = []*mock.Call{}
+
+		id := bson.NewObjectId().Hex()
+		testMongoCollection.On("Update", bson.ObjectIdHex(id), mock.Anything).Return(errors.New("wadus"))
+
+		l := models.SampleList()
+		err := store.UpdateList(id, &l)
+
+		assertMocksExpectations(testMongoSession, testMongoCollection, t)
+
+		assert.NotNil(t, err)
+
+		assert.Equal(t, "Error updating the database", err.Error())
+	})
+
+	t.Run("UpdateList() returns an error when the id is not a valid bson object id", func(t *testing.T) {
+		testMongoCollection.ExpectedCalls = []*mock.Call{}
+
+		l := models.SampleList()
+		err := store.UpdateList("wadus", &l)
+
+		assertMocksExpectations(testMongoSession, testMongoCollection, t)
+
+		assert.NotNil(t, err)
+
+		assert.Equal(t, "Error updating the database, invalid id", err.Error())
+	})
+
+	t.Run("UpdateList() updates a list", func(t *testing.T) {
+		testMongoCollection.ExpectedCalls = []*mock.Call{}
+
+		id := bson.NewObjectId().Hex()
+
+		testMongoCollection.On("Update", bson.ObjectIdHex(id), mock.Anything).Return(nil)
+
+		l := models.SampleList()
+		err := store.UpdateList(id, &l)
+
+		assertMocksExpectations(testMongoSession, testMongoCollection, t)
+
+		assert.Nil(t, err)
+	})
+
 }
 
 func assertMocksExpectations(s *MockedMongoSession, c *MockedMongoCollection, t *testing.T) {

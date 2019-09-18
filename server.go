@@ -55,6 +55,22 @@ func (s *server) getListsHandler(w http.ResponseWriter, r *http.Request) {
 		} else {
 			w.WriteHeader(http.StatusNoContent)
 		}
+	case http.MethodPut:
+		l, err := parseListBody(r)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(err.Error()))
+		} else {
+			err = s.store.UpdateList(listID, &l)
+			if err != nil {
+				w.WriteHeader(http.StatusBadRequest)
+				w.Write([]byte(err.Error()))
+			} else {
+				w.Header().Set("content-type", jsonContentType)
+				w.WriteHeader(http.StatusOK)
+				json.NewEncoder(w).Encode(l)
+			}
+		}
 	default:
 		w.WriteHeader(http.StatusMethodNotAllowed)
 	}

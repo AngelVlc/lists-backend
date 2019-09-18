@@ -49,3 +49,21 @@ func (s *MongoStore) RemoveList(id string) error {
 
 	return nil
 }
+
+// UpdateList updates a list
+func (s *MongoStore) UpdateList(id string, l *models.List) error {
+	if !bson.IsObjectIdHex(id) {
+		return errors.New("Error updating the database, invalid id")
+	}
+
+	oid := bson.ObjectIdHex(id)
+
+	l.ID = oid
+
+	if err := s.mongoSession.Collection().Update(oid, l); err != nil {
+		log.Println("Error updating. Error: " + err.Error())
+		return errors.New("Error updating the database")
+	}
+
+	return nil
+}
