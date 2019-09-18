@@ -55,8 +55,6 @@ func TestLists(t *testing.T) {
 
 		testObj.On("GetLists").Return(data)
 
-		log.Println(data)
-
 		request, _ := http.NewRequest(http.MethodGet, "/lists", nil)
 		response := httptest.NewRecorder()
 
@@ -73,23 +71,14 @@ func TestLists(t *testing.T) {
 		assert.Equal(t, want, got, "they should be equal")
 
 		assertStatus(t, response.Result().StatusCode, http.StatusOK)
+
+		testObj.AssertExpectations(t)
 	})
 
 	t.Run("POST adds a new list and returns it", func(t *testing.T) {
-		listDto := models.ListDto{
-			Name: "new list",
-			Items: []models.Item{
-				models.Item{
-					Title:       "title",
-					Description: "desc",
-				},
-			},
-		}
+		listDto := listDtoToCreate()
 
-		data := models.List{
-			Name:  listDto.Name,
-			Items: listDto.Items,
-		}
+		data := listFromDto(&listDto)
 
 		testObj.On("AddList", &data).Return(nil)
 
@@ -101,6 +90,8 @@ func TestLists(t *testing.T) {
 		server.ServeHTTP(response, request)
 
 		assertStatus(t, response.Result().StatusCode, http.StatusCreated)
+
+		testObj.AssertExpectations(t)
 	})
 
 	t.Run("POST with invalid body should return 404", func(t *testing.T) {
@@ -110,18 +101,12 @@ func TestLists(t *testing.T) {
 		server.ServeHTTP(response, request)
 
 		assertStatus(t, response.Result().StatusCode, http.StatusBadRequest)
+
+		testObj.AssertExpectations(t)
 	})
 
 	t.Run("POST returns 400 when the insert fails", func(t *testing.T) {
-		listDto := models.ListDto{
-			Name: "new list",
-			Items: []models.Item{
-				models.Item{
-					Title:       "title",
-					Description: "desc",
-				},
-			},
-		}
+		listDto := listDtoToCreate()
 
 		testObj.ExpectedCalls = []*mock.Call{}
 		testObj.On("AddList", mock.Anything).Return(errors.New("wadus"))
@@ -134,6 +119,8 @@ func TestLists(t *testing.T) {
 		server.ServeHTTP(response, request)
 
 		assertStatus(t, response.Result().StatusCode, http.StatusBadRequest)
+
+		testObj.AssertExpectations(t)
 	})
 
 	t.Run("DELETE returns 400 when the remove fails", func(t *testing.T) {
@@ -145,6 +132,8 @@ func TestLists(t *testing.T) {
 		server.ServeHTTP(response, request)
 
 		assertStatus(t, response.Result().StatusCode, http.StatusBadRequest)
+
+		testObj.AssertExpectations(t)
 	})
 
 	t.Run("DELETE removes a list", func(t *testing.T) {
@@ -156,6 +145,8 @@ func TestLists(t *testing.T) {
 		server.ServeHTTP(response, request)
 
 		assertStatus(t, response.Result().StatusCode, http.StatusNoContent)
+
+		testObj.AssertExpectations(t)
 	})
 
 	t.Run("PUT with invalid body should return 404", func(t *testing.T) {
@@ -165,18 +156,12 @@ func TestLists(t *testing.T) {
 		server.ServeHTTP(response, request)
 
 		assertStatus(t, response.Result().StatusCode, http.StatusBadRequest)
+
+		testObj.AssertExpectations(t)
 	})
 
 	t.Run("PUT returns 400 when the update fails", func(t *testing.T) {
-		listDto := models.ListDto{
-			Name: "updated list",
-			Items: []models.Item{
-				models.Item{
-					Title:       "replaced title",
-					Description: "replaced desc",
-				},
-			},
-		}
+		listDto := listDtoToUpdate()
 
 		testObj.ExpectedCalls = []*mock.Call{}
 		testObj.On("UpdateList", "1", mock.Anything).Return(errors.New("wadus"))
@@ -189,23 +174,14 @@ func TestLists(t *testing.T) {
 		server.ServeHTTP(response, request)
 
 		assertStatus(t, response.Result().StatusCode, http.StatusBadRequest)
+
+		testObj.AssertExpectations(t)
 	})
 
 	t.Run("PUT updates a new list and returns it", func(t *testing.T) {
-		listDto := models.ListDto{
-			Name: "updated list",
-			Items: []models.Item{
-				models.Item{
-					Title:       "replaced title",
-					Description: "replaced desc",
-				},
-			},
-		}
+		listDto := listDtoToUpdate()
 
-		data := models.List{
-			Name:  listDto.Name,
-			Items: listDto.Items,
-		}
+		data := listFromDto(&listDto)
 
 		testObj.On("UpdateList", "2", &data).Return(nil)
 
@@ -217,6 +193,8 @@ func TestLists(t *testing.T) {
 		server.ServeHTTP(response, request)
 
 		assertStatus(t, response.Result().StatusCode, http.StatusOK)
+
+		testObj.AssertExpectations(t)
 	})
 }
 
@@ -224,5 +202,36 @@ func assertStatus(t *testing.T, got, want int) {
 	t.Helper()
 	if got != want {
 		t.Errorf("did not get correct status, got %d, want %d", got, want)
+	}
+}
+
+func listDtoToCreate() models.ListDto {
+	return models.ListDto{
+		Name: "new list",
+		Items: []models.Item{
+			models.Item{
+				Title:       "title",
+				Description: "desc",
+			},
+		},
+	}
+}
+
+func listDtoToUpdate() models.ListDto {
+	return models.ListDto{
+		Name: "updated list",
+		Items: []models.Item{
+			models.Item{
+				Title:       "replaced title",
+				Description: "replaced desc",
+			},
+		},
+	}
+}
+
+func listFromDto(listDto *models.ListDto) models.List {
+	return models.List{
+		Name:  listDto.Name,
+		Items: listDto.Items,
 	}
 }

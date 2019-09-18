@@ -32,6 +32,7 @@ func (m *MockedMongoCollection) Update(id bson.ObjectId, l *models.List) error {
 	args := m.Called(id, l)
 	return args.Error(0)
 }
+
 type MockedMongoSession struct {
 	mock.Mock
 }
