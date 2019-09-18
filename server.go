@@ -20,7 +20,7 @@ type server struct {
 func (s *server) getListsHandler(w http.ResponseWriter, r *http.Request) {
 	log.Printf("%v %q", r.Method, r.URL)
 
-	// listID := getListIDFromURL(r.URL)
+	listID := getListIDFromURL(r.URL)
 
 	err := r.ParseForm()
 	if err != nil {
@@ -39,13 +39,21 @@ func (s *server) getListsHandler(w http.ResponseWriter, r *http.Request) {
 		} else {
 			err = s.store.AddList(&l)
 			if err != nil {
-				w.WriteHeader(http.StatusInternalServerError)
+				w.WriteHeader(http.StatusBadRequest)
 				w.Write([]byte(err.Error()))
 			} else {
 				w.Header().Set("content-type", jsonContentType)
 				w.WriteHeader(http.StatusCreated)
 				json.NewEncoder(w).Encode(l)
 			}
+		}
+	case http.MethodDelete:
+		err = s.store.RemoveList(listID)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(err.Error()))
+		} else {
+			w.WriteHeader(http.StatusNoContent)
 		}
 	default:
 		w.WriteHeader(http.StatusMethodNotAllowed)

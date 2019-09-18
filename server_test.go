@@ -32,7 +32,11 @@ func (m *MockedStore) GetLists() []models.List {
 
 func (m *MockedStore) AddList(l *models.List) error {
 	args := m.Called(l)
-	log.Println("$$$$$$$$$$", args)
+	return args.Error(0)
+}
+
+func (m *MockedStore) RemoveList(id string) error {
+	args := m.Called(id)
 	return args.Error(0)
 }
 
@@ -103,7 +107,7 @@ func TestLists(t *testing.T) {
 		assertStatus(t, response.Result().StatusCode, http.StatusBadRequest)
 	})
 
-	t.Run("POST returns 500 when the insert fails", func(t *testing.T) {
+	t.Run("POST returns 400 when the insert fails", func(t *testing.T) {
 		listDto := models.ListDto{
 			Name: "new list",
 			Items: []models.Item{
@@ -124,7 +128,29 @@ func TestLists(t *testing.T) {
 
 		server.ServeHTTP(response, request)
 
-		assertStatus(t, response.Result().StatusCode, http.StatusInternalServerError)
+		assertStatus(t, response.Result().StatusCode, http.StatusBadRequest)
+	})
+
+	t.Run("DELETE returns 400 when the remove fails", func(t *testing.T) {
+		testObj.On("RemoveList", "1").Return(errors.New("wadus"))
+
+		request, _ := http.NewRequest(http.MethodDelete, "/lists/1", nil)
+		response := httptest.NewRecorder()
+
+		server.ServeHTTP(response, request)
+
+		assertStatus(t, response.Result().StatusCode, http.StatusBadRequest)
+	})
+
+	t.Run("DELETE removes a list", func(t *testing.T) {
+		testObj.On("RemoveList", "2").Return(nil)
+
+		request, _ := http.NewRequest(http.MethodDelete, "/lists/2", nil)
+		response := httptest.NewRecorder()
+
+		server.ServeHTTP(response, request)
+
+		assertStatus(t, response.Result().StatusCode, http.StatusNoContent)
 	})
 }
 

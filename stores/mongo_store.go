@@ -22,13 +22,29 @@ func (s *MongoStore) GetLists() []models.List {
 	return s.mongoSession.Collection().FindAll()
 }
 
-// AddList adds a new list to the collection and returns it
+// AddList adds a new list to the collection
 func (s *MongoStore) AddList(l *models.List) error {
 	l.ID = bson.NewObjectId()
 	err := s.mongoSession.Collection().Insert(l)
 	if err != nil {
 		log.Println("Error inserting. Error: " + err.Error())
 		return errors.New("Error inserting in the database")
+	}
+
+	return nil
+}
+
+// RemoveList removes a list from the collection
+func (s *MongoStore) RemoveList(id string) error {
+	if !bson.IsObjectIdHex(id) {
+		return errors.New("Error removing from the database, invalid id")
+	}
+
+	oid := bson.ObjectIdHex(id)
+
+	if err := s.mongoSession.Collection().Remove(oid); err != nil {
+		log.Println("Error removing. Error: " + err.Error())
+		return errors.New("Error removing from the database")
 	}
 
 	return nil

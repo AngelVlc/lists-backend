@@ -9,4 +9,5 @@ import (
 type Store interface {
 	GetLists() []models.List
 	AddList(l *models.List) error
+	RemoveList(string) error
 }

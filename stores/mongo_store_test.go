@@ -5,6 +5,7 @@ import (
 	"github.com/AngelVlc/lists-backend/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"gopkg.in/mgo.v2/bson"
 	"testing"
 )
 
@@ -19,6 +20,11 @@ func (m *MockedMongoCollection) FindAll() []models.List {
 
 func (m *MockedMongoCollection) Insert(l *models.List) error {
 	args := m.Called(l)
+	return args.Error(0)
+}
+
+func (m *MockedMongoCollection) Remove(id bson.ObjectId) error {
+	args := m.Called(id)
 	return args.Error(0)
 }
 
@@ -73,6 +79,43 @@ func TestStore(t *testing.T) {
 		assert.NotNil(t, err)
 
 		assert.Equal(t, "Error inserting in the database", err.Error())
+	})
+
+	t.Run("RemoveList() returns an error when the remove fails", func(t *testing.T) {
+		testMongoCollection.ExpectedCalls = []*mock.Call{}
+		testMongoCollection.On("Remove", mock.Anything).Return(errors.New("wadus"))
+
+		err := store.RemoveList(bson.NewObjectId().Hex())
+
+		assertMocksExpectations(testMongoSession, testMongoCollection, t)
+
+		assert.NotNil(t, err)
+
+		assert.Equal(t, "Error removing from the database", err.Error())
+	})
+
+	t.Run("RemoveList() returns an error when the id is not a valid bson object id", func(t *testing.T) {
+		testMongoCollection.ExpectedCalls = []*mock.Call{}
+
+		err := store.RemoveList("wadus")
+
+		assertMocksExpectations(testMongoSession, testMongoCollection, t)
+
+		assert.NotNil(t, err)
+
+		assert.Equal(t, "Error removing from the database, invalid id", err.Error())
+	})
+
+	t.Run("RemoveList() removes a list", func(t *testing.T) {
+		testMongoCollection.ExpectedCalls = []*mock.Call{}
+
+		testMongoCollection.On("Remove", mock.Anything).Return(nil)
+
+		err := store.RemoveList(bson.NewObjectId().Hex())
+
+		assertMocksExpectations(testMongoSession, testMongoCollection, t)
+
+		assert.Nil(t, err)
 	})
 }
 
