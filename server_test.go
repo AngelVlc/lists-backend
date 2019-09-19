@@ -107,9 +107,11 @@ func TestLists(t *testing.T) {
 
 	t.Run("POST returns 400 when the insert fails", func(t *testing.T) {
 		listDto := listDtoToCreate()
+		listDto.Name += " with error"
 
-		testObj.ExpectedCalls = []*mock.Call{}
-		testObj.On("AddList", mock.Anything).Return(errors.New("wadus"))
+		data := listFromDto(&listDto)
+
+		testObj.On("AddList", &data).Return(errors.New("wadus"))
 
 		body, _ := json.Marshal(listDto)
 		request, _ := http.NewRequest(http.MethodPost, "/lists", bytes.NewBuffer(body))
@@ -163,7 +165,6 @@ func TestLists(t *testing.T) {
 	t.Run("PUT returns 400 when the update fails", func(t *testing.T) {
 		listDto := listDtoToUpdate()
 
-		testObj.ExpectedCalls = []*mock.Call{}
 		testObj.On("UpdateList", "1", mock.Anything).Return(errors.New("wadus"))
 
 		body, _ := json.Marshal(listDto)

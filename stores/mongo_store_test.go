@@ -87,10 +87,11 @@ func TestStore(t *testing.T) {
 	})
 
 	t.Run("RemoveList() returns an error when the remove fails", func(t *testing.T) {
-		testMongoCollection.ExpectedCalls = []*mock.Call{}
-		testMongoCollection.On("Remove", mock.Anything).Return(errors.New("wadus"))
+		oidHex := bson.NewObjectId().Hex()
 
-		err := store.RemoveList(bson.NewObjectId().Hex())
+		testMongoCollection.On("Remove", bson.ObjectIdHex(oidHex)).Return(errors.New("wadus"))
+
+		err := store.RemoveList(oidHex)
 
 		assertMocksExpectations(testMongoSession, testMongoCollection, t)
 
@@ -100,8 +101,6 @@ func TestStore(t *testing.T) {
 	})
 
 	t.Run("RemoveList() returns an error when the id is not a valid bson object id", func(t *testing.T) {
-		testMongoCollection.ExpectedCalls = []*mock.Call{}
-
 		err := store.RemoveList("wadus")
 
 		assertMocksExpectations(testMongoSession, testMongoCollection, t)
@@ -112,11 +111,11 @@ func TestStore(t *testing.T) {
 	})
 
 	t.Run("RemoveList() removes a list", func(t *testing.T) {
-		testMongoCollection.ExpectedCalls = []*mock.Call{}
+		oidHex := bson.NewObjectId().Hex()
 
-		testMongoCollection.On("Remove", mock.Anything).Return(nil)
+		testMongoCollection.On("Remove", bson.ObjectIdHex(oidHex)).Return(nil)
 
-		err := store.RemoveList(bson.NewObjectId().Hex())
+		err := store.RemoveList(oidHex)
 
 		assertMocksExpectations(testMongoSession, testMongoCollection, t)
 
@@ -124,8 +123,6 @@ func TestStore(t *testing.T) {
 	})
 
 	t.Run("UpdateList() returns an error when the update fails", func(t *testing.T) {
-		testMongoCollection.ExpectedCalls = []*mock.Call{}
-
 		id := bson.NewObjectId().Hex()
 		testMongoCollection.On("Update", bson.ObjectIdHex(id), mock.Anything).Return(errors.New("wadus"))
 
@@ -140,8 +137,6 @@ func TestStore(t *testing.T) {
 	})
 
 	t.Run("UpdateList() returns an error when the id is not a valid bson object id", func(t *testing.T) {
-		testMongoCollection.ExpectedCalls = []*mock.Call{}
-
 		l := models.SampleList()
 		err := store.UpdateList("wadus", &l)
 
@@ -153,8 +148,6 @@ func TestStore(t *testing.T) {
 	})
 
 	t.Run("UpdateList() updates a list", func(t *testing.T) {
-		testMongoCollection.ExpectedCalls = []*mock.Call{}
-
 		id := bson.NewObjectId().Hex()
 
 		testMongoCollection.On("Update", bson.ObjectIdHex(id), mock.Anything).Return(nil)
