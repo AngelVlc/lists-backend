@@ -1,20 +1,17 @@
 test:
-	go test ./...
-
-run:
-	go run .
+	docker-compose run --rm app go test ./...
 
 coverage:
-	go test ./... -cover
+	docker-compose run --rm app go test ./... -cover
 
 coverage-html:
-	go test ./... -cover -coverprofile coverage.out && go tool cover -html=coverage.out
+	docker-compose run --rm app go test ./... -cover -coverprofile coverage.out && go tool cover -html=coverage.out
 
 fmt:
 	go fmt . ./stores ./models
 
-docker-build:
+build:
 	docker-compose build
 
-docker-up:
+up:
 	docker-compose up

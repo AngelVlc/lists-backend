@@ -13,6 +13,7 @@ type MongoCollection interface {
 	Insert(*models.List) error
 	Remove(bson.ObjectId) error
 	Update(bson.ObjectId, *models.List) error
+	DropCollection() error
 }
 
 // MyMongoCollection contains the methods used by the mongo collection
@@ -52,4 +53,9 @@ func (c *MyMongoCollection) Remove(id bson.ObjectId) error {
 // Update updates a list
 func (c *MyMongoCollection) Update(id bson.ObjectId, l *models.List) error {
 	return c.collection.UpdateId(id, l)
+}
+
+// Drop collection drops the collection
+func (c *MyMongoCollection) DropCollection() error {
+	return c.collection.DropCollection()
 }

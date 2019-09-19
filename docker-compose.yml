@@ -3,8 +3,16 @@ services:
   app:
     build:
       context: .
+      target: test
     ports:
       - 5000:5000
+    command: go run .
+    depends_on:
+      - mongo
+    volumes:
+      - '.:/go/src/github.com/AngelVlc/lists-backend'
+    init: true
 
   mongo:
     image: mongo
+    init: true
