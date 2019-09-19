@@ -12,7 +12,7 @@ func main() {
 	port := 5000
 	addr := fmt.Sprintf(":%v", port)
 
-	session := stores.NewMyMongoSession(mongoSession())
+	session := stores.NewMyMongoSession(mongoSession(), "listsDb", "lists")
 
 	store := stores.NewMongoStore(session)
 	server := newServer(&store)
