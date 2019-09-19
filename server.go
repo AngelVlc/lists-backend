@@ -22,11 +22,6 @@ func (s *server) getListsHandler(w http.ResponseWriter, r *http.Request) {
 
 	listID := getListIDFromURL(r.URL)
 
-	err := r.ParseForm()
-	if err != nil {
-		log.Printf("Error parsing form: %v", err)
-	}
-
 	switch r.Method {
 	case http.MethodGet:
 		if listID == "" {
@@ -59,7 +54,7 @@ func (s *server) getListsHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	case http.MethodDelete:
-		err = s.store.RemoveList(listID)
+		err := s.store.RemoveList(listID)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(err.Error()))

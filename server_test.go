@@ -238,6 +238,15 @@ func TestLists(t *testing.T) {
 
 		testObj.AssertExpectations(t)
 	})
+
+	t.Run("returns 405 when the method is not GET, POST, PUT or DELETE", func(t *testing.T) {
+		request, _ := http.NewRequest(http.MethodPatch, "/lists", nil)
+		response := httptest.NewRecorder()
+
+		server.ServeHTTP(response, request)
+
+		assertStatus(t, response.Result().StatusCode, http.StatusMethodNotAllowed)
+	})
 }
 
 func assertStatus(t *testing.T, got, want int) {
