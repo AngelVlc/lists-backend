@@ -8,6 +8,7 @@ import (
 // Store is the interface which a store must implement
 type Store interface {
 	GetLists() []models.List
+	GetSingleList(string) (models.List, error)
 	AddList(*models.List) error
 	RemoveList(string) error
 	UpdateList(string, *models.List) error

@@ -18,6 +18,11 @@ func (m *MockedMongoCollection) FindAll() []models.List {
 	return args.Get(0).([]models.List)
 }
 
+func (m *MockedMongoCollection) FindOne(id bson.ObjectId) (models.List, error) {
+	args := m.Called(id)
+	return args.Get(0).(models.List), args.Error(1)
+}
+
 func (m *MockedMongoCollection) Insert(l *models.List) error {
 	args := m.Called(l)
 	return args.Error(0)
@@ -62,6 +67,28 @@ func TestStore(t *testing.T) {
 		assert.Equal(t, want, got, "they should be equal")
 	})
 
+	t.Run("GetSingleList() returns a single list", func(t *testing.T) {
+		data := models.SampleListCollectionSlice()[0]
+		testMongoCollection.On("FindOne", data.ID).Return(data, nil)
+
+		want := data
+		got, err := store.GetSingleList(data.ID.Hex())
+
+		assertMocksExpectations(testMongoSession, testMongoCollection, t)
+
+		assert.Equal(t, want, got, "they should be equal")
+
+		assert.Nil(t, err)
+	})
+
+	t.Run("GetSingleList() returns an error when the id is not a valid bson object id", func(t *testing.T) {
+		_, err := store.GetSingleList("wadus")
+
+		assert.NotNil(t, err)
+
+		assert.Equal(t, "Error getting the list from the database, invalid id", err.Error())
+	})
+
 	t.Run("AddList() adds a new list", func(t *testing.T) {
 		l := models.SampleList()
 
@@ -103,8 +130,6 @@ func TestStore(t *testing.T) {
 	t.Run("RemoveList() returns an error when the id is not a valid bson object id", func(t *testing.T) {
 		err := store.RemoveList("wadus")
 
-		assertMocksExpectations(testMongoSession, testMongoCollection, t)
-
 		assert.NotNil(t, err)
 
 		assert.Equal(t, "Error removing from the database, invalid id", err.Error())
@@ -139,8 +164,6 @@ func TestStore(t *testing.T) {
 	t.Run("UpdateList() returns an error when the id is not a valid bson object id", func(t *testing.T) {
 		l := models.SampleList()
 		err := store.UpdateList("wadus", &l)
-
-		assertMocksExpectations(testMongoSession, testMongoCollection, t)
 
 		assert.NotNil(t, err)
 

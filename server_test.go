@@ -45,6 +45,11 @@ func (m *MockedStore) UpdateList(id string, l *models.List) error {
 	return args.Error(0)
 }
 
+func (m *MockedStore) GetSingleList(id string) (models.List, error) {
+	args := m.Called(id)
+	return args.Get(0).(models.List), args.Error(1)
+}
+
 func TestLists(t *testing.T) {
 	testObj := new(MockedStore)
 
@@ -73,6 +78,42 @@ func TestLists(t *testing.T) {
 		assertStatus(t, response.Result().StatusCode, http.StatusOK)
 
 		testObj.AssertExpectations(t)
+	})
+
+	t.Run("GET WITH AN ID returns 400 when the query fails", func(t *testing.T) {
+		testObj.On("GetSingleList", "1").Return(models.List{}, errors.New("wadus"))
+
+		request, _ := http.NewRequest(http.MethodGet, "/lists/1", nil)
+		response := httptest.NewRecorder()
+
+		server.ServeHTTP(response, request)
+
+		assertStatus(t, response.Result().StatusCode, http.StatusBadRequest)
+
+		testObj.AssertExpectations(t)
+	})
+
+	t.Run("GET WITH AN ID returns a single list", func(t *testing.T) {
+		data := models.SampleListCollectionSlice()[0]
+
+		testObj.On("GetSingleList", data.ID.Hex()).Return(data, nil)
+
+		request, _ := http.NewRequest(http.MethodGet, "/lists/"+data.ID.Hex(), nil)
+		response := httptest.NewRecorder()
+
+		server.ServeHTTP(response, request)
+
+		assertStatus(t, response.Result().StatusCode, http.StatusOK)
+
+		testObj.AssertExpectations(t)
+
+		bytes, _ := json.Marshal(data)
+
+		want := string(bytes) + "\n"
+
+		got := string(response.Body.String())
+
+		assert.Equal(t, want, got, "they should be equal")
 	})
 
 	t.Run("POST adds a new list and returns it", func(t *testing.T) {

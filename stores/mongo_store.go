@@ -22,6 +22,17 @@ func (s *MongoStore) GetLists() []models.List {
 	return s.mongoSession.Collection().FindAll()
 }
 
+// GetSingleList returns one list
+func (s *MongoStore) GetSingleList(id string) (models.List, error) {
+	if !bson.IsObjectIdHex(id) {
+		return models.List{}, errors.New("Error getting the list from the database, invalid id")
+	}
+
+	oid := bson.ObjectIdHex(id)
+
+	return s.mongoSession.Collection().FindOne(oid)
+}
+
 // AddList adds a new list to the collection
 func (s *MongoStore) AddList(l *models.List) error {
 	l.ID = bson.NewObjectId()

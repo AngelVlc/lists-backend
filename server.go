@@ -29,8 +29,19 @@ func (s *server) getListsHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case http.MethodGet:
-		w.Header().Set("content-type", jsonContentType)
-		json.NewEncoder(w).Encode(s.store.GetLists())
+		if listID == "" {
+			w.Header().Set("content-type", jsonContentType)
+			json.NewEncoder(w).Encode(s.store.GetLists())
+		} else {
+			l, err := s.store.GetSingleList(listID)
+			if err != nil {
+				w.WriteHeader(http.StatusBadRequest)
+				w.Write([]byte(err.Error()))
+			} else {
+				w.Header().Set("content-type", jsonContentType)
+				json.NewEncoder(w).Encode(l)
+			}
+		}
 	case http.MethodPost:
 		l, err := parseListBody(r)
 		if err != nil {
