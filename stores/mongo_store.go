@@ -27,10 +27,6 @@ func (s *MongoStore) GetLists() []models.GetListsResultDto {
 
 // GetSingleList returns one list
 func (s *MongoStore) GetSingleList(id string) (models.List, error) {
-	if !bson.IsObjectIdHex(id) {
-		return models.List{}, errors.New("Error getting the list from the database, invalid id")
-	}
-
 	oid := bson.ObjectIdHex(id)
 
 	return s.listsCollection().FindOne(oid)
@@ -50,10 +46,6 @@ func (s *MongoStore) AddList(l *models.List) error {
 
 // RemoveList removes a list from the collection
 func (s *MongoStore) RemoveList(id string) error {
-	if !bson.IsObjectIdHex(id) {
-		return errors.New("Error removing from the database, invalid id")
-	}
-
 	oid := bson.ObjectIdHex(id)
 
 	if err := s.listsCollection().Remove(oid); err != nil {
@@ -66,10 +58,6 @@ func (s *MongoStore) RemoveList(id string) error {
 
 // UpdateList updates a list
 func (s *MongoStore) UpdateList(id string, l *models.List) error {
-	if !bson.IsObjectIdHex(id) {
-		return errors.New("Error updating the database, invalid id")
-	}
-
 	oid := bson.ObjectIdHex(id)
 
 	l.ID = oid

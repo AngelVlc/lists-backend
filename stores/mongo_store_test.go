@@ -86,14 +86,6 @@ func TestStore(t *testing.T) {
 		assert.Nil(t, err)
 	})
 
-	t.Run("GetSingleList() returns an error when the id is not a valid bson object id", func(t *testing.T) {
-		_, err := store.GetSingleList("wadus")
-
-		assert.NotNil(t, err)
-
-		assert.Equal(t, "Error getting the list from the database, invalid id", err.Error())
-	})
-
 	t.Run("AddList() adds a new list", func(t *testing.T) {
 		l := models.SampleList()
 
@@ -132,14 +124,6 @@ func TestStore(t *testing.T) {
 		assert.Equal(t, "Error removing from the database", err.Error())
 	})
 
-	t.Run("RemoveList() returns an error when the id is not a valid bson object id", func(t *testing.T) {
-		err := store.RemoveList("wadus")
-
-		assert.NotNil(t, err)
-
-		assert.Equal(t, "Error removing from the database, invalid id", err.Error())
-	})
-
 	t.Run("RemoveList() removes a list", func(t *testing.T) {
 		oidHex := bson.NewObjectId().Hex()
 
@@ -164,15 +148,6 @@ func TestStore(t *testing.T) {
 		assert.NotNil(t, err)
 
 		assert.Equal(t, "Error updating the database", err.Error())
-	})
-
-	t.Run("UpdateList() returns an error when the id is not a valid bson object id", func(t *testing.T) {
-		l := models.SampleList()
-		err := store.UpdateList("wadus", &l)
-
-		assert.NotNil(t, err)
-
-		assert.Equal(t, "Error updating the database, invalid id", err.Error())
 	})
 
 	t.Run("UpdateList() updates a list", func(t *testing.T) {

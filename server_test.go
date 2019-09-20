@@ -7,6 +7,7 @@ import (
 	"github.com/AngelVlc/lists-backend/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"gopkg.in/mgo.v2/bson"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -80,10 +81,20 @@ func TestLists(t *testing.T) {
 		testObj.AssertExpectations(t)
 	})
 
-	t.Run("GET WITH AN ID returns 400 when the query fails", func(t *testing.T) {
-		testObj.On("GetSingleList", "1").Return(models.List{}, errors.New("wadus"))
+	t.Run("GET WITH AN ID returns 400 when the id is not valid", func(t *testing.T) {
+		request, _ := http.NewRequest(http.MethodGet, "/lists/wadus", nil)
+		response := httptest.NewRecorder()
 
-		request, _ := http.NewRequest(http.MethodGet, "/lists/1", nil)
+		server.ServeHTTP(response, request)
+
+		assertStatus(t, response.Result().StatusCode, http.StatusBadRequest)
+	})
+
+	t.Run("GET WITH AN ID returns 400 when the query fails", func(t *testing.T) {
+		id := bson.NewObjectId().Hex()
+		testObj.On("GetSingleList", id).Return(models.List{}, errors.New("wadus"))
+
+		request, _ := http.NewRequest(http.MethodGet, "/lists/"+id, nil)
 		response := httptest.NewRecorder()
 
 		server.ServeHTTP(response, request)
@@ -167,9 +178,11 @@ func TestLists(t *testing.T) {
 	})
 
 	t.Run("DELETE returns 400 when the remove fails", func(t *testing.T) {
-		testObj.On("RemoveList", "1").Return(errors.New("wadus"))
+		id := bson.NewObjectId().Hex()
 
-		request, _ := http.NewRequest(http.MethodDelete, "/lists/1", nil)
+		testObj.On("RemoveList", id).Return(errors.New("wadus"))
+
+		request, _ := http.NewRequest(http.MethodDelete, "/lists/"+id, nil)
 		response := httptest.NewRecorder()
 
 		server.ServeHTTP(response, request)
@@ -180,9 +193,11 @@ func TestLists(t *testing.T) {
 	})
 
 	t.Run("DELETE removes a list", func(t *testing.T) {
-		testObj.On("RemoveList", "2").Return(nil)
+		id := bson.NewObjectId().Hex()
 
-		request, _ := http.NewRequest(http.MethodDelete, "/lists/2", nil)
+		testObj.On("RemoveList", id).Return(nil)
+
+		request, _ := http.NewRequest(http.MethodDelete, "/lists/"+id, nil)
 		response := httptest.NewRecorder()
 
 		server.ServeHTTP(response, request)
@@ -205,11 +220,12 @@ func TestLists(t *testing.T) {
 
 	t.Run("PUT returns 400 when the update fails", func(t *testing.T) {
 		listDto := listDtoToUpdate()
+		id := bson.NewObjectId().Hex()
 
-		testObj.On("UpdateList", "1", mock.Anything).Return(errors.New("wadus"))
+		testObj.On("UpdateList", id, mock.Anything).Return(errors.New("wadus"))
 
 		body, _ := json.Marshal(listDto)
-		request, _ := http.NewRequest(http.MethodPut, "/lists/1", bytes.NewBuffer(body))
+		request, _ := http.NewRequest(http.MethodPut, "/lists/"+id, bytes.NewBuffer(body))
 		request.Header.Set("Content-type", "application/json")
 		response := httptest.NewRecorder()
 
@@ -225,10 +241,12 @@ func TestLists(t *testing.T) {
 
 		data := listFromDto(&listDto)
 
-		testObj.On("UpdateList", "2", &data).Return(nil)
+		id := bson.NewObjectId().Hex()
+
+		testObj.On("UpdateList", id, &data).Return(nil)
 
 		body, _ := json.Marshal(listDto)
-		request, _ := http.NewRequest(http.MethodPut, "/lists/2", bytes.NewBuffer(body))
+		request, _ := http.NewRequest(http.MethodPut, "/lists/"+id, bytes.NewBuffer(body))
 		request.Header.Set("Content-type", "application/json")
 		response := httptest.NewRecorder()
 

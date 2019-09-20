@@ -5,6 +5,7 @@ import (
 	"errors"
 	"github.com/AngelVlc/lists-backend/models"
 	"github.com/AngelVlc/lists-backend/stores"
+	"gopkg.in/mgo.v2/bson"
 	"log"
 	"net/http"
 	"net/url"
@@ -21,6 +22,12 @@ func (s *server) getListsHandler(w http.ResponseWriter, r *http.Request) {
 	log.Printf("%v %q", r.Method, r.URL)
 
 	listID := getListIDFromURL(r.URL)
+
+	if listID != "" && !bson.IsObjectIdHex(listID) {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("Invalid id"))
+		return
+	}
 
 	switch r.Method {
 	case http.MethodGet:
