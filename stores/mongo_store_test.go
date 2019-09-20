@@ -47,8 +47,8 @@ type MockedMongoSession struct {
 	mock.Mock
 }
 
-func (m *MockedMongoSession) Collection() MongoCollection {
-	args := m.Called()
+func (m *MockedMongoSession) Collection(name string) MongoCollection {
+	args := m.Called(name)
 	return args.Get(0).(MongoCollection)
 }
 
@@ -56,7 +56,7 @@ func TestStore(t *testing.T) {
 	testMongoCollection := new(MockedMongoCollection)
 
 	testMongoSession := new(MockedMongoSession)
-	testMongoSession.On("Collection").Return(testMongoCollection)
+	testMongoSession.On("Collection", ListsCollectionName).Return(testMongoCollection)
 
 	store := NewMongoStore(testMongoSession)
 

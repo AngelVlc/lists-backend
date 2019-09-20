@@ -7,6 +7,9 @@ import (
 	"log"
 )
 
+// ListsCollectionName contains the name of the lists collection
+var ListsCollectionName = "lists"
+
 // MongoStore is the store which uses mongo db
 type MongoStore struct {
 	mongoSession MongoSession
@@ -19,7 +22,7 @@ func NewMongoStore(mongoSession MongoSession) MongoStore {
 
 // GetLists returns the lists collection
 func (s *MongoStore) GetLists() []models.GetListsResultDto {
-	return s.mongoSession.Collection().FindAll()
+	return s.listsCollection().FindAll()
 }
 
 // GetSingleList returns one list
@@ -30,13 +33,13 @@ func (s *MongoStore) GetSingleList(id string) (models.List, error) {
 
 	oid := bson.ObjectIdHex(id)
 
-	return s.mongoSession.Collection().FindOne(oid)
+	return s.listsCollection().FindOne(oid)
 }
 
 // AddList adds a new list to the collection
 func (s *MongoStore) AddList(l *models.List) error {
 	l.ID = bson.NewObjectId()
-	err := s.mongoSession.Collection().Insert(l)
+	err := s.listsCollection().Insert(l)
 	if err != nil {
 		log.Println("Error inserting. Error: " + err.Error())
 		return errors.New("Error inserting in the database")
@@ -53,7 +56,7 @@ func (s *MongoStore) RemoveList(id string) error {
 
 	oid := bson.ObjectIdHex(id)
 
-	if err := s.mongoSession.Collection().Remove(oid); err != nil {
+	if err := s.listsCollection().Remove(oid); err != nil {
 		log.Println("Error removing. Error: " + err.Error())
 		return errors.New("Error removing from the database")
 	}
@@ -71,10 +74,14 @@ func (s *MongoStore) UpdateList(id string, l *models.List) error {
 
 	l.ID = oid
 
-	if err := s.mongoSession.Collection().Update(oid, l); err != nil {
+	if err := s.listsCollection().Update(oid, l); err != nil {
 		log.Println("Error updating. Error: " + err.Error())
 		return errors.New("Error updating the database")
 	}
 
 	return nil
+}
+
+func (s *MongoStore) listsCollection() MongoCollection {
+	return s.mongoSession.Collection(ListsCollectionName)
 }

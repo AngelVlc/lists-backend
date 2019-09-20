@@ -8,7 +8,7 @@ import (
 
 // MongoSession is the interface used to retrieve the mongo collection
 type MongoSession interface {
-	Collection() MongoCollection
+	Collection(name string) MongoCollection
 }
 
 // MyMongoSession is the object used to access the mongo collection
@@ -21,13 +21,11 @@ type MyMongoSession struct {
 // NewMyMongoSession returns a new MyMongoSession
 func NewMyMongoSession(useTestConfig bool) *MyMongoSession {
 	url := os.Getenv("MONGO_URL")
-	var databaseName, collectionName string
+	var databaseName string
 	if useTestConfig {
 		databaseName = os.Getenv("MONGO_DATABASE_NAME")
-		collectionName = os.Getenv("MONGO_COLLECTION_NAME")
 	} else {
 		databaseName = os.Getenv("MONGO_TEST_DATABASE_NAME")
-		collectionName = os.Getenv("MONGO_TEST_COLLECTION_NAME")
 	}
 
 	s, err := mgo.Dial(url)
@@ -42,14 +40,13 @@ func NewMyMongoSession(useTestConfig bool) *MyMongoSession {
 	log.Println("Connected with lists mongo database.")
 
 	return &MyMongoSession{
-		session:        s,
-		databaseName:   databaseName,
-		collectionName: collectionName,
+		session:      s,
+		databaseName: databaseName,
 	}
 }
 
 // Collection returns the mongo collection
-func (s *MyMongoSession) Collection() MongoCollection {
-	c := s.session.DB(s.databaseName).C(s.collectionName)
+func (s *MyMongoSession) Collection(name string) MongoCollection {
+	c := s.session.DB(s.databaseName).C(name)
 	return NewMyMongoCollection(c)
 }
