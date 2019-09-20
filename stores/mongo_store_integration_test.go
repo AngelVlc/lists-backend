@@ -7,7 +7,7 @@ import (
 )
 
 func TestMongoStore(t *testing.T) {
-	session := NewMyMongoSession("mongodb://mongo", "listsTestDb", "testLists")
+	session := NewMyMongoSession(true)
 
 	store := NewMongoStore(session)
 

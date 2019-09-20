@@ -11,6 +11,8 @@ services:
       - mongo
     volumes:
       - '.:/go/src/github.com/AngelVlc/lists-backend'
+    env_file: 
+      - ./local.env
     init: true
 
   mongo:

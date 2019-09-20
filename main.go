@@ -5,13 +5,14 @@ import (
 	"github.com/AngelVlc/lists-backend/stores"
 	"log"
 	"net/http"
+	"os"
 )
 
 func main() {
-	port := 5000
+	port := os.Getenv("PORT")
 	addr := fmt.Sprintf(":%v", port)
 
-	session := stores.NewMyMongoSession("mongodb://mongo", "listsDb", "lists")
+	session := stores.NewMyMongoSession(false)
 	store := stores.NewMongoStore(session)
 	server := newServer(&store)
 
