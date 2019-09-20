@@ -25,9 +25,9 @@ type MockedStore struct {
 	mock.Mock
 }
 
-func (m *MockedStore) GetLists() []models.List {
+func (m *MockedStore) GetLists() []models.GetListsResultDto {
 	args := m.Called()
-	return args.Get(0).([]models.List)
+	return args.Get(0).([]models.GetListsResultDto)
 }
 
 func (m *MockedStore) AddList(l *models.List) error {
@@ -56,7 +56,7 @@ func TestLists(t *testing.T) {
 	server := newServer(testObj)
 
 	t.Run("GET returns list items", func(t *testing.T) {
-		data := models.SampleListCollectionSlice()
+		data := models.SampleGetListsResultDto()
 
 		testObj.On("GetLists").Return(data)
 
@@ -94,7 +94,7 @@ func TestLists(t *testing.T) {
 	})
 
 	t.Run("GET WITH AN ID returns a single list", func(t *testing.T) {
-		data := models.SampleListCollectionSlice()[0]
+		data := models.SampleListSlice()[0]
 
 		testObj.On("GetSingleList", data.ID.Hex()).Return(data, nil)
 

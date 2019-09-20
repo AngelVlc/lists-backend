@@ -8,7 +8,7 @@ import (
 
 // MongoCollection is an interface which contains the methods used by the mongo collection
 type MongoCollection interface {
-	FindAll() []models.List
+	FindAll() []models.GetListsResultDto
 	FindOne(bson.ObjectId) (models.List, error)
 	Insert(*models.List) error
 	Remove(bson.ObjectId) error
@@ -27,9 +27,9 @@ func NewMyMongoCollection(c *mgo.Collection) *MyMongoCollection {
 }
 
 // FindAll returns every list
-func (c *MyMongoCollection) FindAll() []models.List {
-	r := []models.List{}
-	c.collection.Find(nil).All(&r)
+func (c *MyMongoCollection) FindAll() []models.GetListsResultDto {
+	r := []models.GetListsResultDto{}
+	c.collection.Find(nil).Select(bson.M{"name": 1}).All(&r)
 	return r
 }
 

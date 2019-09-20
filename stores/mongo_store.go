@@ -18,7 +18,7 @@ func NewMongoStore(mongoSession MongoSession) MongoStore {
 }
 
 // GetLists returns the lists collection
-func (s *MongoStore) GetLists() []models.List {
+func (s *MongoStore) GetLists() []models.GetListsResultDto {
 	return s.mongoSession.Collection().FindAll()
 }
 

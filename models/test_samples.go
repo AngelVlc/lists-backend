@@ -15,10 +15,8 @@ func SampleList() List {
 	return l
 }
 
-func SampleListCollection() map[string]List {
-	m := make(map[string]List, 2)
-
-	m["1"] = List{
+func SampleListSlice() []List {
+	list1 := List{
 		ID:   bson.NewObjectId(),
 		Name: "list1",
 		Items: []Item{
@@ -33,7 +31,7 @@ func SampleListCollection() map[string]List {
 		},
 	}
 
-	m["2"] = List{
+	list2 := List{
 		ID:   bson.NewObjectId(),
 		Name: "list2",
 		Items: []Item{
@@ -48,14 +46,18 @@ func SampleListCollection() map[string]List {
 		},
 	}
 
-	return m
+	return []List{list1, list2}
 }
 
-func SampleListCollectionSlice() []List {
-	r := []List{}
+func SampleGetListsResultDto() []GetListsResultDto {
+	r := []GetListsResultDto{}
 
-	for _, v := range SampleListCollection() {
-		r = append(r, v)
+	for _, v := range SampleListSlice() {
+		dto := GetListsResultDto{
+			ID:   v.ID,
+			Name: v.Name,
+		}
+		r = append(r, dto)
 	}
 
 	return r

@@ -13,9 +13,9 @@ type MockedMongoCollection struct {
 	mock.Mock
 }
 
-func (m *MockedMongoCollection) FindAll() []models.List {
+func (m *MockedMongoCollection) FindAll() []models.GetListsResultDto {
 	args := m.Called()
-	return args.Get(0).([]models.List)
+	return args.Get(0).([]models.GetListsResultDto)
 }
 
 func (m *MockedMongoCollection) FindOne(id bson.ObjectId) (models.List, error) {
@@ -61,7 +61,7 @@ func TestStore(t *testing.T) {
 	store := NewMongoStore(testMongoSession)
 
 	t.Run("GetLists() returns all the list items", func(t *testing.T) {
-		data := models.SampleListCollectionSlice()
+		data := models.SampleGetListsResultDto()
 		testMongoCollection.On("FindAll").Return(data)
 
 		want := data
@@ -73,7 +73,7 @@ func TestStore(t *testing.T) {
 	})
 
 	t.Run("GetSingleList() returns a single list", func(t *testing.T) {
-		data := models.SampleListCollectionSlice()[0]
+		data := models.SampleListSlice()[0]
 		testMongoCollection.On("FindOne", data.ID).Return(data, nil)
 
 		want := data

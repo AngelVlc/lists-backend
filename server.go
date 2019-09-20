@@ -118,10 +118,7 @@ func parseListBody(r *http.Request) (models.List, error) {
 		return models.List{}, errors.New("error parsing body")
 	}
 
-	l := models.List{
-		Name:  dto.Name,
-		Items: dto.Items,
-	}
+	l := dto.ToList()
 
 	return l, nil
 }
