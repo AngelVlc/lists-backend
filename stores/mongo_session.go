@@ -22,7 +22,7 @@ type MyMongoSession struct {
 func NewMyMongoSession(useTestConfig bool) *MyMongoSession {
 	url := os.Getenv("MONGO_URL")
 	var databaseName string
-	if useTestConfig {
+	if !useTestConfig {
 		databaseName = os.Getenv("MONGO_DATABASE_NAME")
 	} else {
 		databaseName = os.Getenv("MONGO_TEST_DATABASE_NAME")
