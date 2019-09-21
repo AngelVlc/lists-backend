@@ -18,14 +18,26 @@ type server struct {
 	http.Handler
 }
 
-func (s *server) getListsHandler(w http.ResponseWriter, r *http.Request) {
+func newServer(store stores.Store) *server {
+	s := new(server)
+	s.store = store
+
+	router := http.NewServeMux()
+	router.Handle("/lists", http.HandlerFunc(s.listsHandler))
+	router.Handle("/lists/", http.HandlerFunc(s.listsHandler))
+
+	s.Handler = router
+
+	return s
+}
+
+func (s *server) listsHandler(w http.ResponseWriter, r *http.Request) {
 	log.Printf("%v %q", r.Method, r.URL)
 
 	listID := getListIDFromURL(r.URL)
 
 	if listID != "" && !bson.IsObjectIdHex(listID) {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("Invalid id"))
+		http.Error(w, "Invalid id", http.StatusBadRequest)
 		return
 	}
 
@@ -37,8 +49,7 @@ func (s *server) getListsHandler(w http.ResponseWriter, r *http.Request) {
 		} else {
 			l, err := s.store.GetSingleList(listID)
 			if err != nil {
-				w.WriteHeader(http.StatusBadRequest)
-				w.Write([]byte(err.Error()))
+				http.Error(w, err.Error(), http.StatusBadRequest)
 			} else {
 				w.Header().Set("content-type", jsonContentType)
 				json.NewEncoder(w).Encode(l)
@@ -47,13 +58,11 @@ func (s *server) getListsHandler(w http.ResponseWriter, r *http.Request) {
 	case http.MethodPost:
 		l, err := parseListBody(r)
 		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(err.Error()))
+			http.Error(w, err.Error(), http.StatusBadRequest)
 		} else {
 			err = s.store.AddList(&l)
 			if err != nil {
-				w.WriteHeader(http.StatusBadRequest)
-				w.Write([]byte(err.Error()))
+				http.Error(w, err.Error(), http.StatusBadRequest)
 			} else {
 				w.Header().Set("content-type", jsonContentType)
 				w.WriteHeader(http.StatusCreated)
@@ -63,21 +72,18 @@ func (s *server) getListsHandler(w http.ResponseWriter, r *http.Request) {
 	case http.MethodDelete:
 		err := s.store.RemoveList(listID)
 		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(err.Error()))
+			http.Error(w, err.Error(), http.StatusBadRequest)
 		} else {
 			w.WriteHeader(http.StatusNoContent)
 		}
 	case http.MethodPut:
 		l, err := parseListBody(r)
 		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(err.Error()))
+			http.Error(w, err.Error(), http.StatusBadRequest)
 		} else {
 			err = s.store.UpdateList(listID, &l)
 			if err != nil {
-				w.WriteHeader(http.StatusBadRequest)
-				w.Write([]byte(err.Error()))
+				http.Error(w, err.Error(), http.StatusBadRequest)
 			} else {
 				w.Header().Set("content-type", jsonContentType)
 				w.WriteHeader(http.StatusOK)
@@ -87,19 +93,6 @@ func (s *server) getListsHandler(w http.ResponseWriter, r *http.Request) {
 	default:
 		w.WriteHeader(http.StatusMethodNotAllowed)
 	}
-}
-
-func newServer(store stores.Store) *server {
-	s := new(server)
-	s.store = store
-
-	router := http.NewServeMux()
-	router.Handle("/lists", http.HandlerFunc(s.getListsHandler))
-	router.Handle("/lists/", http.HandlerFunc(s.getListsHandler))
-
-	s.Handler = router
-
-	return s
 }
 
 func getListIDFromURL(u *url.URL) string {
