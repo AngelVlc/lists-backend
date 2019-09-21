@@ -23,3 +23,18 @@ type GetListsResultDto struct {
 	ID   bson.ObjectId `json:"id" bson:"_id"`
 	Name string        `json:"name" bson:"name"`
 }
+
+// UserDto is the struct used as DTO for a user
+type UserDto struct {
+	UserName string
+	NewPassword string
+	ConfirmNewPassword string
+	IsAdmin bool
+}
+
+// GetUsersResultDto is the struct used as result for the GetUsers method
+type GetUsersResultDto struct {
+	ID   bson.ObjectId `json:"id" bson:"_id"`
+	UserName string        `json:"userName" bson:"userName"`
+	IsAdmin      bool   `json:"isAdmin" bson:"isAdmin"`
+}

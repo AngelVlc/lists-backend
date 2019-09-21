@@ -7,8 +7,18 @@ import (
 	"log"
 )
 
-// ListsCollectionName contains the name of the lists collection
-var ListsCollectionName = "lists"
+var listsCollectionName = "lists"
+
+func (s *MongoStore) listsCollection() MongoCollection {
+	return s.mongoSession.Collection(listsCollectionName)
+}
+
+var usersCollectionName = "users"
+
+func (s *MongoStore) usersCollection() MongoCollection {
+	return s.mongoSession.Collection(usersCollectionName)
+}
+
 
 // MongoStore is the store which uses mongo db
 type MongoStore struct {
@@ -70,6 +80,14 @@ func (s *MongoStore) UpdateList(id string, l *models.List) error {
 	return nil
 }
 
-func (s *MongoStore) listsCollection() MongoCollection {
-	return s.mongoSession.Collection(ListsCollectionName)
+// AddUser adds a new user
+func (s *MongoStore) AddUser(u *models.User) error {
+	u.ID = bson.NewObjectId()
+	err := s.usersCollection().Insert(u)
+	if err != nil {
+		log.Println("Error inserting. Error: " + err.Error())
+		return errors.New("Error inserting in the database")
+	}
+
+	return nil
 }

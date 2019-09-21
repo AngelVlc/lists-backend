@@ -62,3 +62,11 @@ func SampleGetListsResultDto() []GetListsResultDto {
 
 	return r
 }
+
+func SampleUser() User {
+	return User{
+		UserName: "user1",
+		PasswordHash: "pass",
+		IsAdmin: true,
+	}
+}

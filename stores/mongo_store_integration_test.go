@@ -40,6 +40,6 @@ func TestMongoStore(t *testing.T) {
 	_, err = store.GetSingleList(gotLists[0].ID.Hex())
 	assert.NotNil(t, err)
 
-	err = store.mongoSession.Collection(ListsCollectionName).DropCollection()
+	err = store.mongoSession.Collection(listsCollectionName).DropCollection()
 	assert.Nil(t, err)
 }

@@ -23,8 +23,8 @@ func (m *MockedMongoCollection) FindOne(id bson.ObjectId) (models.List, error) {
 	return args.Get(0).(models.List), args.Error(1)
 }
 
-func (m *MockedMongoCollection) Insert(l *models.List) error {
-	args := m.Called(l)
+func (m *MockedMongoCollection) Insert(doc interface{}) error {
+	args := m.Called(doc)
 	return args.Error(0)
 }
 
@@ -33,8 +33,8 @@ func (m *MockedMongoCollection) Remove(id bson.ObjectId) error {
 	return args.Error(0)
 }
 
-func (m *MockedMongoCollection) Update(id bson.ObjectId, l *models.List) error {
-	args := m.Called(id, l)
+func (m *MockedMongoCollection) Update(id bson.ObjectId, doc interface{}) error {
+	args := m.Called(id, doc)
 	return args.Error(0)
 }
 
@@ -52,11 +52,11 @@ func (m *MockedMongoSession) Collection(name string) MongoCollection {
 	return args.Get(0).(MongoCollection)
 }
 
-func TestStore(t *testing.T) {
+func TestStoreForLists(t *testing.T) {
 	testMongoCollection := new(MockedMongoCollection)
 
 	testMongoSession := new(MockedMongoSession)
-	testMongoSession.On("Collection", ListsCollectionName).Return(testMongoCollection)
+	testMongoSession.On("Collection", listsCollectionName).Return(testMongoCollection)
 
 	store := NewMongoStore(testMongoSession)
 
@@ -162,7 +162,40 @@ func TestStore(t *testing.T) {
 
 		assert.Nil(t, err)
 	})
+}
 
+func TestStoreForUsers(t *testing.T) {
+	testMongoCollection := new(MockedMongoCollection)
+
+	testMongoSession := new(MockedMongoSession)
+	testMongoSession.On("Collection", usersCollectionName).Return(testMongoCollection)
+
+	store := NewMongoStore(testMongoSession)
+
+
+	t.Run("AddUser() adds a new list", func(t *testing.T) {
+		u := models.SampleUser()
+
+		testMongoCollection.On("Insert", &u).Return(nil)
+		err := store.AddUser(&u)
+
+		assertMocksExpectations(testMongoSession, testMongoCollection, t)
+
+		assert.Nil(t, err)
+	})
+
+	t.Run("AddUser() returns an error when the insert fails", func(t *testing.T) {
+		u := models.SampleUser()
+
+		testMongoCollection.On("Insert", &u).Return(errors.New("wadus"))
+		err := store.AddUser(&u)
+
+		assertMocksExpectations(testMongoSession, testMongoCollection, t)
+
+		assert.NotNil(t, err)
+
+		assert.Equal(t, "Error inserting in the database", err.Error())
+	})
 }
 
 func assertMocksExpectations(s *MockedMongoSession, c *MockedMongoCollection, t *testing.T) {
