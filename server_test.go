@@ -66,8 +66,6 @@ func TestLists(t *testing.T) {
 
 		server.ServeHTTP(response, request)
 
-		testObj.AssertExpectations(t)
-
 		bytes, _ := json.Marshal(data)
 
 		want := string(bytes) + "\n"
@@ -76,9 +74,7 @@ func TestLists(t *testing.T) {
 
 		assert.Equal(t, want, got, "they should be equal")
 
-		assertStatus(t, response.Result().StatusCode, http.StatusOK)
-
-		testObj.AssertExpectations(t)
+		assertStatus(t, testObj, response.Result().StatusCode, http.StatusOK)
 	})
 
 	t.Run("GET WITH AN ID returns 400 when the id is not valid", func(t *testing.T) {
@@ -87,7 +83,7 @@ func TestLists(t *testing.T) {
 
 		server.ServeHTTP(response, request)
 
-		assertStatus(t, response.Result().StatusCode, http.StatusBadRequest)
+		assertStatus(t, testObj, response.Result().StatusCode, http.StatusBadRequest)
 	})
 
 	t.Run("GET WITH AN ID returns 400 when the query fails", func(t *testing.T) {
@@ -99,9 +95,7 @@ func TestLists(t *testing.T) {
 
 		server.ServeHTTP(response, request)
 
-		assertStatus(t, response.Result().StatusCode, http.StatusBadRequest)
-
-		testObj.AssertExpectations(t)
+		assertStatus(t, testObj, response.Result().StatusCode, http.StatusBadRequest)
 	})
 
 	t.Run("GET WITH AN ID returns a single list", func(t *testing.T) {
@@ -114,9 +108,7 @@ func TestLists(t *testing.T) {
 
 		server.ServeHTTP(response, request)
 
-		assertStatus(t, response.Result().StatusCode, http.StatusOK)
-
-		testObj.AssertExpectations(t)
+		assertStatus(t, testObj, response.Result().StatusCode, http.StatusOK)
 
 		bytes, _ := json.Marshal(data)
 
@@ -141,9 +133,7 @@ func TestLists(t *testing.T) {
 
 		server.ServeHTTP(response, request)
 
-		assertStatus(t, response.Result().StatusCode, http.StatusCreated)
-
-		testObj.AssertExpectations(t)
+		assertStatus(t, testObj, response.Result().StatusCode, http.StatusCreated)
 	})
 
 	t.Run("POST with invalid body should return 404", func(t *testing.T) {
@@ -152,9 +142,7 @@ func TestLists(t *testing.T) {
 
 		server.ServeHTTP(response, request)
 
-		assertStatus(t, response.Result().StatusCode, http.StatusBadRequest)
-
-		testObj.AssertExpectations(t)
+		assertStatus(t, testObj, response.Result().StatusCode, http.StatusBadRequest)
 	})
 
 	t.Run("POST returns 400 when the insert fails", func(t *testing.T) {
@@ -172,9 +160,7 @@ func TestLists(t *testing.T) {
 
 		server.ServeHTTP(response, request)
 
-		assertStatus(t, response.Result().StatusCode, http.StatusBadRequest)
-
-		testObj.AssertExpectations(t)
+		assertStatus(t, testObj, response.Result().StatusCode, http.StatusBadRequest)
 	})
 
 	t.Run("DELETE returns 400 when the remove fails", func(t *testing.T) {
@@ -187,9 +173,7 @@ func TestLists(t *testing.T) {
 
 		server.ServeHTTP(response, request)
 
-		assertStatus(t, response.Result().StatusCode, http.StatusBadRequest)
-
-		testObj.AssertExpectations(t)
+		assertStatus(t, testObj, response.Result().StatusCode, http.StatusBadRequest)
 	})
 
 	t.Run("DELETE removes a list", func(t *testing.T) {
@@ -202,9 +186,7 @@ func TestLists(t *testing.T) {
 
 		server.ServeHTTP(response, request)
 
-		assertStatus(t, response.Result().StatusCode, http.StatusNoContent)
-
-		testObj.AssertExpectations(t)
+		assertStatus(t, testObj, response.Result().StatusCode, http.StatusNoContent)
 	})
 
 	t.Run("PUT with invalid body should return 404", func(t *testing.T) {
@@ -213,9 +195,7 @@ func TestLists(t *testing.T) {
 
 		server.ServeHTTP(response, request)
 
-		assertStatus(t, response.Result().StatusCode, http.StatusBadRequest)
-
-		testObj.AssertExpectations(t)
+		assertStatus(t, testObj, response.Result().StatusCode, http.StatusBadRequest)
 	})
 
 	t.Run("PUT returns 400 when the update fails", func(t *testing.T) {
@@ -231,9 +211,7 @@ func TestLists(t *testing.T) {
 
 		server.ServeHTTP(response, request)
 
-		assertStatus(t, response.Result().StatusCode, http.StatusBadRequest)
-
-		testObj.AssertExpectations(t)
+		assertStatus(t, testObj, response.Result().StatusCode, http.StatusBadRequest)
 	})
 
 	t.Run("PUT updates a new list and returns it", func(t *testing.T) {
@@ -252,9 +230,7 @@ func TestLists(t *testing.T) {
 
 		server.ServeHTTP(response, request)
 
-		assertStatus(t, response.Result().StatusCode, http.StatusOK)
-
-		testObj.AssertExpectations(t)
+		assertStatus(t, testObj, response.Result().StatusCode, http.StatusOK)
 	})
 
 	t.Run("returns 405 when the method is not GET, POST, PUT or DELETE", func(t *testing.T) {
@@ -263,15 +239,16 @@ func TestLists(t *testing.T) {
 
 		server.ServeHTTP(response, request)
 
-		assertStatus(t, response.Result().StatusCode, http.StatusMethodNotAllowed)
+		assertStatus(t, testObj, response.Result().StatusCode, http.StatusMethodNotAllowed)
 	})
 }
 
-func assertStatus(t *testing.T, got, want int) {
+func assertStatus(t *testing.T, m *MockedStore, got, want int) {
 	t.Helper()
-	if got != want {
-		t.Errorf("did not get correct status, got %d, want %d", got, want)
-	}
+
+	assert.Equal(t, want, got, "status are not equal")
+
+	m.AssertExpectations(t)
 }
 
 func listDtoToCreate() models.ListDto {

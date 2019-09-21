@@ -9,7 +9,7 @@ import (
 type Store interface {
 	GetLists() []models.GetListsResultDto
 	GetSingleList(string) (models.List, error)
-	AddList(*models.List) error
+	AddList(l *models.List) error
 	RemoveList(string) error
 	UpdateList(string, *models.List) error
 }
