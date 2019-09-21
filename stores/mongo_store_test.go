@@ -79,11 +79,9 @@ func TestStoreForLists(t *testing.T) {
 		want := data
 		got, err := store.GetSingleList(data.ID.Hex())
 
-		assertMocksExpectations(testMongoSession, testMongoCollection, t)
-
 		assert.Equal(t, want, got, "they should be equal")
-
-		assert.Nil(t, err)
+		
+		assertSuccededOperation(t, testMongoSession, testMongoCollection, err)
 	})
 
 	t.Run("AddList() adds a new list", func(t *testing.T) {
@@ -92,9 +90,7 @@ func TestStoreForLists(t *testing.T) {
 		testMongoCollection.On("Insert", &l).Return(nil)
 		err := store.AddList(&l)
 
-		assertMocksExpectations(testMongoSession, testMongoCollection, t)
-
-		assert.Nil(t, err)
+		assertSuccededOperation(t, testMongoSession, testMongoCollection, err)
 	})
 
 	t.Run("AddList() returns an error when the insert fails", func(t *testing.T) {
@@ -103,11 +99,7 @@ func TestStoreForLists(t *testing.T) {
 		testMongoCollection.On("Insert", &l).Return(errors.New("wadus"))
 		err := store.AddList(&l)
 
-		assertMocksExpectations(testMongoSession, testMongoCollection, t)
-
-		assert.NotNil(t, err)
-
-		assert.Equal(t, "Error inserting in the database", err.Error())
+		assertFailedOperation(t, testMongoSession, testMongoCollection, err, "Error inserting in the database")
 	})
 
 	t.Run("RemoveList() returns an error when the remove fails", func(t *testing.T) {
@@ -117,11 +109,7 @@ func TestStoreForLists(t *testing.T) {
 
 		err := store.RemoveList(oidHex)
 
-		assertMocksExpectations(testMongoSession, testMongoCollection, t)
-
-		assert.NotNil(t, err)
-
-		assert.Equal(t, "Error removing from the database", err.Error())
+		assertFailedOperation(t, testMongoSession, testMongoCollection, err, "Error removing from the database")
 	})
 
 	t.Run("RemoveList() removes a list", func(t *testing.T) {
@@ -131,9 +119,7 @@ func TestStoreForLists(t *testing.T) {
 
 		err := store.RemoveList(oidHex)
 
-		assertMocksExpectations(testMongoSession, testMongoCollection, t)
-
-		assert.Nil(t, err)
+		assertSuccededOperation(t, testMongoSession, testMongoCollection, err)
 	})
 
 	t.Run("UpdateList() returns an error when the update fails", func(t *testing.T) {
@@ -143,11 +129,7 @@ func TestStoreForLists(t *testing.T) {
 		l := models.SampleList()
 		err := store.UpdateList(id, &l)
 
-		assertMocksExpectations(testMongoSession, testMongoCollection, t)
-
-		assert.NotNil(t, err)
-
-		assert.Equal(t, "Error updating the database", err.Error())
+		assertFailedOperation(t, testMongoSession, testMongoCollection, err, "Error updating the database")
 	})
 
 	t.Run("UpdateList() updates a list", func(t *testing.T) {
@@ -158,9 +140,7 @@ func TestStoreForLists(t *testing.T) {
 		l := models.SampleList()
 		err := store.UpdateList(id, &l)
 
-		assertMocksExpectations(testMongoSession, testMongoCollection, t)
-
-		assert.Nil(t, err)
+		assertSuccededOperation(t, testMongoSession, testMongoCollection, err)
 	})
 }
 
@@ -179,9 +159,7 @@ func TestStoreForUsers(t *testing.T) {
 		testMongoCollection.On("Insert", &u).Return(nil)
 		err := store.AddUser(&u)
 
-		assertMocksExpectations(testMongoSession, testMongoCollection, t)
-
-		assert.Nil(t, err)
+		assertSuccededOperation(t, testMongoSession, testMongoCollection, err)
 	})
 
 	t.Run("AddUser() returns an error when the insert fails", func(t *testing.T) {
@@ -190,15 +168,25 @@ func TestStoreForUsers(t *testing.T) {
 		testMongoCollection.On("Insert", &u).Return(errors.New("wadus"))
 		err := store.AddUser(&u)
 
-		assertMocksExpectations(testMongoSession, testMongoCollection, t)
-
-		assert.NotNil(t, err)
-
-		assert.Equal(t, "Error inserting in the database", err.Error())
+		assertFailedOperation(t, testMongoSession, testMongoCollection, err, "Error inserting in the database")
 	})
 }
 
 func assertMocksExpectations(s *MockedMongoSession, c *MockedMongoCollection, t *testing.T) {
 	s.AssertExpectations(t)
 	c.AssertExpectations(t)
+}
+
+func assertSuccededOperation(t *testing.T, s *MockedMongoSession, c *MockedMongoCollection, err error) {
+	assertMocksExpectations(s, c, t)
+
+	assert.Nil(t, err)
+}
+
+func assertFailedOperation(t *testing.T, s *MockedMongoSession, c *MockedMongoCollection, err error, errorMsg string) {
+	assertMocksExpectations(s, c, t)
+
+	assert.NotNil(t, err)
+
+	assert.Equal(t, errorMsg, err.Error())
 }
