@@ -18,7 +18,7 @@ func (m *MockedMongoCollection) FindAll() []models.GetListsResultDto {
 	return args.Get(0).([]models.GetListsResultDto)
 }
 
-func (m *MockedMongoCollection) FindOne(id bson.ObjectId) (models.List, error) {
+func (m *MockedMongoCollection) FindOne(id string) (models.List, error) {
 	args := m.Called(id)
 	return args.Get(0).(models.List), args.Error(1)
 }
@@ -28,12 +28,12 @@ func (m *MockedMongoCollection) Insert(doc interface{}) error {
 	return args.Error(0)
 }
 
-func (m *MockedMongoCollection) Remove(id bson.ObjectId) error {
+func (m *MockedMongoCollection) Remove(id string) error {
 	args := m.Called(id)
 	return args.Error(0)
 }
 
-func (m *MockedMongoCollection) Update(id bson.ObjectId, doc interface{}) error {
+func (m *MockedMongoCollection) Update(id string, doc interface{}) error {
 	args := m.Called(id, doc)
 	return args.Error(0)
 }
@@ -77,10 +77,10 @@ func TestStoreForLists(t *testing.T) {
 		testMongoCollection.On("FindOne", data.ID).Return(data, nil)
 
 		want := data
-		got, err := store.GetSingleList(data.ID.Hex())
+		got, err := store.GetSingleList(data.ID)
 
 		assert.Equal(t, want, got, "they should be equal")
-		
+
 		assertSuccededOperation(t, testMongoSession, testMongoCollection, err)
 	})
 
@@ -105,7 +105,7 @@ func TestStoreForLists(t *testing.T) {
 	t.Run("RemoveList() returns an error when the remove fails", func(t *testing.T) {
 		oidHex := bson.NewObjectId().Hex()
 
-		testMongoCollection.On("Remove", bson.ObjectIdHex(oidHex)).Return(errors.New("wadus"))
+		testMongoCollection.On("Remove", oidHex).Return(errors.New("wadus"))
 
 		err := store.RemoveList(oidHex)
 
@@ -115,7 +115,7 @@ func TestStoreForLists(t *testing.T) {
 	t.Run("RemoveList() removes a list", func(t *testing.T) {
 		oidHex := bson.NewObjectId().Hex()
 
-		testMongoCollection.On("Remove", bson.ObjectIdHex(oidHex)).Return(nil)
+		testMongoCollection.On("Remove", oidHex).Return(nil)
 
 		err := store.RemoveList(oidHex)
 
@@ -124,7 +124,7 @@ func TestStoreForLists(t *testing.T) {
 
 	t.Run("UpdateList() returns an error when the update fails", func(t *testing.T) {
 		id := bson.NewObjectId().Hex()
-		testMongoCollection.On("Update", bson.ObjectIdHex(id), mock.Anything).Return(errors.New("wadus"))
+		testMongoCollection.On("Update", id, mock.Anything).Return(errors.New("wadus"))
 
 		l := models.SampleList()
 		err := store.UpdateList(id, &l)
@@ -135,7 +135,7 @@ func TestStoreForLists(t *testing.T) {
 	t.Run("UpdateList() updates a list", func(t *testing.T) {
 		id := bson.NewObjectId().Hex()
 
-		testMongoCollection.On("Update", bson.ObjectIdHex(id), mock.Anything).Return(nil)
+		testMongoCollection.On("Update", id, mock.Anything).Return(nil)
 
 		l := models.SampleList()
 		err := store.UpdateList(id, &l)
@@ -151,7 +151,6 @@ func TestStoreForUsers(t *testing.T) {
 	testMongoSession.On("Collection", usersCollectionName).Return(testMongoCollection)
 
 	store := NewMongoStore(testMongoSession)
-
 
 	t.Run("AddUser() adds a new list", func(t *testing.T) {
 		u := models.SampleUser()

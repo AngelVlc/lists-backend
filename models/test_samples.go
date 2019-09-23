@@ -17,7 +17,7 @@ func SampleList() List {
 
 func SampleListSlice() []List {
 	list1 := List{
-		ID:   bson.NewObjectId(),
+		ID:   bson.NewObjectId().Hex(),
 		Name: "list1",
 		Items: []Item{
 			Item{
@@ -32,7 +32,7 @@ func SampleListSlice() []List {
 	}
 
 	list2 := List{
-		ID:   bson.NewObjectId(),
+		ID:   bson.NewObjectId().Hex(),
 		Name: "list2",
 		Items: []Item{
 			Item{
@@ -65,8 +65,8 @@ func SampleGetListsResultDto() []GetListsResultDto {
 
 func SampleUser() User {
 	return User{
-		UserName: "user1",
+		UserName:     "user1",
 		PasswordHash: "pass",
-		IsAdmin: true,
+		IsAdmin:      true,
 	}
 }

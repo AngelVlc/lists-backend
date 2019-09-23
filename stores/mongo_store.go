@@ -19,7 +19,6 @@ func (s *MongoStore) usersCollection() MongoCollection {
 	return s.mongoSession.Collection(usersCollectionName)
 }
 
-
 // MongoStore is the store which uses mongo db
 type MongoStore struct {
 	mongoSession MongoSession
@@ -37,14 +36,12 @@ func (s *MongoStore) GetLists() []models.GetListsResultDto {
 
 // GetSingleList returns one list
 func (s *MongoStore) GetSingleList(id string) (models.List, error) {
-	oid := bson.ObjectIdHex(id)
-
-	return s.listsCollection().FindOne(oid)
+	return s.listsCollection().FindOne(id)
 }
 
 // AddList adds a new list to the collection
 func (s *MongoStore) AddList(l *models.List) error {
-	l.ID = bson.NewObjectId()
+	l.ID = bson.NewObjectId().Hex()
 	err := s.listsCollection().Insert(l)
 	if err != nil {
 		log.Println("Error inserting. Error: " + err.Error())
@@ -56,9 +53,7 @@ func (s *MongoStore) AddList(l *models.List) error {
 
 // RemoveList removes a list from the collection
 func (s *MongoStore) RemoveList(id string) error {
-	oid := bson.ObjectIdHex(id)
-
-	if err := s.listsCollection().Remove(oid); err != nil {
+	if err := s.listsCollection().Remove(id); err != nil {
 		log.Println("Error removing. Error: " + err.Error())
 		return errors.New("Error removing from the database")
 	}
@@ -68,11 +63,9 @@ func (s *MongoStore) RemoveList(id string) error {
 
 // UpdateList updates a list
 func (s *MongoStore) UpdateList(id string, l *models.List) error {
-	oid := bson.ObjectIdHex(id)
+	l.ID = id
 
-	l.ID = oid
-
-	if err := s.listsCollection().Update(oid, l); err != nil {
+	if err := s.listsCollection().Update(id, l); err != nil {
 		log.Println("Error updating. Error: " + err.Error())
 		return errors.New("Error updating the database")
 	}
@@ -82,7 +75,7 @@ func (s *MongoStore) UpdateList(id string, l *models.List) error {
 
 // AddUser adds a new user
 func (s *MongoStore) AddUser(u *models.User) error {
-	u.ID = bson.NewObjectId()
+	u.ID = bson.NewObjectId().Hex()
 	err := s.usersCollection().Insert(u)
 	if err != nil {
 		log.Println("Error inserting. Error: " + err.Error())

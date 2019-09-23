@@ -101,9 +101,9 @@ func TestLists(t *testing.T) {
 	t.Run("GET WITH AN ID returns a single list", func(t *testing.T) {
 		data := models.SampleListSlice()[0]
 
-		testObj.On("GetSingleList", data.ID.Hex()).Return(data, nil)
+		testObj.On("GetSingleList", data.ID).Return(data, nil)
 
-		request, _ := http.NewRequest(http.MethodGet, "/lists/"+data.ID.Hex(), nil)
+		request, _ := http.NewRequest(http.MethodGet, "/lists/"+data.ID, nil)
 		response := httptest.NewRecorder()
 
 		server.ServeHTTP(response, request)

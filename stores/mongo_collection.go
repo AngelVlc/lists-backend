@@ -9,10 +9,10 @@ import (
 // MongoCollection is an interface which contains the methods used by the mongo collection
 type MongoCollection interface {
 	FindAll() []models.GetListsResultDto
-	FindOne(id bson.ObjectId) (models.List, error)
+	FindOne(id string) (models.List, error)
 	Insert(doc interface{}) error
-	Remove(id bson.ObjectId) error
-	Update(id bson.ObjectId, doc interface{}) error
+	Remove(id string) error
+	Update(id string, doc interface{}) error
 	DropCollection() error
 }
 
@@ -34,7 +34,7 @@ func (c *MyMongoCollection) FindAll() []models.GetListsResultDto {
 }
 
 // FindOne returns one list
-func (c *MyMongoCollection) FindOne(id bson.ObjectId) (models.List, error) {
+func (c *MyMongoCollection) FindOne(id string) (models.List, error) {
 	r := models.List{}
 	err := c.collection.FindId(id).One(&r)
 	return r, err
@@ -46,12 +46,12 @@ func (c *MyMongoCollection) Insert(doc interface{}) error {
 }
 
 // Remove removes a list
-func (c *MyMongoCollection) Remove(id bson.ObjectId) error {
+func (c *MyMongoCollection) Remove(id string) error {
 	return c.collection.RemoveId(id)
 }
 
 // Update updates a list
-func (c *MyMongoCollection) Update(id bson.ObjectId, doc interface{}) error {
+func (c *MyMongoCollection) Update(id string, doc interface{}) error {
 	return c.collection.UpdateId(id, doc)
 }
 

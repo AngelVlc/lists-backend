@@ -1,9 +1,5 @@
 package models
 
-import (
-	"gopkg.in/mgo.v2/bson"
-)
-
 // ListDto is the struct used as DTO for a List
 type ListDto struct {
 	Name  string
@@ -20,21 +16,21 @@ func (dto *ListDto) ToList() List {
 
 // GetListsResultDto is the struct used as result for the GetLists method
 type GetListsResultDto struct {
-	ID   bson.ObjectId `json:"id" bson:"_id"`
-	Name string        `json:"name" bson:"name"`
+	ID   string `json:"id" bson:"_id"`
+	Name string `json:"name" bson:"name"`
 }
 
 // UserDto is the struct used as DTO for a user
 type UserDto struct {
-	UserName string
-	NewPassword string
+	UserName           string
+	NewPassword        string
 	ConfirmNewPassword string
-	IsAdmin bool
+	IsAdmin            bool
 }
 
 // GetUsersResultDto is the struct used as result for the GetUsers method
 type GetUsersResultDto struct {
-	ID   bson.ObjectId `json:"id" bson:"_id"`
-	UserName string        `json:"userName" bson:"userName"`
-	IsAdmin      bool   `json:"isAdmin" bson:"isAdmin"`
+	ID       string `json:"id" bson:"_id"`
+	UserName string `json:"userName" bson:"userName"`
+	IsAdmin  bool   `json:"isAdmin" bson:"isAdmin"`
 }
