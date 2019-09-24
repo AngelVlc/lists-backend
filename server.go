@@ -45,7 +45,8 @@ func (s *server) listsHandler(w http.ResponseWriter, r *http.Request) {
 	case http.MethodGet:
 		if listID == "" {
 			w.Header().Set("content-type", jsonContentType)
-			json.NewEncoder(w).Encode(s.store.GetLists())
+			r, _ := s.store.GetLists()
+			json.NewEncoder(w).Encode(r)
 		} else {
 			l, err := s.store.GetSingleList(listID)
 			if err != nil {

@@ -1,22 +1,23 @@
 package stores
 
 import (
-	"github.com/AngelVlc/lists-backend/models"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
 
 // MongoCollection is an interface which contains the methods used by the mongo collection
+// for testing purposes
 type MongoCollection interface {
-	FindAll() []models.GetListsResultDto
-	FindOne(id string) (models.List, error)
+	FindAll(doc interface{}) error
+	FindOne(id string, doc interface{}) error
 	Insert(doc interface{}) error
 	Remove(id string) error
 	Update(id string, doc interface{}) error
 	DropCollection() error
+	Name() string
 }
 
-// MyMongoCollection contains the methods used by the mongo collection
+// MyMongoCollection implements the MongoCollection interface
 type MyMongoCollection struct {
 	collection *mgo.Collection
 }
@@ -26,26 +27,26 @@ func NewMyMongoCollection(c *mgo.Collection) *MyMongoCollection {
 	return &MyMongoCollection{c}
 }
 
-// FindAll returns every list
-func (c *MyMongoCollection) FindAll() []models.GetListsResultDto {
-	r := []models.GetListsResultDto{}
-	c.collection.Find(nil).Select(bson.M{"name": 1}).All(&r)
-	return r
+// FindAll returns all documents
+func (c *MyMongoCollection) FindAll(doc interface{}) error {
+	return c.collection.Find(nil).Select(bson.M{"name": 1}).All(doc)
 }
 
-// FindOne returns one list
-func (c *MyMongoCollection) FindOne(id string) (models.List, error) {
-	r := models.List{}
-	err := c.collection.FindId(id).One(&r)
-	return r, err
+// FindOne returns a single document
+func (c *MyMongoCollection) FindOne(id string, doc interface{}) error {
+	if err := c.collection.FindId(id).One(doc); err != nil {
+		return err
+	}
+
+	return nil
 }
 
-// Insert adds a new list
+// Insert adds a new document
 func (c *MyMongoCollection) Insert(doc interface{}) error {
 	return c.collection.Insert(doc)
 }
 
-// Remove removes a list
+// Remove removes a document
 func (c *MyMongoCollection) Remove(id string) error {
 	return c.collection.RemoveId(id)
 }
@@ -58,4 +59,9 @@ func (c *MyMongoCollection) Update(id string, doc interface{}) error {
 // DropCollection drops the collection
 func (c *MyMongoCollection) DropCollection() error {
 	return c.collection.DropCollection()
+}
+
+// Name returns the mongo collection name
+func (c *MyMongoCollection) Name() string {
+	return c.collection.Name
 }

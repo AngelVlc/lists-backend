@@ -26,9 +26,9 @@ type MockedStore struct {
 	mock.Mock
 }
 
-func (m *MockedStore) GetLists() []models.GetListsResultDto {
+func (m *MockedStore) GetLists() ([]models.GetListsResultDto, error) {
 	args := m.Called()
-	return args.Get(0).([]models.GetListsResultDto)
+	return args.Get(0).([]models.GetListsResultDto), args.Error(1)
 }
 
 func (m *MockedStore) AddList(l *models.List) error {
@@ -59,7 +59,7 @@ func TestLists(t *testing.T) {
 	t.Run("GET returns list items", func(t *testing.T) {
 		data := models.SampleGetListsResultDto()
 
-		testObj.On("GetLists").Return(data)
+		testObj.On("GetLists").Return(data, nil)
 
 		request, _ := http.NewRequest(http.MethodGet, "/lists", nil)
 		response := httptest.NewRecorder()

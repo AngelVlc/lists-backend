@@ -1,7 +1,6 @@
 package stores
 
 import (
-	"fmt"
 	"github.com/AngelVlc/lists-backend/models"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -12,21 +11,21 @@ func TestMongoStore(t *testing.T) {
 
 	store := NewMongoStore(session)
 
-	gotLists := store.GetLists()
+	gotLists, err := store.GetLists()
 	assert.Equal(t, 0, len(gotLists), "new collection should have zero lists")
-
-	data := models.SampleList()
-	err := store.AddList(&data)
 	assert.Nil(t, err)
 
-	gotLists = store.GetLists()
-	assert.Equal(t, 1, len(gotLists), "new collection should have zero lists")
+	data := models.SampleList()
+	err = store.AddList(&data)
+	assert.Nil(t, err)
 
-	fmt.Println(gotLists[0], gotLists[0].ID)
+	gotLists, err = store.GetLists()
+	assert.Equal(t, 1, len(gotLists), "after adding a list the new collection should have one list")
+	assert.Nil(t, err)
 
 	gotList, err := store.GetSingleList(gotLists[0].ID)
 	assert.Nil(t, err)
-	assert.Equal(t, gotList.Name, data.Name)
+	assert.Equal(t, data.Name, gotList.Name)
 
 	dataToReplace := models.SampleList()
 	dataToReplace.Name = "REPLACED"
@@ -35,7 +34,7 @@ func TestMongoStore(t *testing.T) {
 
 	gotList, err = store.GetSingleList(gotLists[0].ID)
 	assert.Nil(t, err)
-	assert.Equal(t, gotList.Name, dataToReplace.Name)
+	assert.Equal(t, dataToReplace.Name, gotList.Name)
 
 	err = store.RemoveList(data.ID)
 	assert.Nil(t, err)

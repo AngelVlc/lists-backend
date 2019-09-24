@@ -1,10 +1,8 @@
 package stores
 
 import (
-	"errors"
 	"github.com/AngelVlc/lists-backend/models"
 	"gopkg.in/mgo.v2/bson"
-	"log"
 )
 
 var listsCollectionName = "lists"
@@ -30,56 +28,115 @@ func NewMongoStore(mongoSession MongoSession) MongoStore {
 }
 
 // GetLists returns the lists collection
-func (s *MongoStore) GetLists() []models.GetListsResultDto {
-	return s.listsCollection().FindAll()
+func (s *MongoStore) GetLists() ([]models.GetListsResultDto, error) {
+	r := []models.GetListsResultDto{}
+
+	if err := s.listsCollection().FindAll(&r); err != nil {
+		return []models.GetListsResultDto{}, &UnexpectedError{
+			Msg:           "Error retrieving from the database",
+			InternalError: err,
+		}
+	}
+
+	return r, nil
 }
 
 // GetSingleList returns one list
 func (s *MongoStore) GetSingleList(id string) (models.List, error) {
-	return s.listsCollection().FindOne(id)
+	r := models.List{}
+
+	if err := s.listsCollection().FindOne(id, &r); err != nil {
+		return models.List{}, &UnexpectedError{
+			Msg:           "Error retrieving from the database",
+			InternalError: err,
+		}
+	}
+
+	return r, nil
 }
 
 // AddList adds a new list to the collection
 func (s *MongoStore) AddList(l *models.List) error {
 	l.ID = bson.NewObjectId().Hex()
-	err := s.listsCollection().Insert(l)
-	if err != nil {
-		log.Println("Error inserting. Error: " + err.Error())
-		return errors.New("Error inserting in the database")
-	}
 
-	return nil
+	return s.add(s.listsCollection(), l)
 }
 
 // RemoveList removes a list from the collection
 func (s *MongoStore) RemoveList(id string) error {
-	if err := s.listsCollection().Remove(id); err != nil {
-		log.Println("Error removing. Error: " + err.Error())
-		return errors.New("Error removing from the database")
-	}
-
-	return nil
+	return s.remove(s.listsCollection(), id)
 }
 
 // UpdateList updates a list
 func (s *MongoStore) UpdateList(id string, l *models.List) error {
 	l.ID = id
 
-	if err := s.listsCollection().Update(id, l); err != nil {
-		log.Println("Error updating. Error: " + err.Error())
-		return errors.New("Error updating the database")
-	}
-
-	return nil
+	return s.update(s.listsCollection(), id, l)
 }
 
 // AddUser adds a new user
 func (s *MongoStore) AddUser(u *models.User) error {
 	u.ID = bson.NewObjectId().Hex()
-	err := s.usersCollection().Insert(u)
-	if err != nil {
-		log.Println("Error inserting. Error: " + err.Error())
-		return errors.New("Error inserting in the database")
+
+	return s.add(s.usersCollection(), u)
+}
+
+func (s *MongoStore) add(c MongoCollection, doc interface{}) error {
+	if err := c.Insert(doc); err != nil {
+		return &UnexpectedError{
+			Msg:           "Error inserting in the database",
+			InternalError: err,
+		}
+	}
+
+	return nil
+}
+
+func (s *MongoStore) update(c MongoCollection, id string, doc interface{}) error {
+	if err := s.isValidID(id); err != nil {
+		return err
+	}
+
+	if err := c.Update(id, doc); err != nil {
+		if err.Error() == "not found" {
+			return &NotFoundError{
+				ID:    id,
+				Model: c.Name(),
+			}
+		}
+		return &UnexpectedError{
+			Msg:           "Error updating the database",
+			InternalError: err,
+		}
+	}
+
+	return nil
+}
+
+func (s *MongoStore) remove(c MongoCollection, id string) error {
+	if err := s.isValidID(id); err != nil {
+		return err
+	}
+
+	if err := c.Remove(id); err != nil {
+		if err.Error() == "not found" {
+			return &NotFoundError{
+				ID:    id,
+				Model: c.Name(),
+			}
+		}
+		return &UnexpectedError{
+			Msg:           "Error removing from the database",
+			InternalError: err,
+		}
+	}
+
+	return nil
+}
+
+func (s *MongoStore) isValidID(id string) error {
+	if !bson.IsObjectIdHex(id) {
+		return &InvalidIDError{id}
 	}
 
 	return nil
