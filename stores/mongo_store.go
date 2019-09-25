@@ -45,11 +45,8 @@ func (s *MongoStore) GetLists() ([]models.GetListsResultDto, error) {
 func (s *MongoStore) GetSingleList(id string) (models.List, error) {
 	r := models.List{}
 
-	if err := s.listsCollection().FindOne(id, &r); err != nil {
-		return models.List{}, &UnexpectedError{
-			Msg:           "Error retrieving from the database",
-			InternalError: err,
-		}
+	if err := s.getSingle(s.listsCollection(), id, &r); err != nil {
+		return models.List{}, err
 	}
 
 	return r, nil
@@ -127,6 +124,27 @@ func (s *MongoStore) remove(c MongoCollection, id string) error {
 		}
 		return &UnexpectedError{
 			Msg:           "Error removing from the database",
+			InternalError: err,
+		}
+	}
+
+	return nil
+}
+
+func (s *MongoStore) getSingle(c MongoCollection, id string, doc interface{}) error {
+	if err := s.isValidID(id); err != nil {
+		return err
+	}
+
+	if err := c.FindOne(id, doc); err != nil {
+		if err.Error() == "not found" {
+			return &NotFoundError{
+				ID:    id,
+				Model: c.Name(),
+			}
+		}
+		return &UnexpectedError{
+			Msg:           "Error retrieving from the database",
 			InternalError: err,
 		}
 	}

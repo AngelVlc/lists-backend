@@ -68,7 +68,7 @@ func TestUpdate(t *testing.T) {
 	t.Run("update() returns an unexpected error when the update fails", func(t *testing.T) {
 		id := bson.NewObjectId().Hex()
 
-		testMongoCollection.On("Update", id, &id).Return(errors.New("wadus"))
+		testMongoCollection.On("Update", id, &id).Return(errors.New("wadus")).Once()
 
 		err := store.update(testMongoCollection, id, &id)
 
@@ -79,8 +79,8 @@ func TestUpdate(t *testing.T) {
 
 	t.Run("update() returns a not found error when document does not exits", func(t *testing.T) {
 		id := bson.NewObjectId().Hex()
-		testMongoCollection.On("Update", id, &id).Return(errors.New("not found"))
-		testMongoCollection.On("Name").Return("document")
+		testMongoCollection.On("Update", id, &id).Return(errors.New("not found")).Once()
+		testMongoCollection.On("Name").Return("document").Once()
 
 		err := store.update(testMongoCollection, id, &id)
 
@@ -112,7 +112,7 @@ func TestRemove(t *testing.T) {
 	t.Run("remove() returns an unexpected error when the remove fails", func(t *testing.T) {
 		id := bson.NewObjectId().Hex()
 
-		testMongoCollection.On("Remove", id).Return(errors.New("wadus"))
+		testMongoCollection.On("Remove", id).Return(errors.New("wadus")).Once()
 
 		err := store.remove(testMongoCollection, id)
 
@@ -123,8 +123,8 @@ func TestRemove(t *testing.T) {
 
 	t.Run("remove() returns a not found error when document does not exits", func(t *testing.T) {
 		id := bson.NewObjectId().Hex()
-		testMongoCollection.On("Remove", id).Return(errors.New("not found"))
-		testMongoCollection.On("Name").Return("document")
+		testMongoCollection.On("Remove", id).Return(errors.New("not found")).Once()
+		testMongoCollection.On("Name").Return("document").Once()
 
 		err := store.remove(testMongoCollection, id)
 
@@ -146,6 +146,49 @@ func TestRemove(t *testing.T) {
 	})
 }
 
+func TestGetSingle(t *testing.T) {
+	testMongoCollection := new(MockedMongoCollection)
+
+	testMongoSession := new(MockedMongoSession)
+
+	store := NewMongoStore(testMongoSession)
+
+	t.Run("getSingle() returns an unexpected error when the remove fails", func(t *testing.T) {
+		data := models.SampleListSlice()[0]
+		testMongoCollection.On("FindOne", data.ID, &models.List{}).Return(errors.New("wadus")).Once()
+
+		err := store.getSingle(testMongoCollection, data.ID, &models.List{})
+
+		assert.IsType(t, &UnexpectedError{}, err)
+
+		assertFailedOperation(t, testMongoSession, testMongoCollection, err, "Error retrieving from the database")
+	})
+
+	t.Run("getSingle() returns a not found error when document does not exits", func(t *testing.T) {
+		data := models.SampleListSlice()[0]
+		testMongoCollection.On("FindOne", data.ID, &models.List{}).Return(errors.New("not found")).Once()
+		testMongoCollection.On("Name").Return("document").Once()
+
+		err := store.getSingle(testMongoCollection, data.ID, &models.List{})
+
+		assert.IsType(t, &NotFoundError{}, err)
+
+		msg := fmt.Sprintf("document with id %q not found", data.ID)
+		assertFailedOperation(t, testMongoSession, testMongoCollection, err, msg)
+	})
+
+	t.Run("getSingle() returns an invalid id error when the id is not valid", func(t *testing.T) {
+		id := "wadus"
+
+		err := store.getSingle(testMongoCollection, id, &models.List{})
+
+		assert.IsType(t, &InvalidIDError{}, err)
+
+		msg := fmt.Sprintf("%q is not a valid id", id)
+		assertFailedOperation(t, testMongoSession, testMongoCollection, err, msg)
+	})
+}
+
 func TestAdd(t *testing.T) {
 	testMongoCollection := new(MockedMongoCollection)
 
@@ -155,7 +198,7 @@ func TestAdd(t *testing.T) {
 
 	t.Run("add() returns an unexpected error when the insert fails", func(t *testing.T) {
 		l := models.SampleList()
-		testMongoCollection.On("Insert", &l).Return(errors.New("wadus"))
+		testMongoCollection.On("Insert", &l).Return(errors.New("wadus")).Once()
 
 		err := store.add(testMongoCollection, &l)
 
@@ -175,7 +218,7 @@ func TestStoreForLists(t *testing.T) {
 
 	t.Run("GetLists() returns all the list items", func(t *testing.T) {
 		data := models.SampleGetListsResultDto()
-		testMongoCollection.On("FindAll", &[]models.GetListsResultDto{}).Return(nil).Run(func(args mock.Arguments) {
+		testMongoCollection.On("FindAll", &[]models.GetListsResultDto{}).Return(nil).Once().Run(func(args mock.Arguments) {
 			arg := args.Get(0).(*[]models.GetListsResultDto)
 			*arg = data
 		})
@@ -188,9 +231,17 @@ func TestStoreForLists(t *testing.T) {
 		assertSuccededOperation(t, testMongoSession, testMongoCollection, err)
 	})
 
+	t.Run("GetLists() returns an error when the query fails", func(t *testing.T) {
+		testMongoCollection.On("FindAll", &[]models.GetListsResultDto{}).Return(errors.New("wadus")).Once()
+
+		_, err := store.GetLists()
+
+		assertFailedOperation(t, testMongoSession, testMongoCollection, err, "Error retrieving from the database")
+	})
+
 	t.Run("GetSingleList() returns a single list", func(t *testing.T) {
 		data := models.SampleListSlice()[0]
-		testMongoCollection.On("FindOne", data.ID, &models.List{}).Return(nil).Run(func(args mock.Arguments) {
+		testMongoCollection.On("FindOne", data.ID, &models.List{}).Return(nil).Once().Run(func(args mock.Arguments) {
 			arg := args.Get(1).(*models.List)
 			*arg = data
 		})
@@ -205,7 +256,7 @@ func TestStoreForLists(t *testing.T) {
 
 	t.Run("GetSingleList() returns an error when the query fails", func(t *testing.T) {
 		data := models.SampleListSlice()[0]
-		testMongoCollection.On("FindOne", data.ID, &models.List{}).Return(errors.New("wadus"))
+		testMongoCollection.On("FindOne", data.ID, &models.List{}).Return(errors.New("wadus")).Once()
 
 		_, err := store.GetSingleList(data.ID)
 
@@ -215,7 +266,7 @@ func TestStoreForLists(t *testing.T) {
 	t.Run("AddList() adds a new list", func(t *testing.T) {
 		l := models.SampleList()
 
-		testMongoCollection.On("Insert", &l).Return(nil)
+		testMongoCollection.On("Insert", &l).Return(nil).Once()
 		err := store.AddList(&l)
 
 		assertSuccededOperation(t, testMongoSession, testMongoCollection, err)
@@ -224,7 +275,7 @@ func TestStoreForLists(t *testing.T) {
 	t.Run("AddList() returns an error when the insert fails", func(t *testing.T) {
 		l := models.SampleList()
 
-		testMongoCollection.On("Insert", &l).Return(errors.New("wadus"))
+		testMongoCollection.On("Insert", &l).Return(errors.New("wadus")).Once()
 		err := store.AddList(&l)
 
 		assertFailedOperation(t, testMongoSession, testMongoCollection, err, "Error inserting in the database")
@@ -233,7 +284,7 @@ func TestStoreForLists(t *testing.T) {
 	t.Run("RemoveList() returns an error when the remove fails", func(t *testing.T) {
 		oidHex := bson.NewObjectId().Hex()
 
-		testMongoCollection.On("Remove", oidHex).Return(errors.New("wadus"))
+		testMongoCollection.On("Remove", oidHex).Return(errors.New("wadus")).Once()
 
 		err := store.RemoveList(oidHex)
 
@@ -243,7 +294,7 @@ func TestStoreForLists(t *testing.T) {
 	t.Run("RemoveList() removes a list", func(t *testing.T) {
 		oidHex := bson.NewObjectId().Hex()
 
-		testMongoCollection.On("Remove", oidHex).Return(nil)
+		testMongoCollection.On("Remove", oidHex).Return(nil).Once()
 
 		err := store.RemoveList(oidHex)
 
@@ -252,7 +303,7 @@ func TestStoreForLists(t *testing.T) {
 
 	t.Run("UpdateList() returns an error when the update fails", func(t *testing.T) {
 		id := bson.NewObjectId().Hex()
-		testMongoCollection.On("Update", id, mock.Anything).Return(errors.New("wadus"))
+		testMongoCollection.On("Update", id, mock.Anything).Return(errors.New("wadus")).Once()
 
 		l := models.SampleList()
 		err := store.UpdateList(id, &l)
@@ -263,7 +314,7 @@ func TestStoreForLists(t *testing.T) {
 	t.Run("UpdateList() updates a list", func(t *testing.T) {
 		id := bson.NewObjectId().Hex()
 
-		testMongoCollection.On("Update", id, mock.Anything).Return(nil)
+		testMongoCollection.On("Update", id, mock.Anything).Return(nil).Once()
 
 		l := models.SampleList()
 		err := store.UpdateList(id, &l)
@@ -283,7 +334,7 @@ func TestStoreForUsers(t *testing.T) {
 	t.Run("AddUser() adds a new list", func(t *testing.T) {
 		u := models.SampleUser()
 
-		testMongoCollection.On("Insert", &u).Return(nil)
+		testMongoCollection.On("Insert", &u).Return(nil).Once()
 		err := store.AddUser(&u)
 
 		assertSuccededOperation(t, testMongoSession, testMongoCollection, err)
@@ -292,7 +343,7 @@ func TestStoreForUsers(t *testing.T) {
 	t.Run("AddUser() returns an error when the insert fails", func(t *testing.T) {
 		u := models.SampleUser()
 
-		testMongoCollection.On("Insert", &u).Return(errors.New("wadus"))
+		testMongoCollection.On("Insert", &u).Return(errors.New("wadus")).Once()
 		err := store.AddUser(&u)
 
 		assertFailedOperation(t, testMongoSession, testMongoCollection, err, "Error inserting in the database")
