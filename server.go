@@ -96,12 +96,9 @@ func (s *server) listsHandler(w http.ResponseWriter, r *http.Request) error {
 	case http.MethodGet:
 		if listID == "" {
 			r, err := s.store.GetLists()
-			fmt.Println("####1")
 			if err != nil {
-				fmt.Println("####2")
 				return err
 			}
-			fmt.Println("####3")
 			writeOkResponse(w, http.StatusOK, r)
 		} else {
 			l, err := s.store.GetSingleList(listID)

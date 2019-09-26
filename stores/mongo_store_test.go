@@ -14,8 +14,8 @@ type MockedMongoCollection struct {
 	mock.Mock
 }
 
-func (m *MockedMongoCollection) FindAll(doc interface{}) error {
-	args := m.Called(doc)
+func (m *MockedMongoCollection) Find(doc interface{}, query interface{}, selector interface{}) error {
+	args := m.Called(doc, query, selector)
 	return args.Error(0)
 }
 
@@ -218,7 +218,7 @@ func TestStoreForLists(t *testing.T) {
 
 	t.Run("GetLists() returns all the list items", func(t *testing.T) {
 		data := models.SampleGetListsResultDto()
-		testMongoCollection.On("FindAll", &[]models.GetListsResultDto{}).Return(nil).Once().Run(func(args mock.Arguments) {
+		testMongoCollection.On("Find", &[]models.GetListsResultDto{}, nil, bson.M{"name": 1}).Return(nil).Once().Run(func(args mock.Arguments) {
 			arg := args.Get(0).(*[]models.GetListsResultDto)
 			*arg = data
 		})
@@ -232,7 +232,7 @@ func TestStoreForLists(t *testing.T) {
 	})
 
 	t.Run("GetLists() returns an error when the query fails", func(t *testing.T) {
-		testMongoCollection.On("FindAll", &[]models.GetListsResultDto{}).Return(errors.New("wadus")).Once()
+		testMongoCollection.On("Find", &[]models.GetListsResultDto{}, nil, bson.M{"name": 1}).Return(errors.New("wadus")).Once()
 
 		_, err := store.GetLists()
 

@@ -2,13 +2,12 @@ package stores
 
 import (
 	"gopkg.in/mgo.v2"
-	"gopkg.in/mgo.v2/bson"
 )
 
 // MongoCollection is an interface which contains the methods used by the mongo collection
 // for testing purposes
 type MongoCollection interface {
-	FindAll(doc interface{}) error
+	Find(doc interface{}, query interface{}, selector interface{}) error
 	FindOne(id string, doc interface{}) error
 	Insert(doc interface{}) error
 	Remove(id string) error
@@ -27,9 +26,9 @@ func NewMyMongoCollection(c *mgo.Collection) *MyMongoCollection {
 	return &MyMongoCollection{c}
 }
 
-// FindAll returns all documents
-func (c *MyMongoCollection) FindAll(doc interface{}) error {
-	return c.collection.Find(nil).Select(bson.M{"name": 1}).All(doc)
+// Find returns all documents
+func (c *MyMongoCollection) Find(doc interface{}, query interface{}, selector interface{}) error {
+	return c.collection.Find(query).Select(selector).All(doc)
 }
 
 // FindOne returns a single document

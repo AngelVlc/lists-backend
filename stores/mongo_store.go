@@ -31,7 +31,7 @@ func NewMongoStore(mongoSession MongoSession) MongoStore {
 func (s *MongoStore) GetLists() ([]models.GetListsResultDto, error) {
 	r := []models.GetListsResultDto{}
 
-	if err := s.listsCollection().FindAll(&r); err != nil {
+	if err := s.listsCollection().Find(&r, nil, bson.M{"name": 1}); err != nil {
 		return []models.GetListsResultDto{}, &UnexpectedError{
 			Msg:           "Error retrieving from the database",
 			InternalError: err,
