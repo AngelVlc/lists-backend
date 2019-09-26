@@ -28,6 +28,14 @@ type UserDto struct {
 	IsAdmin            bool
 }
 
+// ToUser returns a User from the Dto
+func (dto *UserDto) ToUser() User {
+	return User{
+		UserName: dto.UserName,
+		IsAdmin:  dto.IsAdmin,
+	}
+}
+
 // GetUsersResultDto is the struct used as result for the GetUsers method
 type GetUsersResultDto struct {
 	ID       string `json:"id" bson:"_id"`

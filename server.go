@@ -83,6 +83,8 @@ func newServer(store stores.Store) *server {
 	router := http.NewServeMux()
 	router.Handle("/lists", appHandler(s.listsHandler))
 	router.Handle("/lists/", appHandler(s.listsHandler))
+	router.Handle("/users", appHandler(s.usersHandler))
+	router.Handle("/users/", appHandler(s.usersHandler))
 
 	s.Handler = router
 
@@ -140,6 +142,25 @@ func (s *server) listsHandler(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
+func (s *server) usersHandler(w http.ResponseWriter, r *http.Request) error {
+	switch r.Method {
+	case http.MethodPost:
+		u, err := parseUserBody(r)
+		if err != nil {
+			return err
+		}
+		err = s.store.AddUser(&u)
+		if err != nil {
+			return err
+		}
+		writeOkResponse(w, http.StatusCreated, u)
+	default:
+		writeOkResponse(w, http.StatusMethodNotAllowed, nil)
+	}
+
+	return nil
+}
+
 func getListIDFromURL(u *url.URL) string {
 	var listID string
 
@@ -162,6 +183,22 @@ func parseListBody(r *http.Request) (models.List, error) {
 	}
 
 	l := dto.ToList()
+
+	return l, nil
+}
+
+func parseUserBody(r *http.Request) (models.User, error) {
+	if r.Body == nil {
+		return models.User{}, &NoBodyError{}
+	}
+	decoder := json.NewDecoder(r.Body)
+	var dto models.UserDto
+	err := decoder.Decode(&dto)
+	if err != nil {
+		return models.User{}, &InvalidBodyError{InternalError: err}
+	}
+
+	l := dto.ToUser()
 
 	return l, nil
 }

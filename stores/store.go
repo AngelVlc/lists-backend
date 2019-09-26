@@ -13,6 +13,7 @@ type Store interface {
 	AddList(l *models.List) error
 	RemoveList(string) error
 	UpdateList(string, *models.List) error
+	AddUser(u *models.User) error
 }
 
 // NotFoundError happens when the document does not exist in the store

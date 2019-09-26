@@ -52,6 +52,11 @@ func (m *MockedStore) GetSingleList(id string) (models.List, error) {
 	return args.Get(0).(models.List), args.Error(1)
 }
 
+func (m *MockedStore) AddUser(u *models.User) error {
+	args := m.Called(u)
+	return args.Error(0)
+}
+
 func TestLists(t *testing.T) {
 	testObj := new(MockedStore)
 
@@ -161,7 +166,7 @@ func TestLists(t *testing.T) {
 	t.Run("POST adds a new list and returns it", func(t *testing.T) {
 		listDto := listDtoToCreate()
 
-		data := listFromDto(&listDto)
+		data := listDto.ToList()
 
 		testObj.On("AddList", &data).Return(nil).Once()
 
@@ -195,9 +200,8 @@ func TestLists(t *testing.T) {
 
 	t.Run("POST returns 500 when the insert fails", func(t *testing.T) {
 		listDto := listDtoToCreate()
-		listDto.Name += " with error"
 
-		data := listFromDto(&listDto)
+		data := listDto.ToList()
 
 		testObj.On("AddList", &data).Return(errors.New("wadus")).Once()
 
@@ -316,7 +320,7 @@ func TestLists(t *testing.T) {
 	t.Run("PUT updates a new list and returns it", func(t *testing.T) {
 		listDto := listDtoToUpdate()
 
-		data := listFromDto(&listDto)
+		data := listDto.ToList()
 
 		id := bson.NewObjectId().Hex()
 
@@ -334,6 +338,73 @@ func TestLists(t *testing.T) {
 
 	t.Run("returns 405 when the method is not GET, POST, PUT or DELETE", func(t *testing.T) {
 		request, _ := http.NewRequest(http.MethodPatch, "/lists", nil)
+		response := httptest.NewRecorder()
+
+		server.ServeHTTP(response, request)
+
+		assertResult(t, testObj, response.Result().StatusCode, http.StatusMethodNotAllowed)
+	})
+}
+
+func TestUsers(t *testing.T) {
+	testObj := new(MockedStore)
+
+	server := newServer(testObj)
+
+	t.Run("POST adds a new user and returns it", func(t *testing.T) {
+		userDto := userDtoToCreate()
+
+		data := userDto.ToUser()
+
+		testObj.On("AddUser", &data).Return(nil).Once()
+
+		body, _ := json.Marshal(userDto)
+		request, _ := http.NewRequest(http.MethodPost, "/users", bytes.NewBuffer(body))
+		request.Header.Set("Content-type", "application/json")
+		response := httptest.NewRecorder()
+
+		server.ServeHTTP(response, request)
+
+		assertResult(t, testObj, response.Result().StatusCode, http.StatusCreated)
+	})
+
+	t.Run("POST with invalid body should return 400", func(t *testing.T) {
+		request, _ := http.NewRequest(http.MethodPost, "/users", strings.NewReader("wadus"))
+		response := httptest.NewRecorder()
+
+		server.ServeHTTP(response, request)
+
+		assertResult(t, testObj, response.Result().StatusCode, http.StatusBadRequest)
+	})
+
+	t.Run("POST without body should return 400", func(t *testing.T) {
+		request, _ := http.NewRequest(http.MethodPost, "/users", nil)
+		response := httptest.NewRecorder()
+
+		server.ServeHTTP(response, request)
+
+		assertResult(t, testObj, response.Result().StatusCode, http.StatusBadRequest)
+	})
+
+	t.Run("POST returns 500 when the insert fails", func(t *testing.T) {
+		userDto := userDtoToCreate()
+
+		data := userDto.ToUser()
+
+		testObj.On("AddUser", &data).Return(errors.New("wadus")).Once()
+
+		body, _ := json.Marshal(userDto)
+		request, _ := http.NewRequest(http.MethodPost, "/users", bytes.NewBuffer(body))
+		request.Header.Set("Content-type", "application/json")
+		response := httptest.NewRecorder()
+
+		server.ServeHTTP(response, request)
+
+		assertResult(t, testObj, response.Result().StatusCode, http.StatusInternalServerError)
+	})
+
+	t.Run("returns 405 when the method is not GET, POST, PUT or DELETE", func(t *testing.T) {
+		request, _ := http.NewRequest(http.MethodPatch, "/users", nil)
 		response := httptest.NewRecorder()
 
 		server.ServeHTTP(response, request)
@@ -362,6 +433,15 @@ func listDtoToCreate() models.ListDto {
 	}
 }
 
+func userDtoToCreate() models.UserDto {
+	return models.UserDto{
+		UserName:"newUser1",
+		NewPassword:"password",
+		ConfirmNewPassword:"password",
+		IsAdmin: true,
+	}
+}
+
 func listDtoToUpdate() models.ListDto {
 	return models.ListDto{
 		Name: "updated list",
@@ -371,12 +451,5 @@ func listDtoToUpdate() models.ListDto {
 				Description: "replaced desc",
 			},
 		},
-	}
-}
-
-func listFromDto(listDto *models.ListDto) models.List {
-	return models.List{
-		Name:  listDto.Name,
-		Items: listDto.Items,
 	}
 }
