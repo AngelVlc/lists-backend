@@ -1,11 +1,12 @@
-package controllers
+package testhelper
 
 import (
 	"testing"
 	"github.com/stretchr/testify/assert"
 )
 
-func assertResult(t *testing.T, m *mockedStore, got, want int) {
+// AssertResult is used to assert the result of a test
+func AssertResult(t *testing.T, m *MockedStore, got, want int) {
 	t.Helper()
 
 	assert.Equal(t, want, got, "status are not equal")

@@ -1,15 +1,16 @@
-package controllers
+package lists
 
 import (
 	"net/http"
 	"net/url"
+	"github.com/AngelVlc/lists-backend/controllers"
 	"github.com/AngelVlc/lists-backend/models"
 	"github.com/AngelVlc/lists-backend/stores"
 	"encoding/json"
 )
 
-// ListsHandler is the handler for the lists endpoints
-func ListsHandler(w http.ResponseWriter, r *http.Request, store stores.Store) error {
+// Handler is the handler for the lists endpoints
+func Handler(w http.ResponseWriter, r *http.Request, store stores.Store) error {
 	listID := getListIDFromURL(r.URL)
 
 	switch r.Method {
@@ -19,13 +20,13 @@ func ListsHandler(w http.ResponseWriter, r *http.Request, store stores.Store) er
 			if err != nil {
 				return err
 			}
-			writeOkResponse(w, http.StatusOK, r)
+			controllers.WriteOkResponse(w, http.StatusOK, r)
 		} else {
 			l, err := store.GetSingleList(listID)
 			if err != nil {
 				return err
 			}
-			writeOkResponse(w, http.StatusOK, l)
+			controllers.WriteOkResponse(w, http.StatusOK, l)
 		}
 	case http.MethodPost:
 		l, err := parseListBody(r)
@@ -36,13 +37,13 @@ func ListsHandler(w http.ResponseWriter, r *http.Request, store stores.Store) er
 		if err != nil {
 			return err
 		}
-		writeOkResponse(w, http.StatusCreated, l)
+		controllers.WriteOkResponse(w, http.StatusCreated, l)
 	case http.MethodDelete:
 		err := store.RemoveList(listID)
 		if err != nil {
 			return err
 		}
-		writeOkResponse(w, http.StatusNoContent, nil)
+		controllers.WriteOkResponse(w, http.StatusNoContent, nil)
 	case http.MethodPut:
 		l, err := parseListBody(r)
 		if err != nil {
@@ -52,9 +53,9 @@ func ListsHandler(w http.ResponseWriter, r *http.Request, store stores.Store) er
 		if err != nil {
 			return err
 		}
-		writeOkResponse(w, http.StatusOK, l)
+		controllers.WriteOkResponse(w, http.StatusOK, l)
 	default:
-		writeOkResponse(w, http.StatusMethodNotAllowed, nil)
+		controllers.WriteOkResponse(w, http.StatusMethodNotAllowed, nil)
 	}
 
 	return nil
@@ -72,13 +73,13 @@ func getListIDFromURL(u *url.URL) string {
 
 func parseListBody(r *http.Request) (models.List, error) {
 	if r.Body == nil {
-		return models.List{}, &NoBodyError{}
+		return models.List{}, &controllers.NoBodyError{}
 	}
 	decoder := json.NewDecoder(r.Body)
 	var dto models.ListDto
 	err := decoder.Decode(&dto)
 	if err != nil {
-		return models.List{}, &InvalidBodyError{InternalError: err}
+		return models.List{}, &controllers.InvalidBodyError{InternalError: err}
 	}
 
 	l := dto.ToList()
