@@ -1,4 +1,4 @@
-package users
+package controllers
 
 import (
 	"testing"
@@ -8,17 +8,15 @@ import (
 	"bytes"
 	"strings"
 	"errors"
-	"github.com/AngelVlc/lists-backend/controllers"
-	"github.com/AngelVlc/lists-backend/controllers/testhelper"
 	"github.com/AngelVlc/lists-backend/models"
 )
 
 
 func TestUsers(t *testing.T) {
-	testObj := new(testhelper.MockedStore)
+	testObj := new(mockedStore)
 
-	handler := controllers.Handler {
-		HandlerFunc: Handler,
+	handler := Handler {
+		HandlerFunc: UsersHandler,
 		Store: testObj,
 	}
 
@@ -36,7 +34,7 @@ func TestUsers(t *testing.T) {
 
 		handler.ServeHTTP(response, request)
 
-		testhelper.AssertResult(t, testObj, response.Result().StatusCode, http.StatusCreated)
+		assertResult(t, testObj, response.Result().StatusCode, http.StatusCreated)
 	})
 
 	t.Run("POST with invalid body should return 400", func(t *testing.T) {
@@ -45,7 +43,7 @@ func TestUsers(t *testing.T) {
 
 		handler.ServeHTTP(response, request)
 
-		testhelper.AssertResult(t, testObj, response.Result().StatusCode, http.StatusBadRequest)
+		assertResult(t, testObj, response.Result().StatusCode, http.StatusBadRequest)
 	})
 
 	t.Run("POST without body should return 400", func(t *testing.T) {
@@ -54,7 +52,7 @@ func TestUsers(t *testing.T) {
 
 		handler.ServeHTTP(response, request)
 
-		testhelper.AssertResult(t, testObj, response.Result().StatusCode, http.StatusBadRequest)
+		assertResult(t, testObj, response.Result().StatusCode, http.StatusBadRequest)
 	})
 
 	t.Run("POST returns 500 when the insert fails", func(t *testing.T) {
@@ -71,7 +69,7 @@ func TestUsers(t *testing.T) {
 
 		handler.ServeHTTP(response, request)
 
-		testhelper.AssertResult(t, testObj, response.Result().StatusCode, http.StatusInternalServerError)
+		assertResult(t, testObj, response.Result().StatusCode, http.StatusInternalServerError)
 	})
 
 	t.Run("returns 405 when the method is not GET, POST, PUT or DELETE", func(t *testing.T) {
@@ -80,7 +78,7 @@ func TestUsers(t *testing.T) {
 
 		handler.ServeHTTP(response, request)
 
-		testhelper.AssertResult(t, testObj, response.Result().StatusCode, http.StatusMethodNotAllowed)
+		assertResult(t, testObj, response.Result().StatusCode, http.StatusMethodNotAllowed)
 	})
 }
 

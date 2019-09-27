@@ -1,4 +1,4 @@
-package lists
+package controllers
 
 import (
 	"testing"
@@ -12,16 +12,14 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/AngelVlc/lists-backend/models"
 	"github.com/AngelVlc/lists-backend/stores"
-	"github.com/AngelVlc/lists-backend/controllers"
-	"github.com/AngelVlc/lists-backend/controllers/testhelper"
 	"gopkg.in/mgo.v2/bson"
 )
 
 func TestLists(t *testing.T) {
-	testObj := new(testhelper.MockedStore)
+	testObj := new(mockedStore)
 
-	handler := controllers.Handler {
-		HandlerFunc: Handler,
+	handler := Handler {
+		HandlerFunc: ListsHandler,
 		Store: testObj,
 	}
 
@@ -43,7 +41,7 @@ func TestLists(t *testing.T) {
 
 		assert.Equal(t, want, got, "they should be equal")
 
-		testhelper.AssertResult(t, testObj, response.Result().StatusCode, http.StatusOK)
+		assertResult(t, testObj, response.Result().StatusCode, http.StatusOK)
 	})
 
 	t.Run("GET returns 500 when when an unhandled error occurs", func(t *testing.T) {
@@ -54,7 +52,7 @@ func TestLists(t *testing.T) {
 
 		handler.ServeHTTP(response, request)
 
-		testhelper.AssertResult(t, testObj, response.Result().StatusCode, http.StatusInternalServerError)
+		assertResult(t, testObj, response.Result().StatusCode, http.StatusInternalServerError)
 	})
 
 	t.Run("GET WITH AN ID returns 404 when the id is not valid", func(t *testing.T) {
@@ -66,7 +64,7 @@ func TestLists(t *testing.T) {
 
 		handler.ServeHTTP(response, request)
 
-		testhelper.AssertResult(t, testObj, response.Result().StatusCode, http.StatusBadRequest)
+		assertResult(t, testObj, response.Result().StatusCode, http.StatusBadRequest)
 	})
 
 	t.Run("GET WITH AN ID returns 500 when an unhandled error occurs", func(t *testing.T) {
@@ -78,7 +76,7 @@ func TestLists(t *testing.T) {
 
 		handler.ServeHTTP(response, request)
 
-		testhelper.AssertResult(t, testObj, response.Result().StatusCode, http.StatusInternalServerError)
+		assertResult(t, testObj, response.Result().StatusCode, http.StatusInternalServerError)
 	})
 
 	t.Run("GET WITH AN ID returns 500 when a query error occurs", func(t *testing.T) {
@@ -90,7 +88,7 @@ func TestLists(t *testing.T) {
 
 		handler.ServeHTTP(response, request)
 
-		testhelper.AssertResult(t, testObj, response.Result().StatusCode, http.StatusInternalServerError)
+		assertResult(t, testObj, response.Result().StatusCode, http.StatusInternalServerError)
 	})
 
 	t.Run("GET WITH AN ID returns 400 when the list does not exist", func(t *testing.T) {
@@ -102,7 +100,7 @@ func TestLists(t *testing.T) {
 
 		handler.ServeHTTP(response, request)
 
-		testhelper.AssertResult(t, testObj, response.Result().StatusCode, http.StatusNotFound)
+		assertResult(t, testObj, response.Result().StatusCode, http.StatusNotFound)
 	})
 
 	t.Run("GET WITH AN ID returns a single list", func(t *testing.T) {
@@ -115,7 +113,7 @@ func TestLists(t *testing.T) {
 
 		handler.ServeHTTP(response, request)
 
-		testhelper.AssertResult(t, testObj, response.Result().StatusCode, http.StatusOK)
+		assertResult(t, testObj, response.Result().StatusCode, http.StatusOK)
 
 		bytes, _ := json.Marshal(data)
 
@@ -140,7 +138,7 @@ func TestLists(t *testing.T) {
 
 		handler.ServeHTTP(response, request)
 
-		testhelper.AssertResult(t, testObj, response.Result().StatusCode, http.StatusCreated)
+		assertResult(t, testObj, response.Result().StatusCode, http.StatusCreated)
 	})
 
 	t.Run("POST with invalid body should return 400", func(t *testing.T) {
@@ -149,7 +147,7 @@ func TestLists(t *testing.T) {
 
 		handler.ServeHTTP(response, request)
 
-		testhelper.AssertResult(t, testObj, response.Result().StatusCode, http.StatusBadRequest)
+		assertResult(t, testObj, response.Result().StatusCode, http.StatusBadRequest)
 	})
 
 	t.Run("POST without body should return 400", func(t *testing.T) {
@@ -158,7 +156,7 @@ func TestLists(t *testing.T) {
 
 		handler.ServeHTTP(response, request)
 
-		testhelper.AssertResult(t, testObj, response.Result().StatusCode, http.StatusBadRequest)
+		assertResult(t, testObj, response.Result().StatusCode, http.StatusBadRequest)
 	})
 
 	t.Run("POST returns 500 when the insert fails", func(t *testing.T) {
@@ -175,7 +173,7 @@ func TestLists(t *testing.T) {
 
 		handler.ServeHTTP(response, request)
 
-		testhelper.AssertResult(t, testObj, response.Result().StatusCode, http.StatusInternalServerError)
+		assertResult(t, testObj, response.Result().StatusCode, http.StatusInternalServerError)
 	})
 
 	t.Run("DELETE returns 500 when the remove fails", func(t *testing.T) {
@@ -188,7 +186,7 @@ func TestLists(t *testing.T) {
 
 		handler.ServeHTTP(response, request)
 
-		testhelper.AssertResult(t, testObj, response.Result().StatusCode, http.StatusInternalServerError)
+		assertResult(t, testObj, response.Result().StatusCode, http.StatusInternalServerError)
 	})
 
 	t.Run("DELETE returns 400 when the id is not valid", func(t *testing.T) {
@@ -201,7 +199,7 @@ func TestLists(t *testing.T) {
 
 		handler.ServeHTTP(response, request)
 
-		testhelper.AssertResult(t, testObj, response.Result().StatusCode, http.StatusBadRequest)
+		assertResult(t, testObj, response.Result().StatusCode, http.StatusBadRequest)
 	})
 
 	t.Run("DELETE returns 404 when the list does not exist", func(t *testing.T) {
@@ -214,7 +212,7 @@ func TestLists(t *testing.T) {
 
 		handler.ServeHTTP(response, request)
 
-		testhelper.AssertResult(t, testObj, response.Result().StatusCode, http.StatusNotFound)
+		assertResult(t, testObj, response.Result().StatusCode, http.StatusNotFound)
 	})
 
 	t.Run("DELETE removes a list", func(t *testing.T) {
@@ -227,7 +225,7 @@ func TestLists(t *testing.T) {
 
 		handler.ServeHTTP(response, request)
 
-		testhelper.AssertResult(t, testObj, response.Result().StatusCode, http.StatusNoContent)
+		assertResult(t, testObj, response.Result().StatusCode, http.StatusNoContent)
 	})
 
 	t.Run("PUT with invalid body should return 400", func(t *testing.T) {
@@ -236,7 +234,7 @@ func TestLists(t *testing.T) {
 
 		handler.ServeHTTP(response, request)
 
-		testhelper.AssertResult(t, testObj, response.Result().StatusCode, http.StatusBadRequest)
+		assertResult(t, testObj, response.Result().StatusCode, http.StatusBadRequest)
 	})
 
 	t.Run("PUT without body should return 400", func(t *testing.T) {
@@ -245,7 +243,7 @@ func TestLists(t *testing.T) {
 
 		handler.ServeHTTP(response, request)
 
-		testhelper.AssertResult(t, testObj, response.Result().StatusCode, http.StatusBadRequest)
+		assertResult(t, testObj, response.Result().StatusCode, http.StatusBadRequest)
 	})
 
 	t.Run("PUT returns 500 when the update fails", func(t *testing.T) {
@@ -261,7 +259,7 @@ func TestLists(t *testing.T) {
 
 		handler.ServeHTTP(response, request)
 
-		testhelper.AssertResult(t, testObj, response.Result().StatusCode, http.StatusInternalServerError)
+		assertResult(t, testObj, response.Result().StatusCode, http.StatusInternalServerError)
 	})
 
 	t.Run("PUT returns 404 when the document does not exist", func(t *testing.T) {
@@ -277,7 +275,7 @@ func TestLists(t *testing.T) {
 
 		handler.ServeHTTP(response, request)
 
-		testhelper.AssertResult(t, testObj, response.Result().StatusCode, http.StatusNotFound)
+		assertResult(t, testObj, response.Result().StatusCode, http.StatusNotFound)
 	})
 
 	t.Run("PUT updates a new list and returns it", func(t *testing.T) {
@@ -296,7 +294,7 @@ func TestLists(t *testing.T) {
 
 		handler.ServeHTTP(response, request)
 
-		testhelper.AssertResult(t, testObj, response.Result().StatusCode, http.StatusOK)
+		assertResult(t, testObj, response.Result().StatusCode, http.StatusOK)
 	})
 
 	t.Run("returns 405 when the method is not GET, POST, PUT or DELETE", func(t *testing.T) {
@@ -305,7 +303,7 @@ func TestLists(t *testing.T) {
 
 		handler.ServeHTTP(response, request)
 
-		testhelper.AssertResult(t, testObj, response.Result().StatusCode, http.StatusMethodNotAllowed)
+		assertResult(t, testObj, response.Result().StatusCode, http.StatusMethodNotAllowed)
 	})
 }
 

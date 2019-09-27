@@ -21,23 +21,23 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	if err := h.HandlerFunc(w, r, h.Store); err != nil {
 		if unexErr, ok := err.(*stores.UnexpectedError); ok {
-			WriteErrorResponse(w, http.StatusInternalServerError, unexErr.Error(), unexErr.InternalError)
+			writeErrorResponse(w, http.StatusInternalServerError, unexErr.Error(), unexErr.InternalError)
 		} else if notFoundErr, ok := err.(*stores.NotFoundError); ok {
-			WriteErrorResponse(w, http.StatusNotFound, notFoundErr.Error(), nil)
+			writeErrorResponse(w, http.StatusNotFound, notFoundErr.Error(), nil)
 		} else if badIDErr, ok := err.(*stores.InvalidIDError); ok {
-			WriteErrorResponse(w, http.StatusBadRequest, badIDErr.Error(), nil)
+			writeErrorResponse(w, http.StatusBadRequest, badIDErr.Error(), nil)
 		} else if noBodyErr, ok := err.(*NoBodyError); ok {
-			WriteErrorResponse(w, http.StatusBadRequest, noBodyErr.Error(), nil)
+			writeErrorResponse(w, http.StatusBadRequest, noBodyErr.Error(), nil)
 		} else if badBodyErr, ok := err.(*InvalidBodyError); ok {
-			WriteErrorResponse(w, http.StatusBadRequest, badBodyErr.Error(), badBodyErr.InternalError)
+			writeErrorResponse(w, http.StatusBadRequest, badBodyErr.Error(), badBodyErr.InternalError)
 		} else {
-			WriteErrorResponse(w, http.StatusInternalServerError, "Internal error", err)
+			writeErrorResponse(w, http.StatusInternalServerError, "Internal error", err)
 		}
 	}
 }
 
-// WriteErrorResponse is used when and endpoind responds with an error
-func WriteErrorResponse(w http.ResponseWriter, statusCode int, msg string, internalError error) {
+// writeErrorResponse is used when and endpoind responds with an error
+func writeErrorResponse(w http.ResponseWriter, statusCode int, msg string, internalError error) {
 	if internalError != nil {
 		log.Printf("%v %v", statusCode, internalError)
 		} else {
@@ -46,8 +46,8 @@ func WriteErrorResponse(w http.ResponseWriter, statusCode int, msg string, inter
 		http.Error(w, msg, statusCode)
 	}
 	
-// WriteOkResponse is used when and endpoind does not respond with an error
-func WriteOkResponse(w http.ResponseWriter, statusCode int, content interface{}) {
+// writeOkResponse is used when and endpoind does not respond with an error
+func writeOkResponse(w http.ResponseWriter, statusCode int, content interface{}) {
 	log.Println(statusCode)
 
 	const jsonContentType = "application/json"

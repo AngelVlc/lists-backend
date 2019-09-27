@@ -2,8 +2,6 @@ package main
 
 import (
 	"github.com/AngelVlc/lists-backend/controllers"
-	"github.com/AngelVlc/lists-backend/controllers/lists"
-	"github.com/AngelVlc/lists-backend/controllers/users"
 	"github.com/AngelVlc/lists-backend/stores"
 	"net/http"
 )
@@ -18,10 +16,10 @@ func newServer(store stores.Store) *server {
 	s.store = store
 
 	router := http.NewServeMux()
-	router.Handle("/lists", s.getHandler(lists.Handler))
-	router.Handle("/lists/", s.getHandler(lists.Handler))
-	router.Handle("/users", s.getHandler(users.Handler))
-	router.Handle("/users/", s.getHandler(users.Handler))
+	router.Handle("/lists", s.getHandler(controllers.ListsHandler))
+	router.Handle("/lists/", s.getHandler(controllers.ListsHandler))
+	router.Handle("/users", s.getHandler(controllers.UsersHandler))
+	router.Handle("/users/", s.getHandler(controllers.UsersHandler))
 
 	s.Handler = router
 
