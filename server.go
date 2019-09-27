@@ -30,7 +30,7 @@ func newServer(store stores.Store) *server {
 
 func (s *server) getHandler(handlerFunc controllers.HandlerFunc) controllers.Handler {
 	return controllers.Handler{
-		HandlerFunc: lists.Handler,
+		HandlerFunc: handlerFunc,
 		Store:       s.store,
 	}
 }
