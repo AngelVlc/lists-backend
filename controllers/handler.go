@@ -10,16 +10,16 @@ import (
 // Handler is the type used to handle the endpoints
 type Handler struct {
 	HandlerFunc
-	Store stores.Store
+	Repository stores.Repository
 }
 
 // HandlerFunc is the type for the handler functions
-type HandlerFunc func(http.ResponseWriter, *http.Request, stores.Store) error
+type HandlerFunc func(http.ResponseWriter, *http.Request, stores.Repository) error
 
 func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	log.Printf("%v %q", r.Method, r.URL)
 
-	if err := h.HandlerFunc(w, r, h.Store); err != nil {
+	if err := h.HandlerFunc(w, r, h.Repository); err != nil {
 		if unexErr, ok := err.(*stores.UnexpectedError); ok {
 			writeErrorResponse(w, http.StatusInternalServerError, unexErr.Error(), unexErr.InternalError)
 		} else if notFoundErr, ok := err.(*stores.NotFoundError); ok {

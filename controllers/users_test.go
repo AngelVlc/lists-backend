@@ -17,7 +17,7 @@ func TestUsers(t *testing.T) {
 
 	handler := Handler {
 		HandlerFunc: UsersHandler,
-		Store: testObj,
+		Repository: testObj,
 	}
 
 	t.Run("POST adds a new user and returns it", func(t *testing.T) {

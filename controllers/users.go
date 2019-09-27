@@ -8,14 +8,14 @@ import (
 )
 
 // UsersHandler is the handler for the users endpoints
-func UsersHandler(w http.ResponseWriter, r *http.Request, store stores.Store) error {
+func UsersHandler(w http.ResponseWriter, r *http.Request, repository stores.Repository) error {
 	switch r.Method {
 	case http.MethodPost:
 		u, err := parseUserBody(r)
 		if err != nil {
 			return err
 		}
-		err = store.AddUser(&u)
+		err = repository.AddUser(&u)
 		if err != nil {
 			return err
 		}

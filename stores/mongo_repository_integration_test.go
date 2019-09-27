@@ -9,7 +9,7 @@ import (
 func TestMongoStore(t *testing.T) {
 	session := NewMyMongoSession(true)
 
-	store := NewMongoStore(session)
+	store := NewMongoRepository(session)
 
 	gotLists, err := store.GetLists()
 	assert.Equal(t, 0, len(gotLists), "new collection should have zero lists")

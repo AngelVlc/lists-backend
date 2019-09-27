@@ -5,8 +5,8 @@ import (
 	"github.com/AngelVlc/lists-backend/models"
 )
 
-// Store is the interface which a store must implement
-type Store interface {
+// Repository is the interface which a store must implement
+type Repository interface {
 	GetLists() ([]models.GetListsResultDto, error)
 	GetSingleList(string) (models.List, error)
 	AddList(l *models.List) error

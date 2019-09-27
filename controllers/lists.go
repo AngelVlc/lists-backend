@@ -9,19 +9,19 @@ import (
 )
 
 // ListsHandler is the handler for the lists endpoints
-func ListsHandler(w http.ResponseWriter, r *http.Request, store stores.Store) error {
+func ListsHandler(w http.ResponseWriter, r *http.Request, repository stores.Repository) error {
 	listID := getListIDFromURL(r.URL)
 
 	switch r.Method {
 	case http.MethodGet:
 		if listID == "" {
-			r, err := store.GetLists()
+			r, err := repository.GetLists()
 			if err != nil {
 				return err
 			}
 			writeOkResponse(w, http.StatusOK, r)
 		} else {
-			l, err := store.GetSingleList(listID)
+			l, err := repository.GetSingleList(listID)
 			if err != nil {
 				return err
 			}
@@ -32,13 +32,13 @@ func ListsHandler(w http.ResponseWriter, r *http.Request, store stores.Store) er
 		if err != nil {
 			return err
 		}
-		err = store.AddList(&l)
+		err = repository.AddList(&l)
 		if err != nil {
 			return err
 		}
 		writeOkResponse(w, http.StatusCreated, l)
 	case http.MethodDelete:
-		err := store.RemoveList(listID)
+		err := repository.RemoveList(listID)
 		if err != nil {
 			return err
 		}
@@ -48,7 +48,7 @@ func ListsHandler(w http.ResponseWriter, r *http.Request, store stores.Store) er
 		if err != nil {
 			return err
 		}
-		err = store.UpdateList(listID, &l)
+		err = repository.UpdateList(listID, &l)
 		if err != nil {
 			return err
 		}

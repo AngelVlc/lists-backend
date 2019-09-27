@@ -13,8 +13,8 @@ type MongoSession interface {
 
 // MyMongoSession is the object used to access the mongo collection
 type MyMongoSession struct {
-	session        *mgo.Session
-	databaseName   string
+	session      *mgo.Session
+	databaseName string
 }
 
 // NewMyMongoSession returns a new MyMongoSession

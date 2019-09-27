@@ -7,28 +7,28 @@ import (
 
 var listsCollectionName = "lists"
 
-func (s *MongoStore) listsCollection() MongoCollection {
+func (s *MongoRepository) listsCollection() MongoCollection {
 	return s.mongoSession.Collection(listsCollectionName)
 }
 
 var usersCollectionName = "users"
 
-func (s *MongoStore) usersCollection() MongoCollection {
+func (s *MongoRepository) usersCollection() MongoCollection {
 	return s.mongoSession.Collection(usersCollectionName)
 }
 
-// MongoStore is the store which uses mongo db
-type MongoStore struct {
+// MongoRepository is the store which uses mongo db
+type MongoRepository struct {
 	mongoSession MongoSession
 }
 
-// NewMongoStore returns a new MongoStore
-func NewMongoStore(mongoSession MongoSession) MongoStore {
-	return MongoStore{mongoSession}
+// NewMongoRepository returns a new MongoRepository
+func NewMongoRepository(mongoSession MongoSession) MongoRepository {
+	return MongoRepository{mongoSession}
 }
 
 // GetLists returns the lists collection
-func (s *MongoStore) GetLists() ([]models.GetListsResultDto, error) {
+func (s *MongoRepository) GetLists() ([]models.GetListsResultDto, error) {
 	r := []models.GetListsResultDto{}
 
 	if err := s.listsCollection().Find(&r, nil, bson.M{"name": 1}); err != nil {
@@ -42,7 +42,7 @@ func (s *MongoStore) GetLists() ([]models.GetListsResultDto, error) {
 }
 
 // GetSingleList returns one list
-func (s *MongoStore) GetSingleList(id string) (models.List, error) {
+func (s *MongoRepository) GetSingleList(id string) (models.List, error) {
 	r := models.List{}
 
 	if err := s.getSingle(s.listsCollection(), id, &r); err != nil {
@@ -53,32 +53,32 @@ func (s *MongoStore) GetSingleList(id string) (models.List, error) {
 }
 
 // AddList adds a new list to the collection
-func (s *MongoStore) AddList(l *models.List) error {
+func (s *MongoRepository) AddList(l *models.List) error {
 	l.ID = bson.NewObjectId().Hex()
 
 	return s.add(s.listsCollection(), l)
 }
 
 // RemoveList removes a list from the collection
-func (s *MongoStore) RemoveList(id string) error {
+func (s *MongoRepository) RemoveList(id string) error {
 	return s.remove(s.listsCollection(), id)
 }
 
 // UpdateList updates a list
-func (s *MongoStore) UpdateList(id string, l *models.List) error {
+func (s *MongoRepository) UpdateList(id string, l *models.List) error {
 	l.ID = id
 
 	return s.update(s.listsCollection(), id, l)
 }
 
 // AddUser adds a new user
-func (s *MongoStore) AddUser(u *models.User) error {
+func (s *MongoRepository) AddUser(u *models.User) error {
 	u.ID = bson.NewObjectId().Hex()
 
 	return s.add(s.usersCollection(), u)
 }
 
-func (s *MongoStore) add(c MongoCollection, doc interface{}) error {
+func (s *MongoRepository) add(c MongoCollection, doc interface{}) error {
 	if err := c.Insert(doc); err != nil {
 		return &UnexpectedError{
 			Msg:           "Error inserting in the database",
@@ -89,7 +89,7 @@ func (s *MongoStore) add(c MongoCollection, doc interface{}) error {
 	return nil
 }
 
-func (s *MongoStore) update(c MongoCollection, id string, doc interface{}) error {
+func (s *MongoRepository) update(c MongoCollection, id string, doc interface{}) error {
 	if err := s.isValidID(id); err != nil {
 		return err
 	}
@@ -110,7 +110,7 @@ func (s *MongoStore) update(c MongoCollection, id string, doc interface{}) error
 	return nil
 }
 
-func (s *MongoStore) remove(c MongoCollection, id string) error {
+func (s *MongoRepository) remove(c MongoCollection, id string) error {
 	if err := s.isValidID(id); err != nil {
 		return err
 	}
@@ -131,7 +131,7 @@ func (s *MongoStore) remove(c MongoCollection, id string) error {
 	return nil
 }
 
-func (s *MongoStore) getSingle(c MongoCollection, id string, doc interface{}) error {
+func (s *MongoRepository) getSingle(c MongoCollection, id string, doc interface{}) error {
 	if err := s.isValidID(id); err != nil {
 		return err
 	}
@@ -152,7 +152,7 @@ func (s *MongoStore) getSingle(c MongoCollection, id string, doc interface{}) er
 	return nil
 }
 
-func (s *MongoStore) isValidID(id string) error {
+func (s *MongoRepository) isValidID(id string) error {
 	if !bson.IsObjectIdHex(id) {
 		return &InvalidIDError{id}
 	}

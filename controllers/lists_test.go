@@ -20,7 +20,7 @@ func TestLists(t *testing.T) {
 
 	handler := Handler {
 		HandlerFunc: ListsHandler,
-		Store: testObj,
+		Repository: testObj,
 	}
 
 	t.Run("GET returns list items", func(t *testing.T) {

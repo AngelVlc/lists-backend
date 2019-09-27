@@ -63,7 +63,7 @@ func TestUpdate(t *testing.T) {
 
 	testMongoSession := new(MockedMongoSession)
 
-	store := NewMongoStore(testMongoSession)
+	store := NewMongoRepository(testMongoSession)
 
 	t.Run("update() returns an unexpected error when the update fails", func(t *testing.T) {
 		id := bson.NewObjectId().Hex()
@@ -107,7 +107,7 @@ func TestRemove(t *testing.T) {
 
 	testMongoSession := new(MockedMongoSession)
 
-	store := NewMongoStore(testMongoSession)
+	store := NewMongoRepository(testMongoSession)
 
 	t.Run("remove() returns an unexpected error when the remove fails", func(t *testing.T) {
 		id := bson.NewObjectId().Hex()
@@ -151,7 +151,7 @@ func TestGetSingle(t *testing.T) {
 
 	testMongoSession := new(MockedMongoSession)
 
-	store := NewMongoStore(testMongoSession)
+	store := NewMongoRepository(testMongoSession)
 
 	t.Run("getSingle() returns an unexpected error when the remove fails", func(t *testing.T) {
 		data := sampleList()
@@ -194,7 +194,7 @@ func TestAdd(t *testing.T) {
 
 	testMongoSession := new(MockedMongoSession)
 
-	store := NewMongoStore(testMongoSession)
+	store := NewMongoRepository(testMongoSession)
 
 	t.Run("add() returns an unexpected error when the insert fails", func(t *testing.T) {
 		l := models.SampleList()
@@ -214,7 +214,7 @@ func TestStoreForLists(t *testing.T) {
 	testMongoSession := new(MockedMongoSession)
 	testMongoSession.On("Collection", listsCollectionName).Return(testMongoCollection)
 
-	store := NewMongoStore(testMongoSession)
+	store := NewMongoRepository(testMongoSession)
 
 	t.Run("GetLists() returns all the list items", func(t *testing.T) {
 		data := models.SampleGetListsResultDto()
@@ -329,7 +329,7 @@ func TestStoreForUsers(t *testing.T) {
 	testMongoSession := new(MockedMongoSession)
 	testMongoSession.On("Collection", usersCollectionName).Return(testMongoCollection)
 
-	store := NewMongoStore(testMongoSession)
+	store := NewMongoRepository(testMongoSession)
 
 	t.Run("AddUser() adds a new list", func(t *testing.T) {
 		u := models.SampleUser()

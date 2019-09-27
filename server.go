@@ -7,11 +7,11 @@ import (
 )
 
 type server struct {
-	store stores.Store
+	store stores.Repository
 	http.Handler
 }
 
-func newServer(store stores.Store) *server {
+func newServer(store stores.Repository) *server {
 	s := new(server)
 	s.store = store
 
@@ -29,6 +29,6 @@ func newServer(store stores.Store) *server {
 func (s *server) getHandler(handlerFunc controllers.HandlerFunc) controllers.Handler {
 	return controllers.Handler{
 		HandlerFunc: handlerFunc,
-		Store:       s.store,
+		Repository:  s.store,
 	}
 }
