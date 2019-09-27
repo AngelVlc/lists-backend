@@ -154,7 +154,7 @@ func TestGetSingle(t *testing.T) {
 	store := NewMongoStore(testMongoSession)
 
 	t.Run("getSingle() returns an unexpected error when the remove fails", func(t *testing.T) {
-		data := models.SampleListSlice()[0]
+		data := sampleList()
 		testMongoCollection.On("FindOne", data.ID, &models.List{}).Return(errors.New("wadus")).Once()
 
 		err := store.getSingle(testMongoCollection, data.ID, &models.List{})
@@ -165,7 +165,7 @@ func TestGetSingle(t *testing.T) {
 	})
 
 	t.Run("getSingle() returns a not found error when document does not exits", func(t *testing.T) {
-		data := models.SampleListSlice()[0]
+		data := sampleList()
 		testMongoCollection.On("FindOne", data.ID, &models.List{}).Return(errors.New("not found")).Once()
 		testMongoCollection.On("Name").Return("document").Once()
 
@@ -240,7 +240,7 @@ func TestStoreForLists(t *testing.T) {
 	})
 
 	t.Run("GetSingleList() returns a single list", func(t *testing.T) {
-		data := models.SampleListSlice()[0]
+		data := sampleList()
 		testMongoCollection.On("FindOne", data.ID, &models.List{}).Return(nil).Once().Run(func(args mock.Arguments) {
 			arg := args.Get(1).(*models.List)
 			*arg = data
@@ -255,7 +255,7 @@ func TestStoreForLists(t *testing.T) {
 	})
 
 	t.Run("GetSingleList() returns an error when the query fails", func(t *testing.T) {
-		data := models.SampleListSlice()[0]
+		data := sampleList()
 		testMongoCollection.On("FindOne", data.ID, &models.List{}).Return(errors.New("wadus")).Once()
 
 		_, err := store.GetSingleList(data.ID)
@@ -367,4 +367,10 @@ func assertFailedOperation(t *testing.T, s *MockedMongoSession, c *MockedMongoCo
 	assert.NotNil(t, err)
 
 	assert.Equal(t, errorMsg, err.Error())
+}
+
+func sampleList() models.List {
+	l := models.SampleListSlice()[0]
+	l.ID = bson.NewObjectId().Hex()
+	return l
 }

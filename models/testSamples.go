@@ -1,7 +1,5 @@
 package models
 
-import "gopkg.in/mgo.v2/bson"
-
 func SampleList() List {
 	l := List{
 		Name: "added",
@@ -17,7 +15,7 @@ func SampleList() List {
 
 func SampleListSlice() []List {
 	list1 := List{
-		ID:   bson.NewObjectId().Hex(),
+		ID:   "1",
 		Name: "list1",
 		Items: []Item{
 			Item{
@@ -32,7 +30,7 @@ func SampleListSlice() []List {
 	}
 
 	list2 := List{
-		ID:   bson.NewObjectId().Hex(),
+		ID:   "2",
 		Name: "list2",
 		Items: []Item{
 			Item{
