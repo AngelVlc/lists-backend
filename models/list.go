@@ -1,4 +1,3 @@
-// Package models contains the models for the api
 package models
 
 // List is the model for the list
