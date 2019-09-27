@@ -18,12 +18,19 @@ func newServer(store stores.Store) *server {
 	s.store = store
 
 	router := http.NewServeMux()
-	router.Handle("/lists", controllers.Handler{lists.Handler, s.store})
-	router.Handle("/lists/", controllers.Handler{lists.Handler, s.store})
-	router.Handle("/users", controllers.Handler{users.Handler, s.store})
-	router.Handle("/users/", controllers.Handler{users.Handler, s.store})
+	router.Handle("/lists", s.getHandler(lists.Handler))
+	router.Handle("/lists/", s.getHandler(lists.Handler))
+	router.Handle("/users", s.getHandler(users.Handler))
+	router.Handle("/users/", s.getHandler(users.Handler))
 
 	s.Handler = router
 
 	return s
+}
+
+func (s *server) getHandler(handlerFunc controllers.HandlerFunc) controllers.Handler {
+	return controllers.Handler{
+		HandlerFunc: lists.Handler,
+		Store:       s.store,
+	}
 }
