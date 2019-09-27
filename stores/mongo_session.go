@@ -15,7 +15,6 @@ type MongoSession interface {
 type MyMongoSession struct {
 	session        *mgo.Session
 	databaseName   string
-	collectionName string
 }
 
 // NewMyMongoSession returns a new MyMongoSession
