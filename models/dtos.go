@@ -14,7 +14,7 @@ func (dto *ListDto) ToList() List {
 	}
 }
 
-// GetListsResultDto is the struct used as result for the GetLists method
+// GetListsResultDto is the struct used as result for the Get method
 type GetListsResultDto struct {
 	ID   string `json:"id" bson:"_id"`
 	Name string `json:"name" bson:"name"`

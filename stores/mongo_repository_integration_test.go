@@ -9,39 +9,44 @@ import (
 func TestMongoStore(t *testing.T) {
 	session := NewMyMongoSession(true)
 
-	store := NewMongoRepository(session)
+	store := NewMongoRepository(session, session.Collection("lists"))
 
-	gotLists, err := store.GetLists()
+	gotLists := []models.GetListsResultDto{}
+	err := store.Get(&gotLists)
 	assert.Equal(t, 0, len(gotLists), "new collection should have zero lists")
 	assert.Nil(t, err)
 
 	data := models.SampleList()
-	err = store.AddList(&data)
+	err = store.Add(&data)
 	assert.Nil(t, err)
 
-	gotLists, err = store.GetLists()
+	gotLists = []models.GetListsResultDto{}
+	err = store.Get(&gotLists)
 	assert.Equal(t, 1, len(gotLists), "after adding a list the new collection should have one list")
 	assert.Nil(t, err)
 
-	gotList, err := store.GetSingleList(gotLists[0].ID)
+	foundList := models.List{}
+	err = store.GetSingle(gotLists[0].ID, &foundList)
 	assert.Nil(t, err)
-	assert.Equal(t, data.Name, gotList.Name)
+	assert.Equal(t, data.Name, foundList.Name)
 
 	dataToReplace := models.SampleList()
 	dataToReplace.Name = "REPLACED"
-	err = store.UpdateList(gotList.ID, &dataToReplace)
+	err = store.Update(foundList.ID, &dataToReplace)
 	assert.Nil(t, err)
 
-	gotList, err = store.GetSingleList(gotLists[0].ID)
+	foundList = models.List{}
+	err = store.GetSingle(gotLists[0].ID, &foundList)
 	assert.Nil(t, err)
-	assert.Equal(t, dataToReplace.Name, gotList.Name)
+	assert.Equal(t, dataToReplace.Name, foundList.Name)
 
-	err = store.RemoveList(data.ID)
+	err = store.Remove(data.ID)
 	assert.Nil(t, err)
 
-	_, err = store.GetSingleList(gotLists[0].ID)
+	foundList = models.List{}
+	err = store.GetSingle(gotLists[0].ID, &foundList)
 	assert.NotNil(t, err)
 
-	err = store.mongoSession.Collection(listsCollectionName).DropCollection()
+	err = store.mongoCollection.DropCollection()
 	assert.Nil(t, err)
 }

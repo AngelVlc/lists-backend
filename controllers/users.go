@@ -15,7 +15,7 @@ func UsersHandler(w http.ResponseWriter, r *http.Request, repository stores.Repo
 		if err != nil {
 			return err
 		}
-		err = repository.AddUser(&u)
+		err = repository.Add(&u)
 		if err != nil {
 			return err
 		}

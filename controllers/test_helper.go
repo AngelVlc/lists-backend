@@ -4,40 +4,34 @@ import (
 	"testing"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"github.com/AngelVlc/lists-backend/models"
 )
 
 type mockedStore struct {
 	mock.Mock
 }
 
-func (m *mockedStore) GetLists() ([]models.GetListsResultDto, error) {
-	args := m.Called()
-	return args.Get(0).([]models.GetListsResultDto), args.Error(1)
-}
-
-func (m *mockedStore) AddList(l *models.List) error {
-	args := m.Called(l)
+func (m *mockedStore) Get(doc interface{}) error {
+	args := m.Called(doc)
 	return args.Error(0)
 }
 
-func (m *mockedStore) RemoveList(id string) error {
+func (m *mockedStore) Remove(id string) error {
 	args := m.Called(id)
 	return args.Error(0)
 }
 
-func (m *mockedStore) UpdateList(id string, l *models.List) error {
-	args := m.Called(id, l)
+func (m *mockedStore) Update(id string, doc interface{}) error {
+	args := m.Called(id, doc)
 	return args.Error(0)
 }
 
-func (m *mockedStore) GetSingleList(id string) (models.List, error) {
-	args := m.Called(id)
-	return args.Get(0).(models.List), args.Error(1)
+func (m *mockedStore) GetSingle(id string, item interface{}) error {
+	args := m.Called(id, item)
+	return args.Error(0)
 }
 
-func (m *mockedStore) AddUser(u *models.User) error {
-	args := m.Called(u)
+func (m *mockedStore) Add(doc interface{}) error {
+	args := m.Called(doc)
 	return args.Error(0)
 }
 

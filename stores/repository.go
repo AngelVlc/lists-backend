@@ -2,17 +2,15 @@ package stores
 
 import (
 	"fmt"
-	"github.com/AngelVlc/lists-backend/models"
 )
 
 // Repository is the interface which a store must implement
 type Repository interface {
-	GetLists() ([]models.GetListsResultDto, error)
-	GetSingleList(string) (models.List, error)
-	AddList(l *models.List) error
-	RemoveList(string) error
-	UpdateList(string, *models.List) error
-	AddUser(u *models.User) error
+	Get(item interface{}) error
+	GetSingle(id string, item interface{}) error
+	Add(item interface{}) error
+	Remove(id string) error
+	Update(id string, item interface{}) error
 }
 
 // NotFoundError happens when the document does not exist in the store

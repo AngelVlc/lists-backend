@@ -25,7 +25,7 @@ func TestUsers(t *testing.T) {
 
 		data := userDto.ToUser()
 
-		testObj.On("AddUser", &data).Return(nil).Once()
+		testObj.On("Add", &data).Return(nil).Once()
 
 		body, _ := json.Marshal(userDto)
 		request, _ := http.NewRequest(http.MethodPost, "/users", bytes.NewBuffer(body))
@@ -60,7 +60,7 @@ func TestUsers(t *testing.T) {
 
 		data := userDto.ToUser()
 
-		testObj.On("AddUser", &data).Return(errors.New("wadus")).Once()
+		testObj.On("Add", &data).Return(errors.New("wadus")).Once()
 
 		body, _ := json.Marshal(userDto)
 		request, _ := http.NewRequest(http.MethodPost, "/users", bytes.NewBuffer(body))

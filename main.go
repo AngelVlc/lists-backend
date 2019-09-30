@@ -13,8 +13,7 @@ func main() {
 	addr := fmt.Sprintf(":%v", port)
 
 	session := stores.NewMyMongoSession(false)
-	store := stores.NewMongoRepository(session)
-	server := newServer(&store)
+	server := newServer(session)
 
 	log.Printf("Listening on port %v ...\n", port)
 

@@ -1,85 +1,39 @@
 package stores
 
 import (
-	"github.com/AngelVlc/lists-backend/models"
 	"gopkg.in/mgo.v2/bson"
+	"reflect"
 )
-
-var listsCollectionName = "lists"
-
-func (s *MongoRepository) listsCollection() MongoCollection {
-	return s.mongoSession.Collection(listsCollectionName)
-}
-
-var usersCollectionName = "users"
-
-func (s *MongoRepository) usersCollection() MongoCollection {
-	return s.mongoSession.Collection(usersCollectionName)
-}
 
 // MongoRepository is the store which uses mongo db
 type MongoRepository struct {
-	mongoSession MongoSession
+	mongoSession    MongoSession
+	mongoCollection MongoCollection
 }
 
 // NewMongoRepository returns a new MongoRepository
-func NewMongoRepository(mongoSession MongoSession) MongoRepository {
-	return MongoRepository{mongoSession}
+func NewMongoRepository(mongoSession MongoSession, mongoCollection MongoCollection) *MongoRepository {
+	return &MongoRepository{mongoSession, mongoCollection}
 }
 
-// GetLists returns the lists collection
-func (s *MongoRepository) GetLists() ([]models.GetListsResultDto, error) {
-	r := []models.GetListsResultDto{}
-
-	if err := s.listsCollection().Find(&r, nil, bson.M{"name": 1}); err != nil {
-		return []models.GetListsResultDto{}, &UnexpectedError{
+// Get returns the lists collection
+func (s *MongoRepository) Get(doc interface{}) error {
+	if err := s.mongoCollection.Find(doc, nil, bson.M{"name": 1}); err != nil {
+		return &UnexpectedError{
 			Msg:           "Error retrieving from the database",
 			InternalError: err,
 		}
 	}
 
-	return r, nil
+	return nil
 }
 
-// GetSingleList returns one list
-func (s *MongoRepository) GetSingleList(id string) (models.List, error) {
-	r := models.List{}
+// Add adds a new list to the collection
+func (s *MongoRepository) Add(doc interface{}) error {
+	id := bson.NewObjectId().Hex()
+	reflect.ValueOf(doc).Elem().FieldByName("ID").SetString(id)
 
-	if err := s.getSingle(s.listsCollection(), id, &r); err != nil {
-		return models.List{}, err
-	}
-
-	return r, nil
-}
-
-// AddList adds a new list to the collection
-func (s *MongoRepository) AddList(l *models.List) error {
-	l.ID = bson.NewObjectId().Hex()
-
-	return s.add(s.listsCollection(), l)
-}
-
-// RemoveList removes a list from the collection
-func (s *MongoRepository) RemoveList(id string) error {
-	return s.remove(s.listsCollection(), id)
-}
-
-// UpdateList updates a list
-func (s *MongoRepository) UpdateList(id string, l *models.List) error {
-	l.ID = id
-
-	return s.update(s.listsCollection(), id, l)
-}
-
-// AddUser adds a new user
-func (s *MongoRepository) AddUser(u *models.User) error {
-	u.ID = bson.NewObjectId().Hex()
-
-	return s.add(s.usersCollection(), u)
-}
-
-func (s *MongoRepository) add(c MongoCollection, doc interface{}) error {
-	if err := c.Insert(doc); err != nil {
+	if err := s.mongoCollection.Insert(doc); err != nil {
 		return &UnexpectedError{
 			Msg:           "Error inserting in the database",
 			InternalError: err,
@@ -89,16 +43,19 @@ func (s *MongoRepository) add(c MongoCollection, doc interface{}) error {
 	return nil
 }
 
-func (s *MongoRepository) update(c MongoCollection, id string, doc interface{}) error {
+// Update updates a list
+func (s *MongoRepository) Update(id string, doc interface{}) error {
 	if err := s.isValidID(id); err != nil {
 		return err
 	}
 
-	if err := c.Update(id, doc); err != nil {
+	reflect.ValueOf(doc).Elem().FieldByName("ID").SetString(id)
+
+	if err := s.mongoCollection.Update(id, doc); err != nil {
 		if err.Error() == "not found" {
 			return &NotFoundError{
 				ID:    id,
-				Model: c.Name(),
+				Model: s.mongoCollection.Name(),
 			}
 		}
 		return &UnexpectedError{
@@ -110,16 +67,17 @@ func (s *MongoRepository) update(c MongoCollection, id string, doc interface{}) 
 	return nil
 }
 
-func (s *MongoRepository) remove(c MongoCollection, id string) error {
+// Remove removes a list from the collection
+func (s *MongoRepository) Remove(id string) error {
 	if err := s.isValidID(id); err != nil {
 		return err
 	}
 
-	if err := c.Remove(id); err != nil {
+	if err := s.mongoCollection.Remove(id); err != nil {
 		if err.Error() == "not found" {
 			return &NotFoundError{
 				ID:    id,
-				Model: c.Name(),
+				Model: s.mongoCollection.Name(),
 			}
 		}
 		return &UnexpectedError{
@@ -131,16 +89,16 @@ func (s *MongoRepository) remove(c MongoCollection, id string) error {
 	return nil
 }
 
-func (s *MongoRepository) getSingle(c MongoCollection, id string, doc interface{}) error {
+func (s *MongoRepository) GetSingle(id string, doc interface{}) error {
 	if err := s.isValidID(id); err != nil {
 		return err
 	}
 
-	if err := c.FindOne(id, doc); err != nil {
+	if err := s.mongoCollection.FindOne(id, doc); err != nil {
 		if err.Error() == "not found" {
 			return &NotFoundError{
 				ID:    id,
-				Model: c.Name(),
+				Model: s.mongoCollection.Name(),
 			}
 		}
 		return &UnexpectedError{

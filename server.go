@@ -7,28 +7,31 @@ import (
 )
 
 type server struct {
-	store stores.Repository
+	session stores.MongoSession
 	http.Handler
 }
 
-func newServer(store stores.Repository) *server {
+func newServer(session stores.MongoSession) *server {
 	s := new(server)
-	s.store = store
 
 	router := http.NewServeMux()
-	router.Handle("/lists", s.getHandler(controllers.ListsHandler))
-	router.Handle("/lists/", s.getHandler(controllers.ListsHandler))
-	router.Handle("/users", s.getHandler(controllers.UsersHandler))
-	router.Handle("/users/", s.getHandler(controllers.UsersHandler))
+
+	listsRepo := stores.NewMongoRepository(session, session.Collection("lists"))
+	usersRepo := stores.NewMongoRepository(session, session.Collection("users"))
+
+	router.Handle("/lists", s.getHandler(controllers.ListsHandler, listsRepo))
+	router.Handle("/lists/", s.getHandler(controllers.ListsHandler, listsRepo))
+	router.Handle("/users", s.getHandler(controllers.UsersHandler, usersRepo))
+	router.Handle("/users/", s.getHandler(controllers.UsersHandler, usersRepo))
 
 	s.Handler = router
 
 	return s
 }
 
-func (s *server) getHandler(handlerFunc controllers.HandlerFunc) controllers.Handler {
+func (s *server) getHandler(handlerFunc controllers.HandlerFunc, store stores.Repository) controllers.Handler {
 	return controllers.Handler{
 		HandlerFunc: handlerFunc,
-		Repository:  s.store,
+		Repository:  store,
 	}
 }

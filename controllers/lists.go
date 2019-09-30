@@ -15,13 +15,15 @@ func ListsHandler(w http.ResponseWriter, r *http.Request, repository stores.Repo
 	switch r.Method {
 	case http.MethodGet:
 		if listID == "" {
-			r, err := repository.GetLists()
+			r := []models.GetListsResultDto{}
+			err := repository.Get(&r)
 			if err != nil {
 				return err
 			}
 			writeOkResponse(w, http.StatusOK, r)
 		} else {
-			l, err := repository.GetSingleList(listID)
+			l := models.List{}
+			err := repository.GetSingle(listID, &l)
 			if err != nil {
 				return err
 			}
@@ -32,13 +34,13 @@ func ListsHandler(w http.ResponseWriter, r *http.Request, repository stores.Repo
 		if err != nil {
 			return err
 		}
-		err = repository.AddList(&l)
+		err = repository.Add(&l)
 		if err != nil {
 			return err
 		}
 		writeOkResponse(w, http.StatusCreated, l)
 	case http.MethodDelete:
-		err := repository.RemoveList(listID)
+		err := repository.Remove(listID)
 		if err != nil {
 			return err
 		}
@@ -48,7 +50,7 @@ func ListsHandler(w http.ResponseWriter, r *http.Request, repository stores.Repo
 		if err != nil {
 			return err
 		}
-		err = repository.UpdateList(listID, &l)
+		err = repository.Update(listID, &l)
 		if err != nil {
 			return err
 		}
