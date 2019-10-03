@@ -12,7 +12,6 @@ type MongoCollection interface {
 	Insert(doc interface{}) error
 	Remove(id string) error
 	Update(id string, doc interface{}) error
-	DropCollection() error
 	Name() string
 }
 
@@ -53,11 +52,6 @@ func (c *MyMongoCollection) Remove(id string) error {
 // Update updates a list
 func (c *MyMongoCollection) Update(id string, doc interface{}) error {
 	return c.collection.UpdateId(id, doc)
-}
-
-// DropCollection drops the collection
-func (c *MyMongoCollection) DropCollection() error {
-	return c.collection.DropCollection()
 }
 
 // Name returns the mongo collection name

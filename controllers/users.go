@@ -1,21 +1,22 @@
 package controllers
 
 import (
-	"net/http"
-	"github.com/AngelVlc/lists-backend/models"
-	"github.com/AngelVlc/lists-backend/stores"
 	"encoding/json"
+	"github.com/AngelVlc/lists-backend/models"
+	"github.com/AngelVlc/lists-backend/services"
+	"net/http"
 )
 
 // UsersHandler is the handler for the users endpoints
-func UsersHandler(w http.ResponseWriter, r *http.Request, repository stores.Repository) error {
+func UsersHandler(w http.ResponseWriter, r *http.Request, serviceProvider services.ServiceProvider) error {
 	switch r.Method {
 	case http.MethodPost:
 		u, err := parseUserBody(r)
 		if err != nil {
 			return err
 		}
-		err = repository.Add(&u)
+		userSrv := serviceProvider.GetUsersService()
+		err = userSrv.AddUser(&u)
 		if err != nil {
 			return err
 		}

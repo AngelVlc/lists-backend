@@ -39,31 +39,15 @@ func (m *MockedMongoCollection) Update(id string, doc interface{}) error {
 	return args.Error(0)
 }
 
-func (m *MockedMongoCollection) DropCollection() error {
-	args := m.Called()
-	return args.Error(0)
-}
-
 func (m *MockedMongoCollection) Name() string {
 	args := m.Called()
 	return args.String(0)
 }
 
-type MockedMongoSession struct {
-	mock.Mock
-}
-
-func (m *MockedMongoSession) Collection(name string) MongoCollection {
-	args := m.Called(name)
-	return args.Get(0).(MongoCollection)
-}
-
 func TestUpdate(t *testing.T) {
 	testMongoCollection := new(MockedMongoCollection)
 
-	testMongoSession := new(MockedMongoSession)
-
-	store := NewMongoRepository(testMongoSession, testMongoCollection)
+	repository := MongoRepository{testMongoCollection}
 
 	t.Run("Update() returns an unexpected error when the update fails", func(t *testing.T) {
 		id := bson.NewObjectId().Hex()
@@ -71,11 +55,11 @@ func TestUpdate(t *testing.T) {
 
 		testMongoCollection.On("Update", id, &l).Return(errors.New("wadus")).Once()
 
-		err := store.Update(id, &l)
+		err := repository.Update(id, &l)
 
 		assert.IsType(t, &UnexpectedError{}, err)
 
-		assertFailedOperation(t, testMongoSession, testMongoCollection, err, "Error updating the database")
+		assertFailedOperation(t, testMongoCollection, err, "Error updating the database")
 	})
 
 	t.Run("Update() returns a not found error when document does not exits", func(t *testing.T) {
@@ -84,23 +68,23 @@ func TestUpdate(t *testing.T) {
 		testMongoCollection.On("Update", id, &l).Return(errors.New("not found")).Once()
 		testMongoCollection.On("Name").Return("document").Once()
 
-		err := store.Update(id, &l)
+		err := repository.Update(id, &l)
 
 		assert.IsType(t, &NotFoundError{}, err)
 
 		msg := fmt.Sprintf("document with id %q not found", id)
-		assertFailedOperation(t, testMongoSession, testMongoCollection, err, msg)
+		assertFailedOperation(t, testMongoCollection, err, msg)
 	})
 
 	t.Run("Update() returns an invalid id error when the id is not valid", func(t *testing.T) {
 		id := "wadus"
 
-		err := store.Update(id, &id)
+		err := repository.Update(id, &id)
 
 		assert.IsType(t, &InvalidIDError{}, err)
 
 		msg := fmt.Sprintf("%q is not a valid id", id)
-		assertFailedOperation(t, testMongoSession, testMongoCollection, err, msg)
+		assertFailedOperation(t, testMongoCollection, err, msg)
 	})
 
 	t.Run("Update() updates a list", func(t *testing.T) {
@@ -109,29 +93,27 @@ func TestUpdate(t *testing.T) {
 
 		testMongoCollection.On("Update", id, &l).Return(nil).Once()
 
-		err := store.Update(id, &l)
+		err := repository.Update(id, &l)
 
-		assertSuccededOperation(t, testMongoSession, testMongoCollection, err)
+		assertSuccededOperation(t, testMongoCollection, err)
 	})
 }
 
 func TestRemove(t *testing.T) {
 	testMongoCollection := new(MockedMongoCollection)
 
-	testMongoSession := new(MockedMongoSession)
-
-	store := NewMongoRepository(testMongoSession, testMongoCollection)
+	repository := MongoRepository{testMongoCollection}
 
 	t.Run("Remove() returns an unexpected error when the remove fails", func(t *testing.T) {
 		id := bson.NewObjectId().Hex()
 
 		testMongoCollection.On("Remove", id).Return(errors.New("wadus")).Once()
 
-		err := store.Remove(id)
+		err := repository.Remove(id)
 
 		assert.IsType(t, &UnexpectedError{}, err)
 
-		assertFailedOperation(t, testMongoSession, testMongoCollection, err, "Error removing from the database")
+		assertFailedOperation(t, testMongoCollection, err, "Error removing from the database")
 	})
 
 	t.Run("Remove() returns a not found error when document does not exits", func(t *testing.T) {
@@ -139,23 +121,23 @@ func TestRemove(t *testing.T) {
 		testMongoCollection.On("Remove", id).Return(errors.New("not found")).Once()
 		testMongoCollection.On("Name").Return("document").Once()
 
-		err := store.Remove(id)
+		err := repository.Remove(id)
 
 		assert.IsType(t, &NotFoundError{}, err)
 
 		msg := fmt.Sprintf("document with id %q not found", id)
-		assertFailedOperation(t, testMongoSession, testMongoCollection, err, msg)
+		assertFailedOperation(t, testMongoCollection, err, msg)
 	})
 
 	t.Run("Remove() returns an invalid id error when the id is not valid", func(t *testing.T) {
 		id := "wadus"
 
-		err := store.Remove(id)
+		err := repository.Remove(id)
 
 		assert.IsType(t, &InvalidIDError{}, err)
 
 		msg := fmt.Sprintf("%q is not a valid id", id)
-		assertFailedOperation(t, testMongoSession, testMongoCollection, err, msg)
+		assertFailedOperation(t, testMongoCollection, err, msg)
 	})
 
 	t.Run("Remove() removes a list", func(t *testing.T) {
@@ -163,28 +145,26 @@ func TestRemove(t *testing.T) {
 
 		testMongoCollection.On("Remove", oidHex).Return(nil).Once()
 
-		err := store.Remove(oidHex)
+		err := repository.Remove(oidHex)
 
-		assertSuccededOperation(t, testMongoSession, testMongoCollection, err)
+		assertSuccededOperation(t, testMongoCollection, err)
 	})
 }
 
 func TestGetSingle(t *testing.T) {
 	testMongoCollection := new(MockedMongoCollection)
 
-	testMongoSession := new(MockedMongoSession)
-
-	store := NewMongoRepository(testMongoSession, testMongoCollection)
+	repository := MongoRepository{testMongoCollection}
 
 	t.Run("GetSingle() returns an unexpected error when the remove fails", func(t *testing.T) {
 		data := sampleList()
 		testMongoCollection.On("FindOne", data.ID, &models.List{}).Return(errors.New("wadus")).Once()
 
-		err := store.GetSingle(data.ID, &models.List{})
+		err := repository.GetSingle(data.ID, &models.List{})
 
 		assert.IsType(t, &UnexpectedError{}, err)
 
-		assertFailedOperation(t, testMongoSession, testMongoCollection, err, "Error retrieving from the database")
+		assertFailedOperation(t, testMongoCollection, err, "Error retrieving from the database")
 	})
 
 	t.Run("GetSingle() returns a not found error when document does not exits", func(t *testing.T) {
@@ -192,23 +172,23 @@ func TestGetSingle(t *testing.T) {
 		testMongoCollection.On("FindOne", data.ID, &models.List{}).Return(errors.New("not found")).Once()
 		testMongoCollection.On("Name").Return("document").Once()
 
-		err := store.GetSingle(data.ID, &models.List{})
+		err := repository.GetSingle(data.ID, &models.List{})
 
 		assert.IsType(t, &NotFoundError{}, err)
 
 		msg := fmt.Sprintf("document with id %q not found", data.ID)
-		assertFailedOperation(t, testMongoSession, testMongoCollection, err, msg)
+		assertFailedOperation(t, testMongoCollection, err, msg)
 	})
 
 	t.Run("GetSingle() returns an invalid id error when the id is not valid", func(t *testing.T) {
 		id := "wadus"
 
-		err := store.GetSingle(id, &models.List{})
+		err := repository.GetSingle(id, &models.List{})
 
 		assert.IsType(t, &InvalidIDError{}, err)
 
 		msg := fmt.Sprintf("%q is not a valid id", id)
-		assertFailedOperation(t, testMongoSession, testMongoCollection, err, msg)
+		assertFailedOperation(t, testMongoCollection, err, msg)
 	})
 
 	t.Run("GetSingle() returns a single list", func(t *testing.T) {
@@ -220,48 +200,44 @@ func TestGetSingle(t *testing.T) {
 
 		want := data
 		got := models.List{}
-		err := store.GetSingle(data.ID, &got)
+		err := repository.GetSingle(data.ID, &got)
 
 		assert.Equal(t, want, got, "they should be equal")
 
-		assertSuccededOperation(t, testMongoSession, testMongoCollection, err)
+		assertSuccededOperation(t, testMongoCollection, err)
 	})
 }
 
 func TestAdd(t *testing.T) {
 	testMongoCollection := new(MockedMongoCollection)
 
-	testMongoSession := new(MockedMongoSession)
-
-	store := NewMongoRepository(testMongoSession, testMongoCollection)
+	repository := MongoRepository{testMongoCollection}
 
 	t.Run("Add() returns an unexpected error when the insert fails", func(t *testing.T) {
 		l := models.SampleList()
 		testMongoCollection.On("Insert", &l).Return(errors.New("wadus")).Once()
 
-		err := store.Add(&l)
+		err := repository.Add(&l)
 
 		assert.IsType(t, &UnexpectedError{}, err)
 
-		assertFailedOperation(t, testMongoSession, testMongoCollection, err, "Error inserting in the database")
+		assertFailedOperation(t, testMongoCollection, err, "Error inserting in the database")
 	})
 
 	t.Run("Add() adds a new list", func(t *testing.T) {
 		l := models.SampleList()
 
 		testMongoCollection.On("Insert", &l).Return(nil).Once()
-		err := store.Add(&l)
+		err := repository.Add(&l)
 
-		assertSuccededOperation(t, testMongoSession, testMongoCollection, err)
+		assertSuccededOperation(t, testMongoCollection, err)
 	})
 }
 
 func TestGet(t *testing.T) {
 	testMongoCollection := new(MockedMongoCollection)
 
-	testMongoSession := new(MockedMongoSession)
-
-	store := NewMongoRepository(testMongoSession, testMongoCollection)
+	repository := MongoRepository{testMongoCollection}
 
 	t.Run("Get() returns all the list items", func(t *testing.T) {
 		data := models.SampleGetListsResultDto()
@@ -272,36 +248,31 @@ func TestGet(t *testing.T) {
 
 		want := data
 		got := []models.GetListsResultDto{}
-		err := store.Get(&got)
+		err := repository.Get(&got)
 
 		assert.Equal(t, want, got, "they should be equal")
 
-		assertSuccededOperation(t, testMongoSession, testMongoCollection, err)
+		assertSuccededOperation(t, testMongoCollection, err)
 	})
 
 	t.Run("Get() returns an error when the query fails", func(t *testing.T) {
 		testMongoCollection.On("Find", &[]models.GetListsResultDto{}, nil, bson.M{"name": 1}).Return(errors.New("wadus")).Once()
 
 		r := []models.GetListsResultDto{}
-		err := store.Get(&r)
+		err := repository.Get(&r)
 
-		assertFailedOperation(t, testMongoSession, testMongoCollection, err, "Error retrieving from the database")
+		assertFailedOperation(t, testMongoCollection, err, "Error retrieving from the database")
 	})
 }
 
-func assertMocksExpectations(s *MockedMongoSession, c *MockedMongoCollection, t *testing.T) {
-	s.AssertExpectations(t)
+func assertSuccededOperation(t *testing.T, c *MockedMongoCollection, err error) {
 	c.AssertExpectations(t)
-}
-
-func assertSuccededOperation(t *testing.T, s *MockedMongoSession, c *MockedMongoCollection, err error) {
-	assertMocksExpectations(s, c, t)
 
 	assert.Nil(t, err)
 }
 
-func assertFailedOperation(t *testing.T, s *MockedMongoSession, c *MockedMongoCollection, err error, errorMsg string) {
-	assertMocksExpectations(s, c, t)
+func assertFailedOperation(t *testing.T, c *MockedMongoCollection, err error, errorMsg string) {
+	c.AssertExpectations(t)
 
 	assert.NotNil(t, err)
 

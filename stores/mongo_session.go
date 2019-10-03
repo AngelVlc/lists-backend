@@ -8,7 +8,7 @@ import (
 
 // MongoSession is the interface used to retrieve the mongo collection
 type MongoSession interface {
-	Collection(name string) MongoCollection
+	GetRepository(collectionName string) Repository
 }
 
 // MyMongoSession is the object used to access the mongo collection
@@ -44,8 +44,10 @@ func NewMyMongoSession(useTestConfig bool) *MyMongoSession {
 	}
 }
 
-// Collection returns the mongo collection
-func (s *MyMongoSession) Collection(name string) MongoCollection {
-	c := s.session.DB(s.databaseName).C(name)
-	return NewMyMongoCollection(c)
+// GetRepository returns a mongo repository for the given collection
+func (s *MyMongoSession) GetRepository(collectionName string) Repository {
+	ms := s.session.Copy()
+	c := ms.DB(s.databaseName).C(collectionName)
+	mc := NewMyMongoCollection(c)
+	return &MongoRepository{mc}
 }

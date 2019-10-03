@@ -1,29 +1,30 @@
 package controllers
 
 import (
+	"encoding/json"
+	"github.com/AngelVlc/lists-backend/models"
+	"github.com/AngelVlc/lists-backend/services"
 	"net/http"
 	"net/url"
-	"github.com/AngelVlc/lists-backend/models"
-	"github.com/AngelVlc/lists-backend/stores"
-	"encoding/json"
 )
 
 // ListsHandler is the handler for the lists endpoints
-func ListsHandler(w http.ResponseWriter, r *http.Request, repository stores.Repository) error {
+func ListsHandler(w http.ResponseWriter, r *http.Request, serviceProvider services.ServiceProvider) error {
 	listID := getListIDFromURL(r.URL)
 
 	switch r.Method {
 	case http.MethodGet:
+		listSrv := serviceProvider.GetListsService()
 		if listID == "" {
 			r := []models.GetListsResultDto{}
-			err := repository.Get(&r)
+			err := listSrv.GetLists(&r)
 			if err != nil {
 				return err
 			}
 			writeOkResponse(w, http.StatusOK, r)
 		} else {
 			l := models.List{}
-			err := repository.GetSingle(listID, &l)
+			err := listSrv.GetSingleList(listID, &l)
 			if err != nil {
 				return err
 			}
@@ -34,13 +35,15 @@ func ListsHandler(w http.ResponseWriter, r *http.Request, repository stores.Repo
 		if err != nil {
 			return err
 		}
-		err = repository.Add(&l)
+		listSrv := serviceProvider.GetListsService()
+		err = listSrv.AddList(&l)
 		if err != nil {
 			return err
 		}
 		writeOkResponse(w, http.StatusCreated, l)
 	case http.MethodDelete:
-		err := repository.Remove(listID)
+		listSrv := serviceProvider.GetListsService()
+		err := listSrv.RemoveList(listID)
 		if err != nil {
 			return err
 		}
@@ -50,7 +53,8 @@ func ListsHandler(w http.ResponseWriter, r *http.Request, repository stores.Repo
 		if err != nil {
 			return err
 		}
-		err = repository.Update(listID, &l)
+		listSrv := serviceProvider.GetListsService()
+		err = listSrv.UpdateList(listID, &l)
 		if err != nil {
 			return err
 		}

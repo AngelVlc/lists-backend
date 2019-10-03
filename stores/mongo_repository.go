@@ -7,13 +7,7 @@ import (
 
 // MongoRepository is the store which uses mongo db
 type MongoRepository struct {
-	mongoSession    MongoSession
 	mongoCollection MongoCollection
-}
-
-// NewMongoRepository returns a new MongoRepository
-func NewMongoRepository(mongoSession MongoSession, mongoCollection MongoCollection) *MongoRepository {
-	return &MongoRepository{mongoSession, mongoCollection}
 }
 
 // Get returns the lists collection

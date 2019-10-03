@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/AngelVlc/lists-backend/services"
 	"github.com/AngelVlc/lists-backend/stores"
 	"log"
 	"net/http"
@@ -12,8 +13,11 @@ func main() {
 	port := os.Getenv("PORT")
 	addr := fmt.Sprintf(":%v", port)
 
-	session := stores.NewMyMongoSession(false)
-	server := newServer(session)
+	ms := stores.NewMyMongoSession(false)
+
+	sp := services.NewMyServiceProvider(ms)
+
+	server := newServer(sp)
 
 	log.Printf("Listening on port %v ...\n", port)
 

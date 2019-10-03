@@ -1,25 +1,26 @@
 package controllers
 
 import (
-	"net/http"
-	"log"
-	"github.com/AngelVlc/lists-backend/stores"
 	"encoding/json"
+	"github.com/AngelVlc/lists-backend/services"
+	"github.com/AngelVlc/lists-backend/stores"
+	"log"
+	"net/http"
 )
 
 // Handler is the type used to handle the endpoints
 type Handler struct {
 	HandlerFunc
-	Repository stores.Repository
+	ServiceProvider services.ServiceProvider
 }
 
 // HandlerFunc is the type for the handler functions
-type HandlerFunc func(http.ResponseWriter, *http.Request, stores.Repository) error
+type HandlerFunc func(http.ResponseWriter, *http.Request, services.ServiceProvider) error
 
 func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	log.Printf("%v %q", r.Method, r.URL)
 
-	if err := h.HandlerFunc(w, r, h.Repository); err != nil {
+	if err := h.HandlerFunc(w, r, h.ServiceProvider); err != nil {
 		if unexErr, ok := err.(*stores.UnexpectedError); ok {
 			writeErrorResponse(w, http.StatusInternalServerError, unexErr.Error(), unexErr.InternalError)
 		} else if notFoundErr, ok := err.(*stores.NotFoundError); ok {
@@ -40,12 +41,12 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func writeErrorResponse(w http.ResponseWriter, statusCode int, msg string, internalError error) {
 	if internalError != nil {
 		log.Printf("%v %v", statusCode, internalError)
-		} else {
-			log.Printf("%v %v", statusCode, msg)
-		}
-		http.Error(w, msg, statusCode)
+	} else {
+		log.Printf("%v %v", statusCode, msg)
 	}
-	
+	http.Error(w, msg, statusCode)
+}
+
 // writeOkResponse is used when and endpoind does not respond with an error
 func writeOkResponse(w http.ResponseWriter, statusCode int, content interface{}) {
 	log.Println(statusCode)
