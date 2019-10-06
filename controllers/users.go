@@ -8,24 +8,23 @@ import (
 )
 
 // UsersHandler is the handler for the users endpoints
-func UsersHandler(w http.ResponseWriter, r *http.Request, serviceProvider services.ServiceProvider) error {
+func UsersHandler(w http.ResponseWriter, r *http.Request, serviceProvider services.ServiceProvider) handlerResult {
 	switch r.Method {
 	case http.MethodPost:
 		u, err := parseUserBody(r)
 		if err != nil {
-			return err
+			return errorResult{err}
 		}
 		userSrv := serviceProvider.GetUsersService()
 		err = userSrv.AddUser(&u)
 		if err != nil {
-			return err
+			return errorResult{err}
 		}
-		writeOkResponse(w, http.StatusCreated, u)
+		return okResult{u, http.StatusCreated}
 	default:
-		writeOkResponse(w, http.StatusMethodNotAllowed, nil)
+		return okResult{nil, http.StatusMethodNotAllowed}
 	}
 
-	return nil
 }
 
 func parseUserBody(r *http.Request) (models.User, error) {

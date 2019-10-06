@@ -9,7 +9,7 @@ import (
 )
 
 // ListsHandler is the handler for the lists endpoints
-func ListsHandler(w http.ResponseWriter, r *http.Request, serviceProvider services.ServiceProvider) error {
+func ListsHandler(w http.ResponseWriter, r *http.Request, serviceProvider services.ServiceProvider) handlerResult {
 	listID := getListIDFromURL(r.URL)
 
 	switch r.Method {
@@ -19,51 +19,48 @@ func ListsHandler(w http.ResponseWriter, r *http.Request, serviceProvider servic
 			r := []models.GetListsResultDto{}
 			err := listSrv.GetLists(&r)
 			if err != nil {
-				return err
+				return errorResult{err}
 			}
-			writeOkResponse(w, http.StatusOK, r)
-		} else {
-			l := models.List{}
-			err := listSrv.GetSingleList(listID, &l)
-			if err != nil {
-				return err
-			}
-			writeOkResponse(w, http.StatusOK, l)
+			return okResult{r, http.StatusOK}
 		}
+		l := models.List{}
+		err := listSrv.GetSingleList(listID, &l)
+		if err != nil {
+			return errorResult{err}
+		}
+		return okResult{l, http.StatusOK}
 	case http.MethodPost:
 		l, err := parseListBody(r)
 		if err != nil {
-			return err
+			return errorResult{err}
 		}
 		listSrv := serviceProvider.GetListsService()
 		err = listSrv.AddList(&l)
 		if err != nil {
-			return err
+			return errorResult{err}
 		}
-		writeOkResponse(w, http.StatusCreated, l)
+		return okResult{l, http.StatusCreated}
 	case http.MethodDelete:
 		listSrv := serviceProvider.GetListsService()
 		err := listSrv.RemoveList(listID)
 		if err != nil {
-			return err
+			return errorResult{err}
 		}
-		writeOkResponse(w, http.StatusNoContent, nil)
+		return okResult{nil, http.StatusNoContent}
 	case http.MethodPut:
 		l, err := parseListBody(r)
 		if err != nil {
-			return err
+			return errorResult{err}
 		}
 		listSrv := serviceProvider.GetListsService()
 		err = listSrv.UpdateList(listID, &l)
 		if err != nil {
-			return err
+			return errorResult{err}
 		}
-		writeOkResponse(w, http.StatusOK, l)
+		return okResult{l, http.StatusOK}
 	default:
-		writeOkResponse(w, http.StatusMethodNotAllowed, nil)
+		return okResult{nil, http.StatusMethodNotAllowed}
 	}
-
-	return nil
 }
 
 func getListIDFromURL(u *url.URL) string {

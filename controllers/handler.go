@@ -14,13 +14,38 @@ type Handler struct {
 	ServiceProvider services.ServiceProvider
 }
 
+type handlerResult interface {
+	IsError() bool
+}
+
+type errorResult struct {
+	err error
+}
+
+func (e errorResult) IsError() bool {
+	return true
+}
+
+type okResult struct {
+	content    interface{}
+	statusCode int
+}
+
+func (r okResult) IsError() bool {
+	return false
+}
+
 // HandlerFunc is the type for the handler functions
-type HandlerFunc func(http.ResponseWriter, *http.Request, services.ServiceProvider) error
+type HandlerFunc func(http.ResponseWriter, *http.Request, services.ServiceProvider) handlerResult
 
 func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	log.Printf("%v %q", r.Method, r.URL)
 
-	if err := h.HandlerFunc(w, r, h.ServiceProvider); err != nil {
+	res := h.HandlerFunc(w, r, h.ServiceProvider)
+
+	if res.IsError() {
+		errorRes, _ := res.(errorResult)
+		err := errorRes.err
 		if unexErr, ok := err.(*stores.UnexpectedError); ok {
 			writeErrorResponse(w, http.StatusInternalServerError, unexErr.Error(), unexErr.InternalError)
 		} else if notFoundErr, ok := err.(*stores.NotFoundError); ok {
@@ -34,6 +59,10 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		} else {
 			writeErrorResponse(w, http.StatusInternalServerError, "Internal error", err)
 		}
+
+	} else {
+		okRes, _ := res.(okResult)
+		writeOkResponse(w, okRes.statusCode, okRes.content)
 	}
 }
 
