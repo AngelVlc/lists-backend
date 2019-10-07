@@ -33,7 +33,10 @@ func TestHandler(t *testing.T) {
 
 	t.Run("Return 200 with content when no error", func(t *testing.T) {
 		f := func(w http.ResponseWriter, r *http.Request, serviceProvider services.ServiceProvider) handlerResult {
-			obj := struct{Field1 string; Field2 string}{Field1: "a", Field2: "b"}
+			obj := struct {
+				Field1 string
+				Field2 string
+			}{Field1: "a", Field2: "b"}
 			return okResult{obj, http.StatusOK}
 		}
 

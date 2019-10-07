@@ -27,17 +27,12 @@ func TestUsersHandler(t *testing.T) {
 
 	testSrvProvider := new(mockedServiceProvider)
 
-	handler := Handler{
-		HandlerFunc:     UsersHandler,
-		ServiceProvider: testSrvProvider,
-	}
-
-	t.Run("POST adds a new user and returns it", func(t *testing.T) {
+	t.Run("POST returns an okResult when there is no error", func(t *testing.T) {
 		userDto := userDtoToCreate()
 
 		data := userDto.ToUser()
 
-		testSrvProvider.On("GetUsersService").Return(testUsersSrv)
+		testSrvProvider.On("GetUsersService").Return(testUsersSrv).Once()
 
 		testUsersSrv.On("AddUser", &data).Return(nil).Once()
 
@@ -46,55 +41,75 @@ func TestUsersHandler(t *testing.T) {
 		request.Header.Set("Content-type", "application/json")
 		response := httptest.NewRecorder()
 
-		handler.ServeHTTP(response, request)
+		got := UsersHandler(response, request, testSrvProvider)
+		want := okResult{data, http.StatusCreated}
 
-		assertUsersResult(t, testSrvProvider, testUsersSrv, response.Result().StatusCode, http.StatusCreated)
+		assert.Equal(t, want, got, "should be equal")
+		assertUsersExpectations(t, testSrvProvider, testUsersSrv)
 	})
 
-	t.Run("POST with invalid body should return 400", func(t *testing.T) {
+	t.Run("POST with invalid body should return an errorResult with an InvalidBodyError", func(t *testing.T) {
 		request, _ := http.NewRequest(http.MethodPost, "/users", strings.NewReader("wadus"))
 		response := httptest.NewRecorder()
 
-		handler.ServeHTTP(response, request)
+		got := UsersHandler(response, request, testSrvProvider)
 
-		assertUsersResult(t, testSrvProvider, testUsersSrv, response.Result().StatusCode, http.StatusBadRequest)
+		errorRes, isErrorResult := got.(errorResult)
+		assert.Equal(t, true, isErrorResult, "should be an error result")
+
+		_, isInvalidBodyError := errorRes.err.(*InvalidBodyError)
+		assert.Equal(t, true, isInvalidBodyError, "should be an invalid body error")
+		assertUsersExpectations(t, testSrvProvider, testUsersSrv)
 	})
 
-	t.Run("POST without body should return 400", func(t *testing.T) {
+	t.Run("POST without body should return an errorResult with a NoBodyError", func(t *testing.T) {
 		request, _ := http.NewRequest(http.MethodPost, "/users", nil)
 		response := httptest.NewRecorder()
 
-		handler.ServeHTTP(response, request)
+		got := UsersHandler(response, request, testSrvProvider)
 
-		assertUsersResult(t, testSrvProvider, testUsersSrv, response.Result().StatusCode, http.StatusBadRequest)
+		errorRes, isErrorResult := got.(errorResult)
+		assert.Equal(t, true, isErrorResult, "should be an error result")
+
+		_, isNoBodyError := errorRes.err.(*NoBodyError)
+		assert.Equal(t, true, isNoBodyError, "should be an invalid body error")
+		assertUsersExpectations(t, testSrvProvider, testUsersSrv)
 	})
 
-	t.Run("POST returns 500 when the insert fails", func(t *testing.T) {
+	t.Run("POST returns an errorResult with the service error when the insert fails", func(t *testing.T) {
 		userDto := userDtoToCreate()
 
 		data := userDto.ToUser()
 
-		testSrvProvider.On("GetUsersService").Return(testUsersSrv)
+		testSrvProvider.On("GetUsersService").Return(testUsersSrv).Once()
 
-		testUsersSrv.On("AddUser", &data).Return(errors.New("wadus")).Once()
+		err := errors.New("wadus")
+		testUsersSrv.On("AddUser", &data).Return(err).Once()
 
 		body, _ := json.Marshal(userDto)
 		request, _ := http.NewRequest(http.MethodPost, "/users", bytes.NewBuffer(body))
 		request.Header.Set("Content-type", "application/json")
 		response := httptest.NewRecorder()
 
-		handler.ServeHTTP(response, request)
+		got := UsersHandler(response, request, testSrvProvider)
 
-		assertUsersResult(t, testSrvProvider, testUsersSrv, response.Result().StatusCode, http.StatusInternalServerError)
+		errorResult, isErrorResult := got.(errorResult)
+		assert.Equal(t, true, isErrorResult, "should be an error result")
+
+		assert.Equal(t, err, errorResult.err)
+		assertUsersExpectations(t, testSrvProvider, testUsersSrv)
 	})
 
-	t.Run("returns 405 when the method is not GET, POST, PUT or DELETE", func(t *testing.T) {
+	t.Run("returns and okResult with a 405 status when the method is not GET, POST, PUT or DELETE", func(t *testing.T) {
 		request, _ := http.NewRequest(http.MethodPatch, "/users", nil)
 		response := httptest.NewRecorder()
 
-		handler.ServeHTTP(response, request)
+		got := UsersHandler(response, request, testSrvProvider)
 
-		assertUsersResult(t, testSrvProvider, testUsersSrv, response.Result().StatusCode, http.StatusMethodNotAllowed)
+		want := okResult{nil, http.StatusMethodNotAllowed}
+
+		assert.Equal(t, want, got, "should be equal")
+		assertUsersExpectations(t, testSrvProvider, testUsersSrv)
 	})
 }
 
@@ -107,10 +122,8 @@ func userDtoToCreate() models.UserDto {
 	}
 }
 
-func assertUsersResult(t *testing.T, sp *mockedServiceProvider, us *mockedUsersService, got, want int) {
+func assertUsersExpectations(t *testing.T, sp *mockedServiceProvider, us *mockedUsersService) {
 	t.Helper()
-
-	assert.Equal(t, want, got, "status are not equal")
 
 	sp.AssertExpectations(t)
 	us.AssertExpectations(t)
