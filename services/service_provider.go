@@ -10,17 +10,19 @@ type ServiceProvider interface {
 }
 
 type MyServiceProvider struct {
-	session stores.MongoSession
+	session   stores.MongoSession
+	bcryptPrv BcryptProvider
 }
 
-func NewMyServiceProvider(s stores.MongoSession) *MyServiceProvider {
+func NewMyServiceProvider(s stores.MongoSession, bp BcryptProvider) *MyServiceProvider {
 	return &MyServiceProvider{
-		session: s,
+		session:   s,
+		bcryptPrv: bp,
 	}
 }
 
 func (sp *MyServiceProvider) GetUsersService() UsersService {
-	return NewMyUsersService(sp.session)
+	return NewMyUsersService(sp.session, sp.bcryptPrv)
 }
 
 func (sp *MyServiceProvider) GetListsService() ListsService {

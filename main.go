@@ -15,7 +15,9 @@ func main() {
 
 	ms := stores.NewMyMongoSession(false)
 
-	sp := services.NewMyServiceProvider(ms)
+	bp := services.NewMyBcryptProvider()
+
+	sp := services.NewMyServiceProvider(ms, bp)
 
 	server := newServer(sp)
 
