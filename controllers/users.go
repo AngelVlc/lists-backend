@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"encoding/json"
+	appErrors "github.com/AngelVlc/lists-backend/errors"
 	"github.com/AngelVlc/lists-backend/models"
 	"github.com/AngelVlc/lists-backend/services"
 	"net/http"
@@ -29,13 +30,13 @@ func UsersHandler(w http.ResponseWriter, r *http.Request, serviceProvider servic
 
 func parseUserBody(r *http.Request) (models.UserDto, error) {
 	if r.Body == nil {
-		return models.UserDto{}, &NoBodyError{}
+		return models.UserDto{}, &appErrors.BadRequestError{Msg: "No body"}
 	}
 	decoder := json.NewDecoder(r.Body)
 	var dto models.UserDto
 	err := decoder.Decode(&dto)
 	if err != nil {
-		return models.UserDto{}, &InvalidBodyError{InternalError: err}
+		return models.UserDto{}, &appErrors.BadRequestError{Msg: "Invalid body", InternalError: err}
 	}
 
 	return dto, nil

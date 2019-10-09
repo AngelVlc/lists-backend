@@ -2,9 +2,9 @@ package controllers
 
 import (
 	"errors"
+	"fmt"
 	appErrors "github.com/AngelVlc/lists-backend/errors"
 	"github.com/AngelVlc/lists-backend/services"
-	"github.com/AngelVlc/lists-backend/stores"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
@@ -81,7 +81,7 @@ func TestHandler(t *testing.T) {
 
 	t.Run("Returns 404 when a not found error happens", func(t *testing.T) {
 		f := func(w http.ResponseWriter, r *http.Request, serviceProvider services.ServiceProvider) handlerResult {
-			return errorResult{&stores.NotFoundError{ID: "id", Model: "model"}}
+			return errorResult{&appErrors.NotFoundError{ID: "id", Model: "model"}}
 		}
 
 		handler := Handler{
@@ -98,9 +98,9 @@ func TestHandler(t *testing.T) {
 		assert.Equal(t, "model with id \"id\" not found\n", string(response.Body.String()))
 	})
 
-	t.Run("Returns 400 when an invalid id error happens", func(t *testing.T) {
+	t.Run("Returns 400 when a bad request error happens", func(t *testing.T) {
 		f := func(w http.ResponseWriter, r *http.Request, serviceProvider services.ServiceProvider) handlerResult {
-			return errorResult{&stores.InvalidIDError{ID: "id"}}
+			return errorResult{&appErrors.BadRequestError{Msg: fmt.Sprintf("%q is not a valid id", "id")}}
 		}
 
 		handler := Handler{
@@ -115,44 +115,6 @@ func TestHandler(t *testing.T) {
 
 		assert.Equal(t, http.StatusBadRequest, response.Result().StatusCode)
 		assert.Equal(t, "\"id\" is not a valid id\n", string(response.Body.String()))
-	})
-
-	t.Run("Returns 400 when a no body error happens", func(t *testing.T) {
-		f := func(w http.ResponseWriter, r *http.Request, serviceProvider services.ServiceProvider) handlerResult {
-			return errorResult{&NoBodyError{}}
-		}
-
-		handler := Handler{
-			HandlerFunc:     f,
-			ServiceProvider: testSrvProvider,
-		}
-
-		request, _ := http.NewRequest(http.MethodGet, "/lists", nil)
-		response := httptest.NewRecorder()
-
-		handler.ServeHTTP(response, request)
-
-		assert.Equal(t, http.StatusBadRequest, response.Result().StatusCode)
-		assert.Equal(t, "No body\n", string(response.Body.String()))
-	})
-
-	t.Run("Returns 400 when an invalid body error happens", func(t *testing.T) {
-		f := func(w http.ResponseWriter, r *http.Request, serviceProvider services.ServiceProvider) handlerResult {
-			return errorResult{&InvalidBodyError{InternalError: errors.New("wadus")}}
-		}
-
-		handler := Handler{
-			HandlerFunc:     f,
-			ServiceProvider: testSrvProvider,
-		}
-
-		request, _ := http.NewRequest(http.MethodGet, "/lists", nil)
-		response := httptest.NewRecorder()
-
-		handler.ServeHTTP(response, request)
-
-		assert.Equal(t, http.StatusBadRequest, response.Result().StatusCode)
-		assert.Equal(t, "Invalid body\n", string(response.Body.String()))
 	})
 
 	t.Run("Returns 500 when an unhandled error happens", func(t *testing.T) {

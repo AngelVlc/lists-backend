@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	appErrors "github.com/AngelVlc/lists-backend/errors"
 	"github.com/AngelVlc/lists-backend/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -48,7 +49,7 @@ func TestUsersHandler(t *testing.T) {
 		assertUsersExpectations(t, testSrvProvider, testUsersSrv)
 	})
 
-	t.Run("POST with invalid body should return an errorResult with an InvalidBodyError", func(t *testing.T) {
+	t.Run("POST with invalid body should return an errorResult with a BadRequestError", func(t *testing.T) {
 		request, _ := http.NewRequest(http.MethodPost, "/users", strings.NewReader("wadus"))
 		response := httptest.NewRecorder()
 
@@ -57,12 +58,14 @@ func TestUsersHandler(t *testing.T) {
 		errorRes, isErrorResult := got.(errorResult)
 		assert.Equal(t, true, isErrorResult, "should be an error result")
 
-		_, isInvalidBodyError := errorRes.err.(*InvalidBodyError)
-		assert.Equal(t, true, isInvalidBodyError, "should be an invalid body error")
+		badReqErr, isInvalidBodyError := errorRes.err.(*appErrors.BadRequestError)
+		assert.Equal(t, true, isInvalidBodyError, "should be a bad request error")
+		assert.Equal(t, "Invalid body", badReqErr.Error())
+
 		assertUsersExpectations(t, testSrvProvider, testUsersSrv)
 	})
 
-	t.Run("POST without body should return an errorResult with a NoBodyError", func(t *testing.T) {
+	t.Run("POST without body should return an errorResult with a BadRequestError", func(t *testing.T) {
 		request, _ := http.NewRequest(http.MethodPost, "/users", nil)
 		response := httptest.NewRecorder()
 
@@ -71,8 +74,10 @@ func TestUsersHandler(t *testing.T) {
 		errorRes, isErrorResult := got.(errorResult)
 		assert.Equal(t, true, isErrorResult, "should be an error result")
 
-		_, isNoBodyError := errorRes.err.(*NoBodyError)
-		assert.Equal(t, true, isNoBodyError, "should be an invalid body error")
+		badReqErr, isNoBodyError := errorRes.err.(*appErrors.BadRequestError)
+		assert.Equal(t, true, isNoBodyError, "should be a bad request error")
+		assert.Equal(t, "No body", badReqErr.Error())
+
 		assertUsersExpectations(t, testSrvProvider, testUsersSrv)
 	})
 

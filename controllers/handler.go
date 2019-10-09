@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	appErrors "github.com/AngelVlc/lists-backend/errors"
 	"github.com/AngelVlc/lists-backend/services"
-	"github.com/AngelVlc/lists-backend/stores"
 	"log"
 	"net/http"
 )
@@ -49,14 +48,10 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		err := errorRes.err
 		if unexErr, ok := err.(*appErrors.UnexpectedError); ok {
 			writeErrorResponse(w, http.StatusInternalServerError, unexErr.Error(), unexErr.InternalError)
-		} else if notFoundErr, ok := err.(*stores.NotFoundError); ok {
+		} else if notFoundErr, ok := err.(*appErrors.NotFoundError); ok {
 			writeErrorResponse(w, http.StatusNotFound, notFoundErr.Error(), nil)
-		} else if badIDErr, ok := err.(*stores.InvalidIDError); ok {
-			writeErrorResponse(w, http.StatusBadRequest, badIDErr.Error(), nil)
-		} else if noBodyErr, ok := err.(*NoBodyError); ok {
-			writeErrorResponse(w, http.StatusBadRequest, noBodyErr.Error(), nil)
-		} else if badBodyErr, ok := err.(*InvalidBodyError); ok {
-			writeErrorResponse(w, http.StatusBadRequest, badBodyErr.Error(), badBodyErr.InternalError)
+		} else if badRequestErr, ok := err.(*appErrors.BadRequestError); ok {
+			writeErrorResponse(w, http.StatusBadRequest, badRequestErr.Error(), badRequestErr.InternalError)
 		} else {
 			writeErrorResponse(w, http.StatusInternalServerError, "Internal error", err)
 		}

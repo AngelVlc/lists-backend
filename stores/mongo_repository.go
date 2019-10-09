@@ -1,6 +1,7 @@
 package stores
 
 import (
+	"fmt"
 	appErrors "github.com/AngelVlc/lists-backend/errors"
 	"gopkg.in/mgo.v2/bson"
 	"reflect"
@@ -23,7 +24,7 @@ func (s *MongoRepository) Get(doc interface{}) error {
 	return nil
 }
 
-// Add adds a new list to the collection
+// Add adds a new document to the collection
 func (s *MongoRepository) Add(doc interface{}) error {
 	id := bson.NewObjectId().Hex()
 	reflect.ValueOf(doc).Elem().FieldByName("ID").SetString(id)
@@ -38,7 +39,7 @@ func (s *MongoRepository) Add(doc interface{}) error {
 	return nil
 }
 
-// Update updates a list
+// Update updates a document
 func (s *MongoRepository) Update(id string, doc interface{}) error {
 	if err := s.isValidID(id); err != nil {
 		return err
@@ -48,7 +49,7 @@ func (s *MongoRepository) Update(id string, doc interface{}) error {
 
 	if err := s.mongoCollection.Update(id, doc); err != nil {
 		if err.Error() == "not found" {
-			return &NotFoundError{
+			return &appErrors.NotFoundError{
 				ID:    id,
 				Model: s.mongoCollection.Name(),
 			}
@@ -62,7 +63,7 @@ func (s *MongoRepository) Update(id string, doc interface{}) error {
 	return nil
 }
 
-// Remove removes a list from the collection
+// Remove removes a document from the collection
 func (s *MongoRepository) Remove(id string) error {
 	if err := s.isValidID(id); err != nil {
 		return err
@@ -70,7 +71,7 @@ func (s *MongoRepository) Remove(id string) error {
 
 	if err := s.mongoCollection.Remove(id); err != nil {
 		if err.Error() == "not found" {
-			return &NotFoundError{
+			return &appErrors.NotFoundError{
 				ID:    id,
 				Model: s.mongoCollection.Name(),
 			}
@@ -84,6 +85,7 @@ func (s *MongoRepository) Remove(id string) error {
 	return nil
 }
 
+// GetSingle returns a single document
 func (s *MongoRepository) GetSingle(id string, doc interface{}) error {
 	if err := s.isValidID(id); err != nil {
 		return err
@@ -91,7 +93,7 @@ func (s *MongoRepository) GetSingle(id string, doc interface{}) error {
 
 	if err := s.mongoCollection.FindOne(id, doc); err != nil {
 		if err.Error() == "not found" {
-			return &NotFoundError{
+			return &appErrors.NotFoundError{
 				ID:    id,
 				Model: s.mongoCollection.Name(),
 			}
@@ -107,7 +109,7 @@ func (s *MongoRepository) GetSingle(id string, doc interface{}) error {
 
 func (s *MongoRepository) isValidID(id string) error {
 	if !bson.IsObjectIdHex(id) {
-		return &InvalidIDError{id}
+		return &appErrors.BadRequestError{Msg: fmt.Sprintf("%q is not a valid id", id), InternalError: nil}
 	}
 
 	return nil

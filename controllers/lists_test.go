@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	appErrors "github.com/AngelVlc/lists-backend/errors"
 	"github.com/AngelVlc/lists-backend/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -144,7 +145,7 @@ func TestLists(t *testing.T) {
 		assertListsExpectations(t, testSrvProvider, testListsSrv)
 	})
 
-	t.Run("POST with invalid body should return an errorResult with an InvalidBodyError", func(t *testing.T) {
+	t.Run("POST with invalid body should return an errorResult with a BadRequestError", func(t *testing.T) {
 		request, _ := http.NewRequest(http.MethodPost, "/lists", strings.NewReader("wadus"))
 		response := httptest.NewRecorder()
 
@@ -153,13 +154,14 @@ func TestLists(t *testing.T) {
 		errorRes, isErrorResult := got.(errorResult)
 		assert.Equal(t, true, isErrorResult, "should be an error result")
 
-		_, isInvalidBodyError := errorRes.err.(*InvalidBodyError)
-		assert.Equal(t, true, isInvalidBodyError, "should be an invalid body error")
+		badReqErr, isInvalidBodyError := errorRes.err.(*appErrors.BadRequestError)
+		assert.Equal(t, true, isInvalidBodyError, "should be a bad request error")
+		assert.Equal(t, "Invalid body", badReqErr.Error())
 
 		assertListsExpectations(t, testSrvProvider, testListsSrv)
 	})
 
-	t.Run("POST without body should return an errorResult with a NoBodyError", func(t *testing.T) {
+	t.Run("POST without body should return an errorResult with a BadRequestError", func(t *testing.T) {
 		request, _ := http.NewRequest(http.MethodPost, "/lists", nil)
 		response := httptest.NewRecorder()
 
@@ -167,8 +169,9 @@ func TestLists(t *testing.T) {
 		errorRes, isErrorResult := got.(errorResult)
 		assert.Equal(t, true, isErrorResult, "should be an error result")
 
-		_, isNoBodyError := errorRes.err.(*NoBodyError)
-		assert.Equal(t, true, isNoBodyError, "should be an invalid body error")
+		badReqErr, isNoBodyError := errorRes.err.(*appErrors.BadRequestError)
+		assert.Equal(t, true, isNoBodyError, "should be a bad request error")
+		assert.Equal(t, "No body", badReqErr.Error())
 
 		assertListsExpectations(t, testSrvProvider, testListsSrv)
 	})
@@ -229,7 +232,7 @@ func TestLists(t *testing.T) {
 		assertListsExpectations(t, testSrvProvider, testListsSrv)
 	})
 
-	t.Run("PUT with invalid body should return an errorResult with an InvalidBodyError", func(t *testing.T) {
+	t.Run("PUT with invalid body should return an errorResult with a BadRequestError", func(t *testing.T) {
 		request, _ := http.NewRequest(http.MethodPut, "/lists", strings.NewReader("wadus"))
 		response := httptest.NewRecorder()
 
@@ -238,13 +241,14 @@ func TestLists(t *testing.T) {
 		errorRes, isErrorResult := got.(errorResult)
 		assert.Equal(t, true, isErrorResult, "should be an error result")
 
-		_, isInvalidBodyError := errorRes.err.(*InvalidBodyError)
-		assert.Equal(t, true, isInvalidBodyError, "should be an invalid body error")
+		badReqErr, isInvalidBodyError := errorRes.err.(*appErrors.BadRequestError)
+		assert.Equal(t, true, isInvalidBodyError, "should be a bad request error")
+		assert.Equal(t, "Invalid body", badReqErr.Error())
 
 		assertListsExpectations(t, testSrvProvider, testListsSrv)
 	})
 
-	t.Run("PUT without body should return an errorResult with a NoBodyError", func(t *testing.T) {
+	t.Run("PUT without body should return an errorResult with a BadRequestError", func(t *testing.T) {
 		request, _ := http.NewRequest(http.MethodPut, "/lists", nil)
 		response := httptest.NewRecorder()
 
@@ -252,8 +256,9 @@ func TestLists(t *testing.T) {
 		errorRes, isErrorResult := got.(errorResult)
 		assert.Equal(t, true, isErrorResult, "should be an error result")
 
-		_, isNoBodyError := errorRes.err.(*NoBodyError)
-		assert.Equal(t, true, isNoBodyError, "should be an invalid body error")
+		badReqErr, isNoBodyError := errorRes.err.(*appErrors.BadRequestError)
+		assert.Equal(t, true, isNoBodyError, "should be a bad request error")
+		assert.Equal(t, "No body", badReqErr.Error())
 
 		assertListsExpectations(t, testSrvProvider, testListsSrv)
 	})

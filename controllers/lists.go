@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"encoding/json"
+	appErrors "github.com/AngelVlc/lists-backend/errors"
 	"github.com/AngelVlc/lists-backend/models"
 	"github.com/AngelVlc/lists-backend/services"
 	"net/http"
@@ -75,13 +76,13 @@ func getListIDFromURL(u *url.URL) string {
 
 func parseListBody(r *http.Request) (models.List, error) {
 	if r.Body == nil {
-		return models.List{}, &NoBodyError{}
+		return models.List{}, &appErrors.BadRequestError{Msg: "No body"}
 	}
 	decoder := json.NewDecoder(r.Body)
 	var dto models.ListDto
 	err := decoder.Decode(&dto)
 	if err != nil {
-		return models.List{}, &InvalidBodyError{InternalError: err}
+		return models.List{}, &appErrors.BadRequestError{Msg: "Invalid body", InternalError: err}
 	}
 
 	l := dto.ToList()

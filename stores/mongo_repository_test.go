@@ -71,7 +71,7 @@ func TestUpdate(t *testing.T) {
 
 		err := repository.Update(id, &l)
 
-		assert.IsType(t, &NotFoundError{}, err)
+		assert.IsType(t, &appErrors.NotFoundError{}, err)
 
 		msg := fmt.Sprintf("document with id %q not found", id)
 		assertFailedOperation(t, testMongoCollection, err, msg)
@@ -82,7 +82,9 @@ func TestUpdate(t *testing.T) {
 
 		err := repository.Update(id, &id)
 
-		assert.IsType(t, &InvalidIDError{}, err)
+		assert.IsType(t, &appErrors.BadRequestError{}, err)
+
+		assert.Equal(t, fmt.Sprintf("%q is not a valid id", id), err.Error())
 
 		msg := fmt.Sprintf("%q is not a valid id", id)
 		assertFailedOperation(t, testMongoCollection, err, msg)
@@ -124,7 +126,7 @@ func TestRemove(t *testing.T) {
 
 		err := repository.Remove(id)
 
-		assert.IsType(t, &NotFoundError{}, err)
+		assert.IsType(t, &appErrors.NotFoundError{}, err)
 
 		msg := fmt.Sprintf("document with id %q not found", id)
 		assertFailedOperation(t, testMongoCollection, err, msg)
@@ -135,7 +137,8 @@ func TestRemove(t *testing.T) {
 
 		err := repository.Remove(id)
 
-		assert.IsType(t, &InvalidIDError{}, err)
+		assert.IsType(t, &appErrors.BadRequestError{}, err)
+		assert.Equal(t, fmt.Sprintf("%q is not a valid id", id), err.Error())
 
 		msg := fmt.Sprintf("%q is not a valid id", id)
 		assertFailedOperation(t, testMongoCollection, err, msg)
@@ -175,7 +178,7 @@ func TestGetSingle(t *testing.T) {
 
 		err := repository.GetSingle(data.ID, &models.List{})
 
-		assert.IsType(t, &NotFoundError{}, err)
+		assert.IsType(t, &appErrors.NotFoundError{}, err)
 
 		msg := fmt.Sprintf("document with id %q not found", data.ID)
 		assertFailedOperation(t, testMongoCollection, err, msg)
@@ -186,7 +189,8 @@ func TestGetSingle(t *testing.T) {
 
 		err := repository.GetSingle(id, &models.List{})
 
-		assert.IsType(t, &InvalidIDError{}, err)
+		assert.IsType(t, &appErrors.BadRequestError{}, err)
+		assert.Equal(t, fmt.Sprintf("%q is not a valid id", id), err.Error())
 
 		msg := fmt.Sprintf("%q is not a valid id", id)
 		assertFailedOperation(t, testMongoCollection, err, msg)
