@@ -8,7 +8,7 @@ coverage-html:
 	docker-compose run --rm app go test ./... -cover -coverprofile coverage.out && go tool cover -html=coverage.out
 
 fmt:
-	go fmt . ./stores ./models ./controllers ./services
+	go fmt . ./stores ./models ./controllers ./services ./errors
 
 build:
 	docker-compose build

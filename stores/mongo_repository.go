@@ -1,6 +1,7 @@
 package stores
 
 import (
+	appErrors "github.com/AngelVlc/lists-backend/errors"
 	"gopkg.in/mgo.v2/bson"
 	"reflect"
 )
@@ -13,7 +14,7 @@ type MongoRepository struct {
 // Get returns the lists collection
 func (s *MongoRepository) Get(doc interface{}) error {
 	if err := s.mongoCollection.Find(doc, nil, bson.M{"name": 1}); err != nil {
-		return &UnexpectedError{
+		return &appErrors.UnexpectedError{
 			Msg:           "Error retrieving from the database",
 			InternalError: err,
 		}
@@ -28,7 +29,7 @@ func (s *MongoRepository) Add(doc interface{}) error {
 	reflect.ValueOf(doc).Elem().FieldByName("ID").SetString(id)
 
 	if err := s.mongoCollection.Insert(doc); err != nil {
-		return &UnexpectedError{
+		return &appErrors.UnexpectedError{
 			Msg:           "Error inserting in the database",
 			InternalError: err,
 		}
@@ -52,7 +53,7 @@ func (s *MongoRepository) Update(id string, doc interface{}) error {
 				Model: s.mongoCollection.Name(),
 			}
 		}
-		return &UnexpectedError{
+		return &appErrors.UnexpectedError{
 			Msg:           "Error updating the database",
 			InternalError: err,
 		}
@@ -74,7 +75,7 @@ func (s *MongoRepository) Remove(id string) error {
 				Model: s.mongoCollection.Name(),
 			}
 		}
-		return &UnexpectedError{
+		return &appErrors.UnexpectedError{
 			Msg:           "Error removing from the database",
 			InternalError: err,
 		}
@@ -95,7 +96,7 @@ func (s *MongoRepository) GetSingle(id string, doc interface{}) error {
 				Model: s.mongoCollection.Name(),
 			}
 		}
-		return &UnexpectedError{
+		return &appErrors.UnexpectedError{
 			Msg:           "Error retrieving from the database",
 			InternalError: err,
 		}

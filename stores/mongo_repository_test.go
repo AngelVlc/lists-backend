@@ -3,6 +3,7 @@ package stores
 import (
 	"errors"
 	"fmt"
+	appErrors "github.com/AngelVlc/lists-backend/errors"
 	"github.com/AngelVlc/lists-backend/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -57,7 +58,7 @@ func TestUpdate(t *testing.T) {
 
 		err := repository.Update(id, &l)
 
-		assert.IsType(t, &UnexpectedError{}, err)
+		assert.IsType(t, &appErrors.UnexpectedError{}, err)
 
 		assertFailedOperation(t, testMongoCollection, err, "Error updating the database")
 	})
@@ -111,7 +112,7 @@ func TestRemove(t *testing.T) {
 
 		err := repository.Remove(id)
 
-		assert.IsType(t, &UnexpectedError{}, err)
+		assert.IsType(t, &appErrors.UnexpectedError{}, err)
 
 		assertFailedOperation(t, testMongoCollection, err, "Error removing from the database")
 	})
@@ -162,7 +163,7 @@ func TestGetSingle(t *testing.T) {
 
 		err := repository.GetSingle(data.ID, &models.List{})
 
-		assert.IsType(t, &UnexpectedError{}, err)
+		assert.IsType(t, &appErrors.UnexpectedError{}, err)
 
 		assertFailedOperation(t, testMongoCollection, err, "Error retrieving from the database")
 	})
@@ -219,7 +220,7 @@ func TestAdd(t *testing.T) {
 
 		err := repository.Add(&l)
 
-		assert.IsType(t, &UnexpectedError{}, err)
+		assert.IsType(t, &appErrors.UnexpectedError{}, err)
 
 		assertFailedOperation(t, testMongoCollection, err, "Error inserting in the database")
 	})

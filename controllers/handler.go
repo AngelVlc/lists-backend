@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"encoding/json"
+	appErrors "github.com/AngelVlc/lists-backend/errors"
 	"github.com/AngelVlc/lists-backend/services"
 	"github.com/AngelVlc/lists-backend/stores"
 	"log"
@@ -46,7 +47,7 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if res.IsError() {
 		errorRes, _ := res.(errorResult)
 		err := errorRes.err
-		if unexErr, ok := err.(*stores.UnexpectedError); ok {
+		if unexErr, ok := err.(*appErrors.UnexpectedError); ok {
 			writeErrorResponse(w, http.StatusInternalServerError, unexErr.Error(), unexErr.InternalError)
 		} else if notFoundErr, ok := err.(*stores.NotFoundError); ok {
 			writeErrorResponse(w, http.StatusNotFound, notFoundErr.Error(), nil)

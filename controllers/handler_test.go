@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"errors"
+	appErrors "github.com/AngelVlc/lists-backend/errors"
 	"github.com/AngelVlc/lists-backend/services"
 	"github.com/AngelVlc/lists-backend/stores"
 	"github.com/stretchr/testify/assert"
@@ -61,7 +62,7 @@ func TestHandler(t *testing.T) {
 
 	t.Run("Returns 500 when an unexpected error happens", func(t *testing.T) {
 		f := func(w http.ResponseWriter, r *http.Request, serviceProvider services.ServiceProvider) handlerResult {
-			return errorResult{&stores.UnexpectedError{Msg: "error", InternalError: errors.New("msg")}}
+			return errorResult{&appErrors.UnexpectedError{Msg: "error", InternalError: errors.New("msg")}}
 		}
 
 		handler := Handler{
