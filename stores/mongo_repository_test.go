@@ -222,8 +222,9 @@ func TestAdd(t *testing.T) {
 		l := models.SampleList()
 		testMongoCollection.On("Insert", &l).Return(errors.New("wadus")).Once()
 
-		err := repository.Add(&l)
+		id, err := repository.Add(&l)
 
+		assert.Empty(t, id)
 		assert.IsType(t, &appErrors.UnexpectedError{}, err)
 
 		assertFailedOperation(t, testMongoCollection, err, "Error inserting in the database")
@@ -233,7 +234,9 @@ func TestAdd(t *testing.T) {
 		l := models.SampleList()
 
 		testMongoCollection.On("Insert", &l).Return(nil).Once()
-		err := repository.Add(&l)
+		id, err := repository.Add(&l)
+
+		assert.NotEmpty(t, id)
 
 		assertSuccededOperation(t, testMongoCollection, err)
 	})

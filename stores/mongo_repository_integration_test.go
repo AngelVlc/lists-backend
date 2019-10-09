@@ -17,15 +17,21 @@ func TestMongoStore(t *testing.T) {
 	assert.Nil(t, err)
 
 	data := models.SampleList()
-	err = repository.Add(&data)
+	id, err := repository.Add(&data)
 	assert.Nil(t, err)
+	assert.NotEmpty(t, id)
+
+	foundList := models.List{}
+	err = repository.GetSingle(id, &foundList)
+	assert.Nil(t, err)
+	assert.Equal(t, data.Name, foundList.Name)
 
 	gotLists = []models.GetListsResultDto{}
 	err = repository.Get(&gotLists)
 	assert.Equal(t, 1, len(gotLists), "after adding a list the new collection should have one list")
 	assert.Nil(t, err)
 
-	foundList := models.List{}
+	foundList = models.List{}
 	err = repository.GetSingle(gotLists[0].ID, &foundList)
 	assert.Nil(t, err)
 	assert.Equal(t, data.Name, foundList.Name)

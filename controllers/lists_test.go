@@ -19,9 +19,9 @@ type mockedListsService struct {
 	mock.Mock
 }
 
-func (us *mockedListsService) AddList(l *models.List) error {
+func (us *mockedListsService) AddList(l *models.List) (string, error) {
 	args := us.Called(l)
-	return args.Error(0)
+	return args.String(0), args.Error(1)
 }
 
 func (us *mockedListsService) RemoveList(id string) error {
@@ -131,7 +131,7 @@ func TestLists(t *testing.T) {
 
 		testSrvProvider.On("GetListsService").Return(testListsSrv).Once()
 
-		testListsSrv.On("AddList", &data).Return(nil).Once()
+		testListsSrv.On("AddList", &data).Return("id", nil).Once()
 
 		body, _ := json.Marshal(listDto)
 		request, _ := http.NewRequest(http.MethodPost, "/lists", bytes.NewBuffer(body))
@@ -139,7 +139,7 @@ func TestLists(t *testing.T) {
 		response := httptest.NewRecorder()
 
 		got := ListsHandler(response, request, testSrvProvider)
-		want := okResult{data, http.StatusCreated}
+		want := okResult{"id", http.StatusCreated}
 
 		assert.Equal(t, want, got, "should be equal")
 		assertListsExpectations(t, testSrvProvider, testListsSrv)
@@ -183,7 +183,7 @@ func TestLists(t *testing.T) {
 
 		testSrvProvider.On("GetListsService").Return(testListsSrv).Once()
 		err := errors.New("wadus")
-		testListsSrv.On("AddList", &data).Return(err).Once()
+		testListsSrv.On("AddList", &data).Return("", err).Once()
 
 		body, _ := json.Marshal(listDto)
 		request, _ := http.NewRequest(http.MethodPost, "/lists", bytes.NewBuffer(body))

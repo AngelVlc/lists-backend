@@ -18,9 +18,9 @@ type mockedUsersService struct {
 	mock.Mock
 }
 
-func (us *mockedUsersService) AddUser(dto *models.UserDto) error {
+func (us *mockedUsersService) AddUser(dto *models.UserDto) (string, error) {
 	args := us.Called(dto)
-	return args.Error(0)
+	return args.String(0), args.Error(1)
 }
 
 func TestUsersHandler(t *testing.T) {
@@ -31,11 +31,9 @@ func TestUsersHandler(t *testing.T) {
 	t.Run("POST returns an okResult when there is no error", func(t *testing.T) {
 		userDto := userDtoToCreate()
 
-		user := userDto.ToUser()
-
 		testSrvProvider.On("GetUsersService").Return(testUsersSrv).Once()
 
-		testUsersSrv.On("AddUser", &userDto).Return(nil).Once()
+		testUsersSrv.On("AddUser", &userDto).Return("id", nil).Once()
 
 		body, _ := json.Marshal(userDto)
 		request, _ := http.NewRequest(http.MethodPost, "/users", bytes.NewBuffer(body))
@@ -43,7 +41,7 @@ func TestUsersHandler(t *testing.T) {
 		response := httptest.NewRecorder()
 
 		got := UsersHandler(response, request, testSrvProvider)
-		want := okResult{user, http.StatusCreated}
+		want := okResult{"id", http.StatusCreated}
 
 		assert.Equal(t, want, got, "should be equal")
 		assertUsersExpectations(t, testSrvProvider, testUsersSrv)
@@ -87,7 +85,7 @@ func TestUsersHandler(t *testing.T) {
 		testSrvProvider.On("GetUsersService").Return(testUsersSrv).Once()
 
 		err := errors.New("wadus")
-		testUsersSrv.On("AddUser", &userDto).Return(err).Once()
+		testUsersSrv.On("AddUser", &userDto).Return("", err).Once()
 
 		body, _ := json.Marshal(userDto)
 		request, _ := http.NewRequest(http.MethodPost, "/users", bytes.NewBuffer(body))

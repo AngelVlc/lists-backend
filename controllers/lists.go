@@ -36,11 +36,11 @@ func ListsHandler(w http.ResponseWriter, r *http.Request, serviceProvider servic
 			return errorResult{err}
 		}
 		listSrv := serviceProvider.GetListsService()
-		err = listSrv.AddList(&l)
+		id, err := listSrv.AddList(&l)
 		if err != nil {
 			return errorResult{err}
 		}
-		return okResult{l, http.StatusCreated}
+		return okResult{id, http.StatusCreated}
 	case http.MethodDelete:
 		listSrv := serviceProvider.GetListsService()
 		err := listSrv.RemoveList(listID)

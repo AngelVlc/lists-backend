@@ -21,10 +21,11 @@ func TestListsService(t *testing.T) {
 			Name: "list",
 		}
 
-		mockedRepository.On("Add", &l).Return(errors.New("error")).Once()
+		mockedRepository.On("Add", &l).Return("", errors.New("error")).Once()
 
-		err := service.AddList(&l)
+		id, err := service.AddList(&l)
 
+		assert.Empty(t, id)
 		assert.NotNil(t, err)
 
 		mockedSession.AssertExpectations(t)

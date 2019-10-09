@@ -45,10 +45,11 @@ func TestUserService(t *testing.T) {
 		mockedBcryptProvider.On("GenerateFromPassword", []byte(dto.NewPassword), bcryptCost).Return([]byte(hasshedPass), nil).Once()
 		u := dto.ToUser()
 		u.PasswordHash = string(hasshedPass)
-		mockedRepository.On("Add", &u).Return(errors.New("error"))
+		mockedRepository.On("Add", &u).Return("", errors.New("error"))
 
-		err := service.AddUser(&dto)
+		id, err := service.AddUser(&dto)
 
+		assert.Empty(t, id)
 		assert.NotNil(t, err)
 
 		mockedSession.AssertExpectations(t)
@@ -63,8 +64,9 @@ func TestUserService(t *testing.T) {
 			ConfirmNewPassword: "other",
 		}
 
-		err := service.AddUser(&dto)
+		id, err := service.AddUser(&dto)
 
+		assert.Empty(t, id)
 		assert.NotNil(t, err)
 
 		badReqErr, isBadReqErr := err.(*appErrors.BadRequestError)
@@ -81,8 +83,9 @@ func TestUserService(t *testing.T) {
 
 		mockedBcryptProvider.On("GenerateFromPassword", []byte(dto.NewPassword), bcryptCost).Return([]byte(""), errors.New("wadus")).Once()
 
-		err := service.AddUser(&dto)
+		id, err := service.AddUser(&dto)
 
+		assert.Empty(t, id)
 		assert.NotNil(t, err)
 
 		unexpectErr, isError := err.(*appErrors.UnexpectedError)

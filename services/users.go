@@ -8,7 +8,7 @@ import (
 
 // UsersService is the interface a users service must implement
 type UsersService interface {
-	AddUser(dto *models.UserDto) error
+	AddUser(dto *models.UserDto) (string, error)
 }
 
 // MyUsersService is the service for the users entity
@@ -28,9 +28,9 @@ func NewMyUsersService(session stores.MongoSession, bcryptPrv BcryptProvider) *M
 }
 
 // AddUser  adds a user
-func (s *MyUsersService) AddUser(dto *models.UserDto) error {
+func (s *MyUsersService) AddUser(dto *models.UserDto) (string, error) {
 	if dto.NewPassword != dto.ConfirmNewPassword {
-		return &appErrors.BadRequestError{Msg: "Passwords don't match", InternalError: nil}
+		return "", &appErrors.BadRequestError{Msg: "Passwords don't match", InternalError: nil}
 	}
 
 	user := dto.ToUser()
@@ -38,7 +38,7 @@ func (s *MyUsersService) AddUser(dto *models.UserDto) error {
 	hasshedPass, err := s.bcryptPrv.GenerateFromPassword([]byte(dto.NewPassword), bcryptCost)
 
 	if err != nil {
-		return &appErrors.UnexpectedError{Msg: "Error encrypting password", InternalError: err}
+		return "", &appErrors.UnexpectedError{Msg: "Error encrypting password", InternalError: err}
 	}
 
 	user.PasswordHash = string(hasshedPass)

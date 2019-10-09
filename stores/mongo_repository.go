@@ -25,18 +25,18 @@ func (s *MongoRepository) Get(doc interface{}) error {
 }
 
 // Add adds a new document to the collection
-func (s *MongoRepository) Add(doc interface{}) error {
+func (s *MongoRepository) Add(doc interface{}) (string, error) {
 	id := bson.NewObjectId().Hex()
 	reflect.ValueOf(doc).Elem().FieldByName("ID").SetString(id)
 
 	if err := s.mongoCollection.Insert(doc); err != nil {
-		return &appErrors.UnexpectedError{
+		return "", &appErrors.UnexpectedError{
 			Msg:           "Error inserting in the database",
 			InternalError: err,
 		}
 	}
 
-	return nil
+	return id, nil
 }
 
 // Update updates a document

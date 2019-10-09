@@ -4,7 +4,7 @@ package stores
 type Repository interface {
 	Get(item interface{}) error
 	GetSingle(id string, item interface{}) error
-	Add(item interface{}) error
+	Add(item interface{}) (string, error)
 	Remove(id string) error
 	Update(id string, item interface{}) error
 }

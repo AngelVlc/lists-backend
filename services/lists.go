@@ -7,7 +7,7 @@ import (
 
 // ListsService is the interface a lists service must implement
 type ListsService interface {
-	AddList(l *models.List) error
+	AddList(l *models.List) (string, error)
 	RemoveList(id string) error
 	UpdateList(id string, l *models.List) error
 	GetSingleList(id string, l *models.List) error
@@ -27,7 +27,7 @@ func NewMyListsService(session stores.MongoSession) *MyListsService {
 }
 
 // AddList  adds a user
-func (s *MyListsService) AddList(l *models.List) error {
+func (s *MyListsService) AddList(l *models.List) (string, error) {
 	return s.listsRepository().Add(l)
 }
 

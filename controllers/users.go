@@ -17,11 +17,11 @@ func UsersHandler(w http.ResponseWriter, r *http.Request, serviceProvider servic
 			return errorResult{err}
 		}
 		userSrv := serviceProvider.GetUsersService()
-		err = userSrv.AddUser(&dto)
+		id, err := userSrv.AddUser(&dto)
 		if err != nil {
 			return errorResult{err}
 		}
-		return okResult{dto.ToUser(), http.StatusCreated}
+		return okResult{id, http.StatusCreated}
 	default:
 		return okResult{nil, http.StatusMethodNotAllowed}
 	}
