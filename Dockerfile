@@ -1,7 +1,7 @@
 FROM golang:1.12-alpine as base
 
 RUN apk --update add git
-RUN go get -u gopkg.in/mgo.v2
+RUN go get -u gopkg.in/mgo.v2 golang.org/x/crypto/bcrypt
 
 ENV APP /go/src/github.com/AngelVlc/lists-backend
 WORKDIR $APP
