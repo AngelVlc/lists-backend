@@ -11,34 +11,32 @@ import (
 func UsersHandler(w http.ResponseWriter, r *http.Request, serviceProvider services.ServiceProvider) handlerResult {
 	switch r.Method {
 	case http.MethodPost:
-		u, err := parseUserBody(r)
+		dto, err := parseUserBody(r)
 		if err != nil {
 			return errorResult{err}
 		}
 		userSrv := serviceProvider.GetUsersService()
-		err = userSrv.AddUser(&u)
+		err = userSrv.AddUser(&dto)
 		if err != nil {
 			return errorResult{err}
 		}
-		return okResult{u, http.StatusCreated}
+		return okResult{dto.ToUser(), http.StatusCreated}
 	default:
 		return okResult{nil, http.StatusMethodNotAllowed}
 	}
 
 }
 
-func parseUserBody(r *http.Request) (models.User, error) {
+func parseUserBody(r *http.Request) (models.UserDto, error) {
 	if r.Body == nil {
-		return models.User{}, &NoBodyError{}
+		return models.UserDto{}, &NoBodyError{}
 	}
 	decoder := json.NewDecoder(r.Body)
 	var dto models.UserDto
 	err := decoder.Decode(&dto)
 	if err != nil {
-		return models.User{}, &InvalidBodyError{InternalError: err}
+		return models.UserDto{}, &InvalidBodyError{InternalError: err}
 	}
 
-	l := dto.ToUser()
-
-	return l, nil
+	return dto, nil
 }
