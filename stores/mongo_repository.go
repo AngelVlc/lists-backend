@@ -13,8 +13,8 @@ type MongoRepository struct {
 }
 
 // Get returns the lists collection
-func (s *MongoRepository) Get(doc interface{}) error {
-	if err := s.mongoCollection.Find(doc, nil, bson.M{"name": 1}); err != nil {
+func (s *MongoRepository) Get(doc interface{}, query interface{}, selector interface{}) error {
+	if err := s.mongoCollection.Find(doc, query, selector); err != nil {
 		return &appErrors.UnexpectedError{
 			Msg:           "Error retrieving from the database",
 			InternalError: err,

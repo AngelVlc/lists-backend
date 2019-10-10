@@ -3,6 +3,7 @@ package services
 import (
 	"github.com/AngelVlc/lists-backend/models"
 	"github.com/AngelVlc/lists-backend/stores"
+	"gopkg.in/mgo.v2/bson"
 )
 
 // ListsService is the interface a lists service must implement
@@ -48,7 +49,7 @@ func (s *MyListsService) GetSingleList(id string, l *models.List) error {
 
 // GetLists returns the lists
 func (s *MyListsService) GetLists(r *[]models.GetListsResultDto) error {
-	return s.listsRepository().Get(r)
+	return s.listsRepository().Get(r, nil, bson.M{"name": 1})
 }
 
 func (s *MyListsService) listsRepository() stores.Repository {

@@ -256,7 +256,7 @@ func TestGet(t *testing.T) {
 
 		want := data
 		got := []models.GetListsResultDto{}
-		err := repository.Get(&got)
+		err := repository.Get(&got, nil, bson.M{"name": 1})
 
 		assert.Equal(t, want, got, "they should be equal")
 
@@ -267,7 +267,7 @@ func TestGet(t *testing.T) {
 		testMongoCollection.On("Find", &[]models.GetListsResultDto{}, nil, bson.M{"name": 1}).Return(errors.New("wadus")).Once()
 
 		r := []models.GetListsResultDto{}
-		err := repository.Get(&r)
+		err := repository.Get(&r, nil, bson.M{"name": 1})
 
 		assertFailedOperation(t, testMongoCollection, err, "Error retrieving from the database")
 	})

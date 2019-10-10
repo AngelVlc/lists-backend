@@ -3,6 +3,7 @@ package stores
 import (
 	"github.com/AngelVlc/lists-backend/models"
 	"github.com/stretchr/testify/assert"
+	"gopkg.in/mgo.v2/bson"
 	"testing"
 )
 
@@ -12,7 +13,7 @@ func TestMongoStore(t *testing.T) {
 	repository := session.GetRepository("lists")
 
 	gotLists := []models.GetListsResultDto{}
-	err := repository.Get(&gotLists)
+	err := repository.Get(&gotLists, nil, bson.M{"name": 1})
 	assert.Equal(t, 0, len(gotLists), "new collection should have zero lists")
 	assert.Nil(t, err)
 
@@ -27,7 +28,7 @@ func TestMongoStore(t *testing.T) {
 	assert.Equal(t, data.Name, foundList.Name)
 
 	gotLists = []models.GetListsResultDto{}
-	err = repository.Get(&gotLists)
+	err = repository.Get(&gotLists, nil, bson.M{"name": 1})
 	assert.Equal(t, 1, len(gotLists), "after adding a list the new collection should have one list")
 	assert.Nil(t, err)
 

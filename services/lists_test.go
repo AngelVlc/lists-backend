@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/AngelVlc/lists-backend/models"
 	"github.com/stretchr/testify/assert"
+	"gopkg.in/mgo.v2/bson"
 	"testing"
 )
 
@@ -75,7 +76,7 @@ func TestListsService(t *testing.T) {
 	t.Run("GetLists() should call repository.RemoveList", func(t *testing.T) {
 		r := []models.GetListsResultDto{}
 
-		mockedRepository.On("Get", &r).Return(errors.New("error")).Once()
+		mockedRepository.On("Get", &r, nil, bson.M{"name": 1}).Return(errors.New("error")).Once()
 
 		err := service.GetLists(&r)
 

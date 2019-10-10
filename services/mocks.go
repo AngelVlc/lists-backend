@@ -18,8 +18,8 @@ type mockedRepository struct {
 	mock.Mock
 }
 
-func (m *mockedRepository) Get(doc interface{}) error {
-	args := m.Called(doc)
+func (m *mockedRepository) Get(doc interface{}, query interface{}, selector interface{}) error {
+	args := m.Called(doc, query, selector)
 	return args.Error(0)
 }
 
