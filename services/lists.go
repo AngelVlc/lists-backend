@@ -1,6 +1,8 @@
 package services
 
 import (
+	"fmt"
+	appErrors "github.com/AngelVlc/lists-backend/errors"
 	"github.com/AngelVlc/lists-backend/models"
 	"github.com/AngelVlc/lists-backend/stores"
 	"gopkg.in/mgo.v2/bson"
@@ -34,16 +36,28 @@ func (s *MyListsService) AddList(l *models.List) (string, error) {
 
 // RemoveList removes a list
 func (s *MyListsService) RemoveList(id string) error {
+	if !s.listsRepository().IsValidID(id) {
+		return s.getInvalidIDError(id)
+	}
+
 	return s.listsRepository().Remove(id)
 }
 
 // UpdateList updates an existing list
 func (s *MyListsService) UpdateList(id string, l *models.List) error {
+	if !s.listsRepository().IsValidID(id) {
+		return s.getInvalidIDError(id)
+	}
+
 	return s.listsRepository().Update(id, l)
 }
 
 // GetSingleList returns a single list from its id
 func (s *MyListsService) GetSingleList(id string, l *models.List) error {
+	if !s.listsRepository().IsValidID(id) {
+		return s.getInvalidIDError(id)
+	}
+
 	return s.listsRepository().GetSingle(id, l)
 }
 
@@ -54,4 +68,8 @@ func (s *MyListsService) GetLists(r *[]models.GetListsResultDto) error {
 
 func (s *MyListsService) listsRepository() stores.Repository {
 	return s.session.GetRepository("lists")
+}
+
+func (s *MyListsService) getInvalidIDError(id string) error {
+	return &appErrors.BadRequestError{Msg: fmt.Sprintf("%q is not a valid id", id), InternalError: nil}
 }

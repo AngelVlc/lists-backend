@@ -42,3 +42,8 @@ func (m *mockedRepository) Add(doc interface{}) (string, error) {
 	args := m.Called(doc)
 	return args.String(0), args.Error(1)
 }
+
+func (m *mockedRepository) IsValidID(id string) bool {
+	args := m.Called(id)
+	return args.Bool(0)
+}

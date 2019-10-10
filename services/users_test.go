@@ -6,8 +6,8 @@ import (
 	"github.com/AngelVlc/lists-backend/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"testing"
 	"gopkg.in/mgo.v2/bson"
+	"testing"
 )
 
 type mockedBcryptProvider struct {
@@ -43,7 +43,7 @@ func TestUserService(t *testing.T) {
 		}
 
 		r := []models.GetUsersResultDto{}
-		mockedRepository.On("Get", &r, bson.M{"userName": dto.UserName}, bson.M{"_id": 1} ).Return(nil).Once()
+		mockedRepository.On("Get", &r, bson.M{"userName": dto.UserName}, bson.M{"_id": 1}).Return(nil).Once()
 
 		hasshedPass := "hashedPass"
 		mockedBcryptProvider.On("GenerateFromPassword", []byte(dto.NewPassword), bcryptCost).Return([]byte(hasshedPass), nil).Once()
@@ -86,7 +86,7 @@ func TestUserService(t *testing.T) {
 		}
 
 		r := []models.GetUsersResultDto{}
-		mockedRepository.On("Get", &r, bson.M{"userName": dto.UserName}, bson.M{"_id": 1} ).Return(nil).Once()
+		mockedRepository.On("Get", &r, bson.M{"userName": dto.UserName}, bson.M{"_id": 1}).Return(nil).Once()
 
 		mockedBcryptProvider.On("GenerateFromPassword", []byte(dto.NewPassword), bcryptCost).Return([]byte(""), errors.New("wadus")).Once()
 
@@ -111,7 +111,7 @@ func TestUserService(t *testing.T) {
 			ID: "id",
 		}
 		r := []models.GetUsersResultDto{item}
-		mockedRepository.On("Get", &[]models.GetUsersResultDto{}, bson.M{"userName": dto.UserName}, bson.M{"_id": 1} ).Return(nil).Once().Run(func(args mock.Arguments) {
+		mockedRepository.On("Get", &[]models.GetUsersResultDto{}, bson.M{"userName": dto.UserName}, bson.M{"_id": 1}).Return(nil).Once().Run(func(args mock.Arguments) {
 			arg := args.Get(0).(*[]models.GetUsersResultDto)
 			*arg = r
 		})

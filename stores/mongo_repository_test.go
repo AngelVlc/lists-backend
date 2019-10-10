@@ -77,19 +77,6 @@ func TestUpdate(t *testing.T) {
 		assertFailedOperation(t, testMongoCollection, err, msg)
 	})
 
-	t.Run("Update() returns an invalid id error when the id is not valid", func(t *testing.T) {
-		id := "wadus"
-
-		err := repository.Update(id, &id)
-
-		assert.IsType(t, &appErrors.BadRequestError{}, err)
-
-		assert.Equal(t, fmt.Sprintf("%q is not a valid id", id), err.Error())
-
-		msg := fmt.Sprintf("%q is not a valid id", id)
-		assertFailedOperation(t, testMongoCollection, err, msg)
-	})
-
 	t.Run("Update() updates a list", func(t *testing.T) {
 		id := bson.NewObjectId().Hex()
 		l := models.SampleList()
@@ -132,18 +119,6 @@ func TestRemove(t *testing.T) {
 		assertFailedOperation(t, testMongoCollection, err, msg)
 	})
 
-	t.Run("Remove() returns an invalid id error when the id is not valid", func(t *testing.T) {
-		id := "wadus"
-
-		err := repository.Remove(id)
-
-		assert.IsType(t, &appErrors.BadRequestError{}, err)
-		assert.Equal(t, fmt.Sprintf("%q is not a valid id", id), err.Error())
-
-		msg := fmt.Sprintf("%q is not a valid id", id)
-		assertFailedOperation(t, testMongoCollection, err, msg)
-	})
-
 	t.Run("Remove() removes a list", func(t *testing.T) {
 		oidHex := bson.NewObjectId().Hex()
 
@@ -181,18 +156,6 @@ func TestGetSingle(t *testing.T) {
 		assert.IsType(t, &appErrors.NotFoundError{}, err)
 
 		msg := fmt.Sprintf("document with id %q not found", data.ID)
-		assertFailedOperation(t, testMongoCollection, err, msg)
-	})
-
-	t.Run("GetSingle() returns an invalid id error when the id is not valid", func(t *testing.T) {
-		id := "wadus"
-
-		err := repository.GetSingle(id, &models.List{})
-
-		assert.IsType(t, &appErrors.BadRequestError{}, err)
-		assert.Equal(t, fmt.Sprintf("%q is not a valid id", id), err.Error())
-
-		msg := fmt.Sprintf("%q is not a valid id", id)
 		assertFailedOperation(t, testMongoCollection, err, msg)
 	})
 
@@ -270,6 +233,29 @@ func TestGet(t *testing.T) {
 		err := repository.Get(&r, nil, bson.M{"name": 1})
 
 		assertFailedOperation(t, testMongoCollection, err, "Error retrieving from the database")
+	})
+}
+
+func TestIsValidID(t *testing.T) {
+	testMongoCollection := new(MockedMongoCollection)
+	repository := MongoRepository{testMongoCollection}
+
+	t.Run("IsValidID() returns true if the id is valid", func(t *testing.T) {
+		id := bson.NewObjectId().Hex()
+
+		got := repository.IsValidID(id)
+
+		want := true
+
+		assert.Equal(t, want, got, "they should be equal")
+	})
+
+	t.Run("IsValidID() returns false if the id is not valid", func(t *testing.T) {
+		got := repository.IsValidID("wadus")
+
+		want := false
+
+		assert.Equal(t, want, got, "they should be equal")
 	})
 }
 

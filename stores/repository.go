@@ -7,4 +7,5 @@ type Repository interface {
 	Add(item interface{}) (string, error)
 	Remove(id string) error
 	Update(id string, item interface{}) error
+	IsValidID(id string) bool
 }

@@ -1,7 +1,6 @@
 package stores
 
 import (
-	"fmt"
 	appErrors "github.com/AngelVlc/lists-backend/errors"
 	"gopkg.in/mgo.v2/bson"
 	"reflect"
@@ -41,10 +40,6 @@ func (s *MongoRepository) Add(doc interface{}) (string, error) {
 
 // Update updates a document
 func (s *MongoRepository) Update(id string, doc interface{}) error {
-	if err := s.isValidID(id); err != nil {
-		return err
-	}
-
 	reflect.ValueOf(doc).Elem().FieldByName("ID").SetString(id)
 
 	if err := s.mongoCollection.Update(id, doc); err != nil {
@@ -65,10 +60,6 @@ func (s *MongoRepository) Update(id string, doc interface{}) error {
 
 // Remove removes a document from the collection
 func (s *MongoRepository) Remove(id string) error {
-	if err := s.isValidID(id); err != nil {
-		return err
-	}
-
 	if err := s.mongoCollection.Remove(id); err != nil {
 		if err.Error() == "not found" {
 			return &appErrors.NotFoundError{
@@ -87,10 +78,6 @@ func (s *MongoRepository) Remove(id string) error {
 
 // GetSingle returns a single document
 func (s *MongoRepository) GetSingle(id string, doc interface{}) error {
-	if err := s.isValidID(id); err != nil {
-		return err
-	}
-
 	if err := s.mongoCollection.FindOne(id, doc); err != nil {
 		if err.Error() == "not found" {
 			return &appErrors.NotFoundError{
@@ -107,10 +94,7 @@ func (s *MongoRepository) GetSingle(id string, doc interface{}) error {
 	return nil
 }
 
-func (s *MongoRepository) isValidID(id string) error {
-	if !bson.IsObjectIdHex(id) {
-		return &appErrors.BadRequestError{Msg: fmt.Sprintf("%q is not a valid id", id), InternalError: nil}
-	}
-
-	return nil
+// IsValidID returns true if the id is valid
+func (s *MongoRepository) IsValidID(id string) bool {
+	return bson.IsObjectIdHex(id)
 }
