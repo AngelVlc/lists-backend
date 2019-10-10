@@ -76,9 +76,9 @@ func (s *MongoRepository) Remove(id string) error {
 	return nil
 }
 
-// GetSingle returns a single document
-func (s *MongoRepository) GetSingle(id string, doc interface{}) error {
-	if err := s.mongoCollection.FindOne(id, doc); err != nil {
+// GetByID returns a single document
+func (s *MongoRepository) GetByID(id string, doc interface{}) error {
+	if err := s.mongoCollection.FindOneById(id, doc); err != nil {
 		if err.Error() == "not found" {
 			return &appErrors.NotFoundError{
 				ID:    id,

@@ -104,7 +104,7 @@ func TestListsService(t *testing.T) {
 	t.Run("GetSingleList() should call repository.RemoveList", func(t *testing.T) {
 		l := models.List{}
 
-		mockedRepository.On("GetSingle", "id", &l).Return(errors.New("error")).Once()
+		mockedRepository.On("GetByID", "id", &l).Return(errors.New("error")).Once()
 		mockedRepository.On("IsValidID", "id").Return(true).Once()
 
 		err := service.GetSingleList("id", &l)

@@ -33,7 +33,7 @@ func (m *mockedRepository) Update(id string, doc interface{}) error {
 	return args.Error(0)
 }
 
-func (m *mockedRepository) GetSingle(id string, item interface{}) error {
+func (m *mockedRepository) GetByID(id string, item interface{}) error {
 	args := m.Called(id, item)
 	return args.Error(0)
 }

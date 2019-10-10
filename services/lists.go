@@ -58,7 +58,7 @@ func (s *MyListsService) GetSingleList(id string, l *models.List) error {
 		return s.getInvalidIDError(id)
 	}
 
-	return s.listsRepository().GetSingle(id, l)
+	return s.listsRepository().GetByID(id, l)
 }
 
 // GetLists returns the lists

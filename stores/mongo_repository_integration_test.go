@@ -23,7 +23,7 @@ func TestMongoStore(t *testing.T) {
 	assert.NotEmpty(t, id)
 
 	foundList := models.List{}
-	err = repository.GetSingle(id, &foundList)
+	err = repository.GetByID(id, &foundList)
 	assert.Nil(t, err)
 	assert.Equal(t, data.Name, foundList.Name)
 
@@ -33,7 +33,7 @@ func TestMongoStore(t *testing.T) {
 	assert.Nil(t, err)
 
 	foundList = models.List{}
-	err = repository.GetSingle(gotLists[0].ID, &foundList)
+	err = repository.GetByID(gotLists[0].ID, &foundList)
 	assert.Nil(t, err)
 	assert.Equal(t, data.Name, foundList.Name)
 
@@ -43,7 +43,7 @@ func TestMongoStore(t *testing.T) {
 	assert.Nil(t, err)
 
 	foundList = models.List{}
-	err = repository.GetSingle(gotLists[0].ID, &foundList)
+	err = repository.GetByID(gotLists[0].ID, &foundList)
 	assert.Nil(t, err)
 	assert.Equal(t, dataToReplace.Name, foundList.Name)
 
@@ -51,7 +51,7 @@ func TestMongoStore(t *testing.T) {
 	assert.Nil(t, err)
 
 	foundList = models.List{}
-	err = repository.GetSingle(gotLists[0].ID, &foundList)
+	err = repository.GetByID(gotLists[0].ID, &foundList)
 	assert.NotNil(t, err)
 
 	err = session.session.DB(session.databaseName).C("lists").DropCollection()

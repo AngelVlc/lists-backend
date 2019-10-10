@@ -20,7 +20,7 @@ func (m *MockedMongoCollection) Find(doc interface{}, query interface{}, selecto
 	return args.Error(0)
 }
 
-func (m *MockedMongoCollection) FindOne(id string, doc interface{}) error {
+func (m *MockedMongoCollection) FindOneById(id string, doc interface{}) error {
 	args := m.Called(id, doc)
 	return args.Error(0)
 }
@@ -135,23 +135,23 @@ func TestGetSingle(t *testing.T) {
 
 	repository := MongoRepository{testMongoCollection}
 
-	t.Run("GetSingle() returns an unexpected error when the remove fails", func(t *testing.T) {
+	t.Run("GetByID() returns an unexpected error when the remove fails", func(t *testing.T) {
 		data := sampleList()
-		testMongoCollection.On("FindOne", data.ID, &models.List{}).Return(errors.New("wadus")).Once()
+		testMongoCollection.On("FindOneById", data.ID, &models.List{}).Return(errors.New("wadus")).Once()
 
-		err := repository.GetSingle(data.ID, &models.List{})
+		err := repository.GetByID(data.ID, &models.List{})
 
 		assert.IsType(t, &appErrors.UnexpectedError{}, err)
 
 		assertFailedOperation(t, testMongoCollection, err, "Error retrieving from the database")
 	})
 
-	t.Run("GetSingle() returns a not found error when document does not exits", func(t *testing.T) {
+	t.Run("GetByID() returns a not found error when document does not exits", func(t *testing.T) {
 		data := sampleList()
-		testMongoCollection.On("FindOne", data.ID, &models.List{}).Return(errors.New("not found")).Once()
+		testMongoCollection.On("FindOneById", data.ID, &models.List{}).Return(errors.New("not found")).Once()
 		testMongoCollection.On("Name").Return("document").Once()
 
-		err := repository.GetSingle(data.ID, &models.List{})
+		err := repository.GetByID(data.ID, &models.List{})
 
 		assert.IsType(t, &appErrors.NotFoundError{}, err)
 
@@ -159,16 +159,16 @@ func TestGetSingle(t *testing.T) {
 		assertFailedOperation(t, testMongoCollection, err, msg)
 	})
 
-	t.Run("GetSingle() returns a single list", func(t *testing.T) {
+	t.Run("GetByID() returns a single list", func(t *testing.T) {
 		data := sampleList()
-		testMongoCollection.On("FindOne", data.ID, &models.List{}).Return(nil).Once().Run(func(args mock.Arguments) {
+		testMongoCollection.On("FindOneById", data.ID, &models.List{}).Return(nil).Once().Run(func(args mock.Arguments) {
 			arg := args.Get(1).(*models.List)
 			*arg = data
 		})
 
 		want := data
 		got := models.List{}
-		err := repository.GetSingle(data.ID, &got)
+		err := repository.GetByID(data.ID, &got)
 
 		assert.Equal(t, want, got, "they should be equal")
 
