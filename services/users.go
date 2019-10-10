@@ -10,6 +10,7 @@ import (
 // UsersService is the interface a users service must implement
 type UsersService interface {
 	AddUser(dto *models.UserDto) (string, error)
+	CheckIfUserPasswordIsOk(userName string, password string) error
 }
 
 // MyUsersService is the service for the users entity
@@ -55,6 +56,25 @@ func (s *MyUsersService) AddUser(dto *models.UserDto) (string, error) {
 	return s.usersRepository().Add(&user)
 }
 
+// CheckIfUserPasswordIsOk returns nil if the password is correct or an error if it isn't
+func (s *MyUsersService) CheckIfUserPasswordIsOk(userName string, password string) error {
+	foundUser, err := s.getUserByUserName(userName)
+	if err != nil {
+		return err
+	}
+
+	if foundUser == nil {
+		return &appErrors.BadRequestError{Msg: "The user does not exist", InternalError: nil}
+	}
+
+	err = s.bcryptPrv.CompareHashAndPassword([]byte(foundUser.PasswordHash), []byte(password))
+	if err != nil {
+		return &appErrors.BadRequestError{Msg: "Invalid password", InternalError: nil}
+	}
+
+	return nil
+}
+
 func (s *MyUsersService) usersRepository() stores.Repository {
 	return s.session.GetRepository("users")
 }
@@ -67,4 +87,18 @@ func (s *MyUsersService) existsUser(userName string) (bool, error) {
 	}
 
 	return len(existingUsers) > 0, nil
+}
+
+func (s *MyUsersService) getUserByUserName(userName string) (*models.User, error) {
+	foundUsers := []models.User{}
+	err := s.usersRepository().Get(&foundUsers, bson.M{"userName": userName}, nil)
+	if err != nil {
+		return nil, &appErrors.UnexpectedError{Msg: "Error checking if user name exists", InternalError: err}
+	}
+
+	if len(foundUsers) == 0 {
+		return nil, nil
+	}
+
+	return &foundUsers[0], nil
 }

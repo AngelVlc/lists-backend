@@ -23,6 +23,11 @@ func (us *mockedUsersService) AddUser(dto *models.UserDto) (string, error) {
 	return args.String(0), args.Error(1)
 }
 
+func (us *mockedUsersService) CheckIfUserPasswordIsOk(userName string, password string) error {
+	args := us.Called(userName, password)
+	return args.Error(1)
+}
+
 func TestUsersHandler(t *testing.T) {
 	testUsersSrv := new(mockedUsersService)
 

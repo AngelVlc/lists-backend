@@ -98,6 +98,10 @@ func TestUserService(t *testing.T) {
 		unexpectErr, isError := err.(*appErrors.UnexpectedError)
 		assert.Equal(t, true, isError, "should be a bad request error")
 		assert.Equal(t, "Error encrypting password", unexpectErr.Error())
+
+		mockedSession.AssertExpectations(t)
+		mockedRepository.AssertExpectations(t)
+		mockedBcryptProvider.AssertExpectations(t)
 	})
 
 	t.Run("AddUser() should return a BadRequestError if a user with the same name exists", func(t *testing.T) {
@@ -124,5 +128,82 @@ func TestUserService(t *testing.T) {
 		badReqErr, isBadReqErr := err.(*appErrors.BadRequestError)
 		assert.Equal(t, true, isBadReqErr, "should be a bad request error")
 		assert.Equal(t, "A user with the same user name already exists", badReqErr.Error())
+
+		mockedSession.AssertExpectations(t)
+		mockedRepository.AssertExpectations(t)
+	})
+
+	t.Run("CheckIfUserPasswordIsOk() should return nil if the password is correct", func(t *testing.T) {
+		user := models.User{
+			UserName:     "wadus",
+			PasswordHash: "hash",
+		}
+
+		mockedRepository.On("Get", &[]models.User{}, bson.M{"userName": user.UserName}, nil).Return(nil).Once().Run(func(args mock.Arguments) {
+			user := models.User{
+				PasswordHash: "hash",
+			}
+			arg := args.Get(0).(*[]models.User)
+			*arg = []models.User{user}
+		})
+
+		mockedBcryptProvider.On("CompareHashAndPassword", []byte(user.PasswordHash), []byte("pass")).Return(nil).Once()
+
+		err := service.CheckIfUserPasswordIsOk(user.UserName, "pass")
+
+		assert.Nil(t, err)
+
+		mockedSession.AssertExpectations(t)
+		mockedRepository.AssertExpectations(t)
+		mockedBcryptProvider.AssertExpectations(t)
+	})
+
+	t.Run("CheckIfUserPasswordIsOk() should return a badRequestError if the user doesn't exist", func(t *testing.T) {
+		userName := "wadus"
+
+		mockedRepository.On("Get", &[]models.User{}, bson.M{"userName": userName}, nil).Return(nil).Once().Run(func(args mock.Arguments) {
+			arg := args.Get(0).(*[]models.User)
+			*arg = []models.User{}
+		})
+
+		err := service.CheckIfUserPasswordIsOk(userName, "pass")
+
+		assert.NotNil(t, err)
+
+		badReqErr, isBadReqErr := err.(*appErrors.BadRequestError)
+		assert.Equal(t, true, isBadReqErr, "should be a bad request error")
+		assert.Equal(t, "The user does not exist", badReqErr.Error())
+
+		mockedSession.AssertExpectations(t)
+		mockedRepository.AssertExpectations(t)
+	})
+
+	t.Run("CheckIfUserPasswordIsOk() should return a badRequestError if the password is not correct", func(t *testing.T) {
+		user := models.User{
+			UserName:     "wadus",
+			PasswordHash: "hash",
+		}
+
+		mockedRepository.On("Get", &[]models.User{}, bson.M{"userName": user.UserName}, nil).Return(nil).Once().Run(func(args mock.Arguments) {
+			user := models.User{
+				PasswordHash: "hash",
+			}
+			arg := args.Get(0).(*[]models.User)
+			*arg = []models.User{user}
+		})
+
+		mockedBcryptProvider.On("CompareHashAndPassword", []byte(user.PasswordHash), []byte("pass")).Return(errors.New("wadus")).Once()
+
+		err := service.CheckIfUserPasswordIsOk(user.UserName, "pass")
+
+		assert.NotNil(t, err)
+
+		badReqErr, isBadReqErr := err.(*appErrors.BadRequestError)
+		assert.Equal(t, true, isBadReqErr, "should be a bad request error")
+		assert.Equal(t, "Invalid password", badReqErr.Error())
+
+		mockedSession.AssertExpectations(t)
+		mockedRepository.AssertExpectations(t)
+		mockedBcryptProvider.AssertExpectations(t)
 	})
 }
