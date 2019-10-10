@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"testing"
+	"gopkg.in/mgo.v2/bson"
 )
 
 type mockedBcryptProvider struct {
@@ -40,6 +41,9 @@ func TestUserService(t *testing.T) {
 			NewPassword:        "pass",
 			ConfirmNewPassword: "pass",
 		}
+
+		r := []models.GetUsersResultDto{}
+		mockedRepository.On("Get", &r, bson.M{"userName": dto.UserName}, bson.M{"_id": 1} ).Return(nil).Once()
 
 		hasshedPass := "hashedPass"
 		mockedBcryptProvider.On("GenerateFromPassword", []byte(dto.NewPassword), bcryptCost).Return([]byte(hasshedPass), nil).Once()
@@ -81,6 +85,9 @@ func TestUserService(t *testing.T) {
 			ConfirmNewPassword: "pass",
 		}
 
+		r := []models.GetUsersResultDto{}
+		mockedRepository.On("Get", &r, bson.M{"userName": dto.UserName}, bson.M{"_id": 1} ).Return(nil).Once()
+
 		mockedBcryptProvider.On("GenerateFromPassword", []byte(dto.NewPassword), bcryptCost).Return([]byte(""), errors.New("wadus")).Once()
 
 		id, err := service.AddUser(&dto)
@@ -91,5 +98,31 @@ func TestUserService(t *testing.T) {
 		unexpectErr, isError := err.(*appErrors.UnexpectedError)
 		assert.Equal(t, true, isError, "should be a bad request error")
 		assert.Equal(t, "Error encrypting password", unexpectErr.Error())
+	})
+
+	t.Run("AddUser() should return a BadRequestError if a user with the same name exists", func(t *testing.T) {
+		dto := models.UserDto{
+			UserName:           "user",
+			NewPassword:        "pass",
+			ConfirmNewPassword: "pass",
+		}
+
+		item := models.GetUsersResultDto{
+			ID: "id",
+		}
+		r := []models.GetUsersResultDto{item}
+		mockedRepository.On("Get", &[]models.GetUsersResultDto{}, bson.M{"userName": dto.UserName}, bson.M{"_id": 1} ).Return(nil).Once().Run(func(args mock.Arguments) {
+			arg := args.Get(0).(*[]models.GetUsersResultDto)
+			*arg = r
+		})
+
+		id, err := service.AddUser(&dto)
+
+		assert.Empty(t, id)
+		assert.NotNil(t, err)
+
+		badReqErr, isBadReqErr := err.(*appErrors.BadRequestError)
+		assert.Equal(t, true, isBadReqErr, "should be a bad request error")
+		assert.Equal(t, "A user with the same user name already exists", badReqErr.Error())
 	})
 }
