@@ -10,7 +10,6 @@ import (
 	"github.com/stretchr/testify/mock"
 	"gopkg.in/mgo.v2/bson"
 	"net/http"
-	"net/http/httptest"
 	"strings"
 	"testing"
 )
@@ -59,9 +58,8 @@ func TestLists(t *testing.T) {
 		})
 
 		request, _ := http.NewRequest(http.MethodGet, "/lists", nil)
-		response := httptest.NewRecorder()
 
-		got := ListsHandler(response, request, testSrvProvider)
+		got := ListsHandler(request, testSrvProvider)
 
 		want := okResult{data, http.StatusOK}
 
@@ -75,9 +73,8 @@ func TestLists(t *testing.T) {
 		testListsSrv.On("GetLists", &[]models.GetListsResultDto{}).Return(err).Once()
 
 		request, _ := http.NewRequest(http.MethodGet, "/lists", nil)
-		response := httptest.NewRecorder()
 
-		got := ListsHandler(response, request, testSrvProvider)
+		got := ListsHandler(request, testSrvProvider)
 
 		errorResult, isErrorResult := got.(errorResult)
 		assert.Equal(t, true, isErrorResult, "should be an error result")
@@ -93,9 +90,8 @@ func TestLists(t *testing.T) {
 		testListsSrv.On("GetSingleList", id, &models.List{}).Return(errors.New("wadus")).Once()
 
 		request, _ := http.NewRequest(http.MethodGet, "/lists/"+id, nil)
-		response := httptest.NewRecorder()
 
-		got := ListsHandler(response, request, testSrvProvider)
+		got := ListsHandler(request, testSrvProvider)
 
 		errorResult, isErrorResult := got.(errorResult)
 		assert.Equal(t, true, isErrorResult, "should be an error result")
@@ -114,9 +110,8 @@ func TestLists(t *testing.T) {
 		})
 
 		request, _ := http.NewRequest(http.MethodGet, "/lists/"+data.ID, nil)
-		response := httptest.NewRecorder()
 
-		got := ListsHandler(response, request, testSrvProvider)
+		got := ListsHandler(request, testSrvProvider)
 
 		want := okResult{data, http.StatusOK}
 
@@ -136,9 +131,8 @@ func TestLists(t *testing.T) {
 		body, _ := json.Marshal(listDto)
 		request, _ := http.NewRequest(http.MethodPost, "/lists", bytes.NewBuffer(body))
 		request.Header.Set("Content-type", "application/json")
-		response := httptest.NewRecorder()
 
-		got := ListsHandler(response, request, testSrvProvider)
+		got := ListsHandler(request, testSrvProvider)
 		want := okResult{"id", http.StatusCreated}
 
 		assert.Equal(t, want, got, "should be equal")
@@ -147,9 +141,8 @@ func TestLists(t *testing.T) {
 
 	t.Run("POST with invalid body should return an errorResult with a BadRequestError", func(t *testing.T) {
 		request, _ := http.NewRequest(http.MethodPost, "/lists", strings.NewReader("wadus"))
-		response := httptest.NewRecorder()
 
-		got := ListsHandler(response, request, testSrvProvider)
+		got := ListsHandler(request, testSrvProvider)
 
 		errorRes, isErrorResult := got.(errorResult)
 		assert.Equal(t, true, isErrorResult, "should be an error result")
@@ -163,9 +156,8 @@ func TestLists(t *testing.T) {
 
 	t.Run("POST without body should return an errorResult with a BadRequestError", func(t *testing.T) {
 		request, _ := http.NewRequest(http.MethodPost, "/lists", nil)
-		response := httptest.NewRecorder()
 
-		got := ListsHandler(response, request, testSrvProvider)
+		got := ListsHandler(request, testSrvProvider)
 		errorRes, isErrorResult := got.(errorResult)
 		assert.Equal(t, true, isErrorResult, "should be an error result")
 
@@ -188,9 +180,8 @@ func TestLists(t *testing.T) {
 		body, _ := json.Marshal(listDto)
 		request, _ := http.NewRequest(http.MethodPost, "/lists", bytes.NewBuffer(body))
 		request.Header.Set("Content-type", "application/json")
-		response := httptest.NewRecorder()
 
-		got := ListsHandler(response, request, testSrvProvider)
+		got := ListsHandler(request, testSrvProvider)
 		errorRes, isErrorResult := got.(errorResult)
 		assert.Equal(t, true, isErrorResult, "should be an error result")
 
@@ -206,9 +197,8 @@ func TestLists(t *testing.T) {
 		testListsSrv.On("RemoveList", id).Return(err).Once()
 
 		request, _ := http.NewRequest(http.MethodDelete, "/lists/"+id, nil)
-		response := httptest.NewRecorder()
 
-		got := ListsHandler(response, request, testSrvProvider)
+		got := ListsHandler(request, testSrvProvider)
 		errorRes, isErrorResult := got.(errorResult)
 		assert.Equal(t, true, isErrorResult, "should be an error result")
 
@@ -223,9 +213,8 @@ func TestLists(t *testing.T) {
 		testListsSrv.On("RemoveList", id).Return(nil).Once()
 
 		request, _ := http.NewRequest(http.MethodDelete, "/lists/"+id, nil)
-		response := httptest.NewRecorder()
 
-		got := ListsHandler(response, request, testSrvProvider)
+		got := ListsHandler(request, testSrvProvider)
 		want := okResult{nil, http.StatusNoContent}
 
 		assert.Equal(t, want, got, "should be equal")
@@ -234,9 +223,8 @@ func TestLists(t *testing.T) {
 
 	t.Run("PUT with invalid body should return an errorResult with a BadRequestError", func(t *testing.T) {
 		request, _ := http.NewRequest(http.MethodPut, "/lists", strings.NewReader("wadus"))
-		response := httptest.NewRecorder()
 
-		got := ListsHandler(response, request, testSrvProvider)
+		got := ListsHandler(request, testSrvProvider)
 
 		errorRes, isErrorResult := got.(errorResult)
 		assert.Equal(t, true, isErrorResult, "should be an error result")
@@ -250,9 +238,8 @@ func TestLists(t *testing.T) {
 
 	t.Run("PUT without body should return an errorResult with a BadRequestError", func(t *testing.T) {
 		request, _ := http.NewRequest(http.MethodPut, "/lists", nil)
-		response := httptest.NewRecorder()
 
-		got := ListsHandler(response, request, testSrvProvider)
+		got := ListsHandler(request, testSrvProvider)
 		errorRes, isErrorResult := got.(errorResult)
 		assert.Equal(t, true, isErrorResult, "should be an error result")
 
@@ -274,9 +261,8 @@ func TestLists(t *testing.T) {
 		body, _ := json.Marshal(listDto)
 		request, _ := http.NewRequest(http.MethodPut, "/lists/"+id, bytes.NewBuffer(body))
 		request.Header.Set("Content-type", "application/json")
-		response := httptest.NewRecorder()
 
-		got := ListsHandler(response, request, testSrvProvider)
+		got := ListsHandler(request, testSrvProvider)
 		errorRes, isErrorResult := got.(errorResult)
 		assert.Equal(t, true, isErrorResult, "should be an error result")
 
@@ -297,9 +283,8 @@ func TestLists(t *testing.T) {
 		body, _ := json.Marshal(listDto)
 		request, _ := http.NewRequest(http.MethodPut, "/lists/"+id, bytes.NewBuffer(body))
 		request.Header.Set("Content-type", "application/json")
-		response := httptest.NewRecorder()
 
-		got := ListsHandler(response, request, testSrvProvider)
+		got := ListsHandler(request, testSrvProvider)
 		want := okResult{data, http.StatusOK}
 
 		assert.Equal(t, want, got, "should be equal")
@@ -308,9 +293,8 @@ func TestLists(t *testing.T) {
 
 	t.Run("returns and okResult with a 405 status when the method is not GET, POST, PUT or DELETE", func(t *testing.T) {
 		request, _ := http.NewRequest(http.MethodPatch, "/lists", nil)
-		response := httptest.NewRecorder()
 
-		ListsHandler(response, request, testSrvProvider)
+		ListsHandler(request, testSrvProvider)
 
 		assertListsExpectations(t, testSrvProvider, testListsSrv)
 	})

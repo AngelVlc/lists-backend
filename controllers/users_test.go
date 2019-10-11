@@ -9,7 +9,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"net/http"
-	"net/http/httptest"
 	"strings"
 	"testing"
 )
@@ -43,9 +42,8 @@ func TestUsersHandler(t *testing.T) {
 		body, _ := json.Marshal(userDto)
 		request, _ := http.NewRequest(http.MethodPost, "/users", bytes.NewBuffer(body))
 		request.Header.Set("Content-type", "application/json")
-		response := httptest.NewRecorder()
 
-		got := UsersHandler(response, request, testSrvProvider)
+		got := UsersHandler(request, testSrvProvider)
 		want := okResult{"id", http.StatusCreated}
 
 		assert.Equal(t, want, got, "should be equal")
@@ -54,9 +52,8 @@ func TestUsersHandler(t *testing.T) {
 
 	t.Run("POST with invalid body should return an errorResult with a BadRequestError", func(t *testing.T) {
 		request, _ := http.NewRequest(http.MethodPost, "/users", strings.NewReader("wadus"))
-		response := httptest.NewRecorder()
 
-		got := UsersHandler(response, request, testSrvProvider)
+		got := UsersHandler(request, testSrvProvider)
 
 		errorRes, isErrorResult := got.(errorResult)
 		assert.Equal(t, true, isErrorResult, "should be an error result")
@@ -70,9 +67,8 @@ func TestUsersHandler(t *testing.T) {
 
 	t.Run("POST without body should return an errorResult with a BadRequestError", func(t *testing.T) {
 		request, _ := http.NewRequest(http.MethodPost, "/users", nil)
-		response := httptest.NewRecorder()
 
-		got := UsersHandler(response, request, testSrvProvider)
+		got := UsersHandler(request, testSrvProvider)
 
 		errorRes, isErrorResult := got.(errorResult)
 		assert.Equal(t, true, isErrorResult, "should be an error result")
@@ -95,9 +91,8 @@ func TestUsersHandler(t *testing.T) {
 		body, _ := json.Marshal(userDto)
 		request, _ := http.NewRequest(http.MethodPost, "/users", bytes.NewBuffer(body))
 		request.Header.Set("Content-type", "application/json")
-		response := httptest.NewRecorder()
 
-		got := UsersHandler(response, request, testSrvProvider)
+		got := UsersHandler(request, testSrvProvider)
 
 		errorResult, isErrorResult := got.(errorResult)
 		assert.Equal(t, true, isErrorResult, "should be an error result")
@@ -108,9 +103,8 @@ func TestUsersHandler(t *testing.T) {
 
 	t.Run("returns and okResult with a 405 status when the method is not GET, POST, PUT or DELETE", func(t *testing.T) {
 		request, _ := http.NewRequest(http.MethodPatch, "/users", nil)
-		response := httptest.NewRecorder()
 
-		got := UsersHandler(response, request, testSrvProvider)
+		got := UsersHandler(request, testSrvProvider)
 
 		want := okResult{nil, http.StatusMethodNotAllowed}
 

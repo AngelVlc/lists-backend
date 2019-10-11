@@ -10,58 +10,79 @@ import (
 )
 
 // ListsHandler is the handler for the lists endpoints
-func ListsHandler(w http.ResponseWriter, r *http.Request, serviceProvider services.ServiceProvider) handlerResult {
-	listID := getListIDFromURL(r.URL)
-
+func ListsHandler(r *http.Request, servicePrv services.ServiceProvider) handlerResult {
 	switch r.Method {
 	case http.MethodGet:
-		listSrv := serviceProvider.GetListsService()
-		if listID == "" {
-			r := []models.GetListsResultDto{}
-			err := listSrv.GetLists(&r)
-			if err != nil {
-				return errorResult{err}
-			}
-			return okResult{r, http.StatusOK}
-		}
-		l := models.List{}
-		err := listSrv.GetSingleList(listID, &l)
-		if err != nil {
-			return errorResult{err}
-		}
-		return okResult{l, http.StatusOK}
+		return processListsGET(r, servicePrv)
 	case http.MethodPost:
-		l, err := parseListBody(r)
-		if err != nil {
-			return errorResult{err}
-		}
-		listSrv := serviceProvider.GetListsService()
-		id, err := listSrv.AddList(&l)
-		if err != nil {
-			return errorResult{err}
-		}
-		return okResult{id, http.StatusCreated}
+		return processListsPOST(r, servicePrv)
 	case http.MethodDelete:
-		listSrv := serviceProvider.GetListsService()
-		err := listSrv.RemoveList(listID)
-		if err != nil {
-			return errorResult{err}
-		}
-		return okResult{nil, http.StatusNoContent}
+		return processListsDELETE(r, servicePrv)
 	case http.MethodPut:
-		l, err := parseListBody(r)
-		if err != nil {
-			return errorResult{err}
-		}
-		listSrv := serviceProvider.GetListsService()
-		err = listSrv.UpdateList(listID, &l)
-		if err != nil {
-			return errorResult{err}
-		}
-		return okResult{l, http.StatusOK}
+		return processListsPUT(r, servicePrv)
 	default:
 		return okResult{nil, http.StatusMethodNotAllowed}
 	}
+}
+
+func processListsGET(r *http.Request, servicePrv services.ServiceProvider) handlerResult {
+	listID := getListIDFromURL(r.URL)
+
+	listSrv := servicePrv.GetListsService()
+	if listID == "" {
+		r := []models.GetListsResultDto{}
+		err := listSrv.GetLists(&r)
+		if err != nil {
+			return errorResult{err}
+		}
+		return okResult{r, http.StatusOK}
+	}
+	l := models.List{}
+	err := listSrv.GetSingleList(listID, &l)
+	if err != nil {
+		return errorResult{err}
+	}
+	return okResult{l, http.StatusOK}
+}
+
+func processListsPOST(r *http.Request, servicePrv services.ServiceProvider) handlerResult {
+	l, err := parseListBody(r)
+
+	if err != nil {
+		return errorResult{err}
+	}
+	listSrv := servicePrv.GetListsService()
+	id, err := listSrv.AddList(&l)
+	if err != nil {
+		return errorResult{err}
+	}
+	return okResult{id, http.StatusCreated}
+}
+
+func processListsPUT(r *http.Request, servicePrv services.ServiceProvider) handlerResult {
+	listID := getListIDFromURL(r.URL)
+
+	l, err := parseListBody(r)
+	if err != nil {
+		return errorResult{err}
+	}
+	listSrv := servicePrv.GetListsService()
+	err = listSrv.UpdateList(listID, &l)
+	if err != nil {
+		return errorResult{err}
+	}
+	return okResult{l, http.StatusOK}
+}
+
+func processListsDELETE(r *http.Request, servicePrv services.ServiceProvider) handlerResult {
+	listID := getListIDFromURL(r.URL)
+
+	listSrv := servicePrv.GetListsService()
+	err := listSrv.RemoveList(listID)
+	if err != nil {
+		return errorResult{err}
+	}
+	return okResult{nil, http.StatusNoContent}
 }
 
 func getListIDFromURL(u *url.URL) string {

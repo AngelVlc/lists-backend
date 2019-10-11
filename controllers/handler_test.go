@@ -15,7 +15,7 @@ func TestHandler(t *testing.T) {
 	testSrvProvider := new(mockedServiceProvider)
 
 	t.Run("Returns 200 when no error", func(t *testing.T) {
-		f := func(w http.ResponseWriter, r *http.Request, serviceProvider services.ServiceProvider) handlerResult {
+		f := func(r *http.Request, serviceProvider services.ServiceProvider) handlerResult {
 			return okResult{nil, http.StatusOK}
 		}
 
@@ -33,7 +33,7 @@ func TestHandler(t *testing.T) {
 	})
 
 	t.Run("Return 200 with content when no error", func(t *testing.T) {
-		f := func(w http.ResponseWriter, r *http.Request, serviceProvider services.ServiceProvider) handlerResult {
+		f := func(r *http.Request, serviceProvider services.ServiceProvider) handlerResult {
 			obj := struct {
 				Field1 string
 				Field2 string
@@ -61,7 +61,7 @@ func TestHandler(t *testing.T) {
 	})
 
 	t.Run("Returns 500 when an unexpected error happens", func(t *testing.T) {
-		f := func(w http.ResponseWriter, r *http.Request, serviceProvider services.ServiceProvider) handlerResult {
+		f := func(r *http.Request, serviceProvider services.ServiceProvider) handlerResult {
 			return errorResult{&appErrors.UnexpectedError{Msg: "error", InternalError: errors.New("msg")}}
 		}
 
@@ -80,7 +80,7 @@ func TestHandler(t *testing.T) {
 	})
 
 	t.Run("Returns 404 when a not found error happens", func(t *testing.T) {
-		f := func(w http.ResponseWriter, r *http.Request, serviceProvider services.ServiceProvider) handlerResult {
+		f := func(r *http.Request, serviceProvider services.ServiceProvider) handlerResult {
 			return errorResult{&appErrors.NotFoundError{ID: "id", Model: "model"}}
 		}
 
@@ -99,7 +99,7 @@ func TestHandler(t *testing.T) {
 	})
 
 	t.Run("Returns 400 when a bad request error happens", func(t *testing.T) {
-		f := func(w http.ResponseWriter, r *http.Request, serviceProvider services.ServiceProvider) handlerResult {
+		f := func(r *http.Request, serviceProvider services.ServiceProvider) handlerResult {
 			return errorResult{&appErrors.BadRequestError{Msg: fmt.Sprintf("%q is not a valid id", "id")}}
 		}
 
@@ -118,7 +118,7 @@ func TestHandler(t *testing.T) {
 	})
 
 	t.Run("Returns 500 when an unhandled error happens", func(t *testing.T) {
-		f := func(w http.ResponseWriter, r *http.Request, serviceProvider services.ServiceProvider) handlerResult {
+		f := func(r *http.Request, serviceProvider services.ServiceProvider) handlerResult {
 			return errorResult{errors.New("wadus")}
 		}
 

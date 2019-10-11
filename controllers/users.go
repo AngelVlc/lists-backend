@@ -9,23 +9,26 @@ import (
 )
 
 // UsersHandler is the handler for the users endpoints
-func UsersHandler(w http.ResponseWriter, r *http.Request, serviceProvider services.ServiceProvider) handlerResult {
+func UsersHandler(r *http.Request, servicePrv services.ServiceProvider) handlerResult {
 	switch r.Method {
 	case http.MethodPost:
-		dto, err := parseUserBody(r)
-		if err != nil {
-			return errorResult{err}
-		}
-		userSrv := serviceProvider.GetUsersService()
-		id, err := userSrv.AddUser(&dto)
-		if err != nil {
-			return errorResult{err}
-		}
-		return okResult{id, http.StatusCreated}
+		return processUsersGET(r, servicePrv)
 	default:
 		return okResult{nil, http.StatusMethodNotAllowed}
 	}
+}
 
+func processUsersGET(r *http.Request, servicePrv services.ServiceProvider) handlerResult {
+	dto, err := parseUserBody(r)
+	if err != nil {
+		return errorResult{err}
+	}
+	userSrv := servicePrv.GetUsersService()
+	id, err := userSrv.AddUser(&dto)
+	if err != nil {
+		return errorResult{err}
+	}
+	return okResult{id, http.StatusCreated}
 }
 
 func parseUserBody(r *http.Request) (models.UserDto, error) {
