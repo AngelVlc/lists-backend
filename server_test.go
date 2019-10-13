@@ -54,4 +54,13 @@ func TestServer(t *testing.T) {
 		assert.Equal(t, http.StatusMethodNotAllowed, response.Result().StatusCode, "status are not equal")
 	})
 
+	t.Run("handles /auth/token", func(t *testing.T) {
+		request, _ := http.NewRequest(http.MethodPatch, "/lists/wadus", nil)
+		response := httptest.NewRecorder()
+
+		server.ServeHTTP(response, request)
+
+		assert.Equal(t, http.StatusMethodNotAllowed, response.Result().StatusCode, "status are not equal")
+	})
+
 }
