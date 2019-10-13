@@ -7,6 +7,7 @@ import (
 	"github.com/AngelVlc/lists-backend/services"
 	"net/http"
 	"net/url"
+	"fmt"
 )
 
 // ListsHandler is the handler for the lists endpoints
@@ -96,9 +97,6 @@ func getListIDFromURL(u *url.URL) string {
 }
 
 func parseListBody(r *http.Request) (models.List, error) {
-	if r.Body == nil {
-		return models.List{}, &appErrors.BadRequestError{Msg: "No body"}
-	}
 	decoder := json.NewDecoder(r.Body)
 	var dto models.ListDto
 	err := decoder.Decode(&dto)
