@@ -32,9 +32,6 @@ func processUsersGET(r *http.Request, servicePrv services.ServiceProvider) handl
 }
 
 func parseUserBody(r *http.Request) (models.UserDto, error) {
-	if r.Body == nil {
-		return models.UserDto{}, &appErrors.BadRequestError{Msg: "No body"}
-	}
 	decoder := json.NewDecoder(r.Body)
 	var dto models.UserDto
 	err := decoder.Decode(&dto)

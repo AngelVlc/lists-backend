@@ -65,21 +65,6 @@ func TestUsersHandler(t *testing.T) {
 		assertUsersExpectations(t, testSrvProvider, testUsersSrv)
 	})
 
-	t.Run("POST without body should return an errorResult with a BadRequestError", func(t *testing.T) {
-		request, _ := http.NewRequest(http.MethodPost, "/users", nil)
-
-		got := UsersHandler(request, testSrvProvider)
-
-		errorRes, isErrorResult := got.(errorResult)
-		assert.Equal(t, true, isErrorResult, "should be an error result")
-
-		badReqErr, isNoBodyError := errorRes.err.(*appErrors.BadRequestError)
-		assert.Equal(t, true, isNoBodyError, "should be a bad request error")
-		assert.Equal(t, "No body", badReqErr.Error())
-
-		assertUsersExpectations(t, testSrvProvider, testUsersSrv)
-	})
-
 	t.Run("POST returns an errorResult with the service error when the insert fails", func(t *testing.T) {
 		userDto := userDtoToCreate()
 
