@@ -4,13 +4,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"net/http"
+	"strings"
+	"testing"
+
 	appErrors "github.com/AngelVlc/lists-backend/errors"
 	"github.com/AngelVlc/lists-backend/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"net/http"
-	"strings"
-	"testing"
 )
 
 type mockedUsersService struct {
@@ -22,9 +23,9 @@ func (us *mockedUsersService) AddUser(dto *models.UserDto) (string, error) {
 	return args.String(0), args.Error(1)
 }
 
-func (us *mockedUsersService) CheckIfUserPasswordIsOk(userName string, password string) error {
+func (us *mockedUsersService) CheckIfUserPasswordIsOk(userName string, password string) (*models.User, error) {
 	args := us.Called(userName, password)
-	return args.Error(1)
+	return args.Get(0).(*models.User), args.Error(1)
 }
 
 func TestUsersHandler(t *testing.T) {

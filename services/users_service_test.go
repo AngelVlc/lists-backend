@@ -2,12 +2,13 @@ package services
 
 import (
 	"errors"
+	"testing"
+
 	appErrors "github.com/AngelVlc/lists-backend/errors"
 	"github.com/AngelVlc/lists-backend/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"gopkg.in/mgo.v2/bson"
-	"testing"
 )
 
 type mockedBcryptProvider struct {
@@ -133,25 +134,24 @@ func TestUserService(t *testing.T) {
 		mockedRepository.AssertExpectations(t)
 	})
 
-	t.Run("CheckIfUserPasswordIsOk() should return nil if the password is correct", func(t *testing.T) {
+	t.Run("CheckIfUserPasswordIsOk() should return the user if the password is correct", func(t *testing.T) {
 		user := models.User{
 			UserName:     "wadus",
 			PasswordHash: "hash",
 		}
 
 		mockedRepository.On("Get", &[]models.User{}, bson.M{"userName": user.UserName}, nil).Return(nil).Once().Run(func(args mock.Arguments) {
-			user := models.User{
-				PasswordHash: "hash",
-			}
 			arg := args.Get(0).(*[]models.User)
 			*arg = []models.User{user}
 		})
 
 		mockedBcryptProvider.On("CompareHashAndPassword", []byte(user.PasswordHash), []byte("pass")).Return(nil).Once()
 
-		err := service.CheckIfUserPasswordIsOk(user.UserName, "pass")
+		gotUser, err := service.CheckIfUserPasswordIsOk(user.UserName, "pass")
 
 		assert.Nil(t, err)
+
+		assert.Equal(t, &user, gotUser, "should be equal")
 
 		mockedSession.AssertExpectations(t)
 		mockedRepository.AssertExpectations(t)
@@ -166,8 +166,9 @@ func TestUserService(t *testing.T) {
 			*arg = []models.User{}
 		})
 
-		err := service.CheckIfUserPasswordIsOk(userName, "pass")
+		gotUser, err := service.CheckIfUserPasswordIsOk(userName, "pass")
 
+		assert.Nil(t, gotUser)
 		assert.NotNil(t, err)
 
 		badReqErr, isBadReqErr := err.(*appErrors.BadRequestError)
@@ -194,8 +195,9 @@ func TestUserService(t *testing.T) {
 
 		mockedBcryptProvider.On("CompareHashAndPassword", []byte(user.PasswordHash), []byte("pass")).Return(errors.New("wadus")).Once()
 
-		err := service.CheckIfUserPasswordIsOk(user.UserName, "pass")
+		gotUser, err := service.CheckIfUserPasswordIsOk(user.UserName, "pass")
 
+		assert.Nil(t, gotUser)
 		assert.NotNil(t, err)
 
 		badReqErr, isBadReqErr := err.(*appErrors.BadRequestError)

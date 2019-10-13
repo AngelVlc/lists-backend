@@ -18,3 +18,8 @@ func (sp *mockedServiceProvider) GetListsService() services.ListsService {
 	args := sp.Called()
 	return args.Get(0).(services.ListsService)
 }
+
+func (sp *mockedServiceProvider) GetAuthService() services.AuthService {
+	args := sp.Called()
+	return args.Get(0).(services.AuthService)
+}

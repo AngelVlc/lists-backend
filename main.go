@@ -2,22 +2,27 @@ package main
 
 import (
 	"fmt"
-	"github.com/AngelVlc/lists-backend/services"
-	"github.com/AngelVlc/lists-backend/stores"
 	"log"
 	"net/http"
 	"os"
+
+	"github.com/AngelVlc/lists-backend/services"
+	"github.com/AngelVlc/lists-backend/stores"
 )
 
 func main() {
 	port := os.Getenv("PORT")
 	addr := fmt.Sprintf(":%v", port)
 
+	jwtSecret := os.Getenv("JWT_SECRET")
+
 	ms := stores.NewMyMongoSession(false)
 
 	bp := services.NewMyBcryptProvider()
 
-	sp := services.NewMyServiceProvider(ms, bp)
+	jwtp := services.NewMyJwtProvider(jwtSecret)
+
+	sp := services.NewMyServiceProvider(ms, bp, jwtp)
 
 	server := newServer(sp)
 

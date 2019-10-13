@@ -10,7 +10,7 @@ import (
 // UsersService is the interface a users service must implement
 type UsersService interface {
 	AddUser(dto *models.UserDto) (string, error)
-	CheckIfUserPasswordIsOk(userName string, password string) error
+	CheckIfUserPasswordIsOk(userName string, password string) (*models.User, error)
 }
 
 // MyUsersService is the service for the users entity
@@ -57,22 +57,22 @@ func (s *MyUsersService) AddUser(dto *models.UserDto) (string, error) {
 }
 
 // CheckIfUserPasswordIsOk returns nil if the password is correct or an error if it isn't
-func (s *MyUsersService) CheckIfUserPasswordIsOk(userName string, password string) error {
+func (s *MyUsersService) CheckIfUserPasswordIsOk(userName string, password string) (*models.User, error) {
 	foundUser, err := s.getUserByUserName(userName)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if foundUser == nil {
-		return &appErrors.BadRequestError{Msg: "The user does not exist", InternalError: nil}
+		return nil, &appErrors.BadRequestError{Msg: "The user does not exist", InternalError: nil}
 	}
 
 	err = s.bcryptPrv.CompareHashAndPassword([]byte(foundUser.PasswordHash), []byte(password))
 	if err != nil {
-		return &appErrors.BadRequestError{Msg: "Invalid password", InternalError: nil}
+		return nil, &appErrors.BadRequestError{Msg: "Invalid password", InternalError: nil}
 	}
 
-	return nil
+	return foundUser, nil
 }
 
 func (s *MyUsersService) usersRepository() stores.Repository {

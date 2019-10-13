@@ -7,17 +7,20 @@ import (
 type ServiceProvider interface {
 	GetUsersService() UsersService
 	GetListsService() ListsService
+	GetAuthService() AuthService
 }
 
 type MyServiceProvider struct {
 	session   stores.MongoSession
 	bcryptPrv BcryptProvider
+	jwtPrv    JwtProvider
 }
 
-func NewMyServiceProvider(s stores.MongoSession, bp BcryptProvider) *MyServiceProvider {
+func NewMyServiceProvider(s stores.MongoSession, bp BcryptProvider, jwtp JwtProvider) *MyServiceProvider {
 	return &MyServiceProvider{
 		session:   s,
 		bcryptPrv: bp,
+		jwtPrv:    jwtp,
 	}
 }
 
@@ -27,4 +30,8 @@ func (sp *MyServiceProvider) GetUsersService() UsersService {
 
 func (sp *MyServiceProvider) GetListsService() ListsService {
 	return NewMyListsService(sp.session)
+}
+
+func (sp *MyServiceProvider) GetAuthService() AuthService {
+	return NewMyAuthService(sp.jwtPrv)
 }

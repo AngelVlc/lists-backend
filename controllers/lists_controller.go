@@ -2,12 +2,12 @@ package controllers
 
 import (
 	"encoding/json"
+	"net/http"
+	"net/url"
+
 	appErrors "github.com/AngelVlc/lists-backend/errors"
 	"github.com/AngelVlc/lists-backend/models"
 	"github.com/AngelVlc/lists-backend/services"
-	"net/http"
-	"net/url"
-	"fmt"
 )
 
 // ListsHandler is the handler for the lists endpoints
