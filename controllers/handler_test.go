@@ -5,14 +5,30 @@ import (
 	"fmt"
 	appErrors "github.com/AngelVlc/lists-backend/errors"
 	"github.com/AngelVlc/lists-backend/services"
+	"github.com/AngelVlc/lists-backend/models"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"github.com/stretchr/testify/mock"
 )
 
-func TestHandler(t *testing.T) {
-	testSrvProvider := new(mockedServiceProvider)
+type mockedAuthService struct {
+	mock.Mock
+}
+
+func (s *mockedAuthService) CreateToken(u *models.User) (string, error) {
+	args := s.Called(u)
+	return args.String(0), args.Error(1)
+}
+
+func (s *mockedAuthService) ValidateToken(token string) (*models.JwtClaimsInfo, error) {
+	args := s.Called(token)
+	return args.Get(0).(*models.JwtClaimsInfo), args.Error(1)
+}
+
+func TestHandlerWithoutAuth(t *testing.T) {
+	mockServicePrv := new(mockedServiceProvider)
 
 	t.Run("Returns 200 when no error", func(t *testing.T) {
 		f := func(r *http.Request, serviceProvider services.ServiceProvider) handlerResult {
@@ -21,10 +37,10 @@ func TestHandler(t *testing.T) {
 
 		handler := Handler{
 			HandlerFunc:     f,
-			ServiceProvider: testSrvProvider,
+			ServiceProvider: mockServicePrv,
 		}
 
-		request, _ := http.NewRequest(http.MethodGet, "/lists", nil)
+		request, _ := http.NewRequest(http.MethodGet, "/wadus", nil)
 		response := httptest.NewRecorder()
 
 		handler.ServeHTTP(response, request)
@@ -32,7 +48,7 @@ func TestHandler(t *testing.T) {
 		assert.Equal(t, http.StatusOK, response.Result().StatusCode)
 	})
 
-	t.Run("Return 200 with content when no error", func(t *testing.T) {
+	t.Run("Returns 200 with content when no error", func(t *testing.T) {
 		f := func(r *http.Request, serviceProvider services.ServiceProvider) handlerResult {
 			obj := struct {
 				Field1 string
@@ -43,10 +59,10 @@ func TestHandler(t *testing.T) {
 
 		handler := Handler{
 			HandlerFunc:     f,
-			ServiceProvider: testSrvProvider,
+			ServiceProvider: mockServicePrv,
 		}
 
-		request, _ := http.NewRequest(http.MethodGet, "/lists", nil)
+		request, _ := http.NewRequest(http.MethodGet, "/wadus", nil)
 		response := httptest.NewRecorder()
 
 		handler.ServeHTTP(response, request)
@@ -67,10 +83,10 @@ func TestHandler(t *testing.T) {
 
 		handler := Handler{
 			HandlerFunc:     f,
-			ServiceProvider: testSrvProvider,
+			ServiceProvider: mockServicePrv,
 		}
 
-		request, _ := http.NewRequest(http.MethodGet, "/lists", nil)
+		request, _ := http.NewRequest(http.MethodGet, "/wadus", nil)
 		response := httptest.NewRecorder()
 
 		handler.ServeHTTP(response, request)
@@ -86,10 +102,10 @@ func TestHandler(t *testing.T) {
 
 		handler := Handler{
 			HandlerFunc:     f,
-			ServiceProvider: testSrvProvider,
+			ServiceProvider: mockServicePrv,
 		}
 
-		request, _ := http.NewRequest(http.MethodGet, "/lists", nil)
+		request, _ := http.NewRequest(http.MethodGet, "/wadus", nil)
 		response := httptest.NewRecorder()
 
 		handler.ServeHTTP(response, request)
@@ -105,10 +121,10 @@ func TestHandler(t *testing.T) {
 
 		handler := Handler{
 			HandlerFunc:     f,
-			ServiceProvider: testSrvProvider,
+			ServiceProvider: mockServicePrv,
 		}
 
-		request, _ := http.NewRequest(http.MethodGet, "/lists", nil)
+		request, _ := http.NewRequest(http.MethodGet, "/wadus", nil)
 		response := httptest.NewRecorder()
 
 		handler.ServeHTTP(response, request)
@@ -124,10 +140,10 @@ func TestHandler(t *testing.T) {
 
 		handler := Handler{
 			HandlerFunc:     f,
-			ServiceProvider: testSrvProvider,
+			ServiceProvider: mockServicePrv,
 		}
 
-		request, _ := http.NewRequest(http.MethodGet, "/lists", nil)
+		request, _ := http.NewRequest(http.MethodGet, "/wadus", nil)
 		response := httptest.NewRecorder()
 
 		handler.ServeHTTP(response, request)
@@ -143,10 +159,10 @@ func TestHandler(t *testing.T) {
 
 		handler := Handler{
 			HandlerFunc:     f,
-			ServiceProvider: testSrvProvider,
+			ServiceProvider: mockServicePrv,
 		}
 
-		request, _ := http.NewRequest(http.MethodGet, "/lists", nil)
+		request, _ := http.NewRequest(http.MethodGet, "/wadus", nil)
 		response := httptest.NewRecorder()
 
 		handler.ServeHTTP(response, request)
@@ -154,4 +170,91 @@ func TestHandler(t *testing.T) {
 		assert.Equal(t, http.StatusInternalServerError, response.Result().StatusCode)
 		assert.Equal(t, "Internal error\n", string(response.Body.String()))
 	})
+}
+
+func TestHandlerWithAuth(t *testing.T) {
+	mockServicePrv := new(mockedServiceProvider)
+
+	mockAuthSvc := new(mockedAuthService)
+
+	f := func(r *http.Request, serviceProvider services.ServiceProvider) handlerResult {
+		return errorResult{errors.New("wadus")}
+	}
+
+	t.Run("Returns 401 when the request does not have auth header", func(t *testing.T) {
+		handler := Handler{
+			HandlerFunc:     f,
+			ServiceProvider: mockServicePrv,
+			RequireAuth: true,
+		}
+
+		request, _ := http.NewRequest(http.MethodGet, "/wadus", nil)
+		response := httptest.NewRecorder()
+
+		handler.ServeHTTP(response, request)
+
+		assert.Equal(t, http.StatusUnauthorized, response.Result().StatusCode)
+		assert.Equal(t, "No authorization header\n", string(response.Body.String()))
+	})
+
+	t.Run("Returns 401 when the request auth header is not valid", func(t *testing.T) {
+		handler := Handler{
+			HandlerFunc:     f,
+			ServiceProvider: mockServicePrv,
+			RequireAuth: true,
+		}
+
+		request, _ := http.NewRequest(http.MethodGet, "/wadus", nil)
+		request.Header.Set("Authorization", "bad_header")
+		response := httptest.NewRecorder()
+
+		handler.ServeHTTP(response, request)
+
+		assert.Equal(t, http.StatusUnauthorized, response.Result().StatusCode)
+		assert.Equal(t, "Invalid authorization header\n", string(response.Body.String()))
+	})
+
+	t.Run("Returns 401 when the auth token is not valid", func(t *testing.T) {
+		mockServicePrv.On("GetAuthService").Return(mockAuthSvc).Once()
+
+		mockAuthSvc.On("ValidateToken", "token").Return(&models.JwtClaimsInfo{}, errors.New("wadus")).Once()
+
+		handler := Handler{
+			HandlerFunc:     f,
+			ServiceProvider: mockServicePrv,
+			RequireAuth: true,
+		}
+
+		request, _ := http.NewRequest(http.MethodGet, "/wadus", nil)
+		request.Header.Set("Authorization", "Bearer token")
+		response := httptest.NewRecorder()
+
+		handler.ServeHTTP(response, request)
+
+		assert.Equal(t, http.StatusUnauthorized, response.Result().StatusCode)
+		assert.Equal(t, "Invalid auth token\n", string(response.Body.String()))
+	})
+
+	t.Run("Returns 403 when the resource requires admin and the user is not admin", func(t *testing.T) {
+		mockServicePrv.On("GetAuthService").Return(mockAuthSvc).Once()
+
+		mockAuthSvc.On("ValidateToken", "token").Return(&models.JwtClaimsInfo{IsAdmin:false}, nil).Once()
+
+		handler := Handler{
+			HandlerFunc:     f,
+			ServiceProvider: mockServicePrv,
+			RequireAuth: true,
+			RequireAdmin: true,
+		}
+
+		request, _ := http.NewRequest(http.MethodGet, "/wadus", nil)
+		request.Header.Set("Authorization", "Bearer token")
+		response := httptest.NewRecorder()
+
+		handler.ServeHTTP(response, request)
+
+		assert.Equal(t, http.StatusForbidden, response.Result().StatusCode)
+		assert.Equal(t, "Access forbidden\n", string(response.Body.String()))
+	})
+
 }

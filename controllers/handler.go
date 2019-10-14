@@ -54,6 +54,8 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		authSrv := h.ServiceProvider.GetAuthService()
 		jwtInfo, err := authSrv.ValidateToken(token)
 
+		
+
 		if err != nil {
 			writeErrorResponse(w, http.StatusUnauthorized, "Invalid auth token", err)
 			return
