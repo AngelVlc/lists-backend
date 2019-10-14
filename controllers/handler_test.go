@@ -22,7 +22,7 @@ func (s *mockedAuthService) CreateToken(u *models.User) (string, error) {
 	return args.String(0), args.Error(1)
 }
 
-func (s *mockedAuthService) ValidateToken(token string) (*models.JwtClaimsInfo, error) {
+func (s *mockedAuthService) ParseToken(token string) (*models.JwtClaimsInfo, error) {
 	args := s.Called(token)
 	return args.Get(0).(*models.JwtClaimsInfo), args.Error(1)
 }
@@ -217,7 +217,7 @@ func TestHandlerWithAuth(t *testing.T) {
 	t.Run("Returns 401 when the auth token is not valid", func(t *testing.T) {
 		mockServicePrv.On("GetAuthService").Return(mockAuthSvc).Once()
 
-		mockAuthSvc.On("ValidateToken", "token").Return(&models.JwtClaimsInfo{}, errors.New("wadus")).Once()
+		mockAuthSvc.On("ParseToken", "token").Return(&models.JwtClaimsInfo{}, errors.New("wadus")).Once()
 
 		handler := Handler{
 			HandlerFunc:     f,
@@ -238,7 +238,7 @@ func TestHandlerWithAuth(t *testing.T) {
 	t.Run("Returns 403 when the resource requires admin and the user is not admin", func(t *testing.T) {
 		mockServicePrv.On("GetAuthService").Return(mockAuthSvc).Once()
 
-		mockAuthSvc.On("ValidateToken", "token").Return(&models.JwtClaimsInfo{IsAdmin: false}, nil).Once()
+		mockAuthSvc.On("ParseToken", "token").Return(&models.JwtClaimsInfo{IsAdmin: false}, nil).Once()
 
 		handler := Handler{
 			HandlerFunc:     f,

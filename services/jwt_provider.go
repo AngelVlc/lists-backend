@@ -1,66 +1,77 @@
 package services
 
 import (
-	"errors"
 	"fmt"
-	"time"
 
 	"github.com/AngelVlc/lists-backend/models"
 	"github.com/dgrijalva/jwt-go"
 )
 
+// JwtProvider is the interface which contains the methods to deal with a Jwt token
 type JwtProvider interface {
-	CreateToken(m map[string]interface{}) (string, error)
-	ValidateToken(token string) (*models.JwtClaimsInfo, error)
+	NewToken() interface{}
+	GetTokenClaims(token interface{}) map[string]interface{}
+	SignToken(token interface{}) (string, error)
+	ParseToken(tokenString string) (interface{}, error)
+	IsTokenValid(token interface{}) bool
+	GetJwtInfo(token interface{}) *models.JwtClaimsInfo
 }
 
+// MyJwtProvider is the type used as JwtProvider
 type MyJwtProvider struct {
 	secret string
 }
 
+// NewMyJwtProvider returns a new MyJwtProvider
 func NewMyJwtProvider(secret string) *MyJwtProvider {
 	return &MyJwtProvider{secret}
 }
 
-func (p *MyJwtProvider) CreateToken(m map[string]interface{}) (string, error) {
-	token := jwt.New(jwt.SigningMethodHS256)
-
-	claims := token.Claims.(jwt.MapClaims)
-
-	for k, v := range m {
-		claims[k] = v
-	}
-	claims["exp"] = time.Now().Add(time.Hour * 72).Unix()
-
-	t, err := token.SignedString([]byte(p.secret))
-	if err != nil {
-		return "", err
-	}
-
-	return t, nil
+// NewToken returns a new Jwt tooken
+func (p *MyJwtProvider) NewToken() interface{} {
+	return jwt.New(jwt.SigningMethodHS256)
 }
 
-func (p *MyJwtProvider) ValidateToken(tokenString string) (*models.JwtClaimsInfo, error) {
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+func (p *MyJwtProvider) getJwtToken(token interface{}) *jwt.Token {
+	jwtToken, _ := token.(jwt.Token)
+	return &jwtToken
+}
+
+// GetTokenClaims returns the claims for the given token as a map
+func (p *MyJwtProvider) GetTokenClaims(token interface{}) map[string]interface{} {
+	return p.getJwtToken(token).Claims.(jwt.MapClaims)
+}
+
+// SignToken signs the given token
+func (p *MyJwtProvider) SignToken(token interface{}) (string, error) {
+	return p.getJwtToken(token).SignedString([]byte(p.secret))
+}
+
+// ParseToken parses the string and checks the signing method
+func (p *MyJwtProvider) ParseToken(tokenString string) (interface{}, error) {
+	return jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
 		}
 		return []byte(p.secret), nil
 	})
+}
 
-	if err != nil {
-		return nil, err
-	}
+// IsTokenValid returns true if the given token is valid
+func (p *MyJwtProvider) IsTokenValid(token interface{}) bool {
+	return p.getJwtToken(token).Valid
+}
 
-	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		info := models.JwtClaimsInfo{
-			UserName: parseStringClaim(claims["userName"]),
-			ID:       parseStringClaim(claims["userId"]),
-			IsAdmin:  parseBoolClaim(claims["isAdmin"]),
-		}
-		return &info, nil
+// GetJwtInfo returns a JwtClaimsInfo obtained from the token claims
+func (p *MyJwtProvider) GetJwtInfo(token interface{}) *models.JwtClaimsInfo {
+	claims := p.GetTokenClaims(token)
+
+	info := models.JwtClaimsInfo{
+		UserName: parseStringClaim(claims["userName"]),
+		ID:       parseStringClaim(claims["userId"]),
+		IsAdmin:  parseBoolClaim(claims["isAdmin"]),
 	}
-	return nil, errors.New("Invalid token")
+	return &info
 }
 
 func parseStringClaim(value interface{}) string {
