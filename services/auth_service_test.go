@@ -144,3 +144,27 @@ func TestAuthServiceParseToken(t *testing.T) {
 		mockedJwtProvider.AssertExpectations(t)
 	})
 }
+
+func TestAuthServiceJwtProviderIntegration(t *testing.T) {
+	jwtPrv := NewMyJwtProvider("theSecret")
+
+	service := NewMyAuthService(jwtPrv)
+
+	u := models.User{
+		UserName: "wadus",
+		IsAdmin:  true,
+		ID:       "theId",
+	}
+
+	tokenString, err := service.CreateToken(&u)
+	assert.NotNil(t, tokenString)
+	assert.Nil(t, err)
+
+	jwtInfo, err := service.ParseToken(tokenString)
+	assert.NotNil(t, tokenString)
+	assert.Nil(t, err)
+
+	assert.Equal(t, u.UserName, jwtInfo.UserName)
+	assert.Equal(t, u.IsAdmin, jwtInfo.IsAdmin)
+	assert.Equal(t, u.ID, jwtInfo.ID)
+}

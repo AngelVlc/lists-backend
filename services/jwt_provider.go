@@ -33,8 +33,8 @@ func (p *MyJwtProvider) NewToken() interface{} {
 }
 
 func (p *MyJwtProvider) getJwtToken(token interface{}) *jwt.Token {
-	jwtToken, _ := token.(jwt.Token)
-	return &jwtToken
+	jwtToken, _ := token.(*jwt.Token)
+	return jwtToken
 }
 
 // GetTokenClaims returns the claims for the given token as a map
