@@ -8,6 +8,7 @@ import (
 // AuthService is the interface an auth service must implement
 type AuthService interface {
 	CreateToken(u *models.User) (string, error)
+	ValidateToken(token string) (*models.JwtClaimsInfo, error)
 }
 
 // MyAuthService is the service for auth methods
@@ -29,4 +30,8 @@ func (s *MyAuthService) CreateToken(u *models.User) (string, error) {
 	}
 
 	return t, nil
+}
+
+func (s *MyAuthService) ValidateToken(token string) (*models.JwtClaimsInfo, error) {
+	return s.jwtPrv.ValidateToken(token)
 }

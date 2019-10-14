@@ -117,6 +117,25 @@ func TestHandler(t *testing.T) {
 		assert.Equal(t, "\"id\" is not a valid id\n", string(response.Body.String()))
 	})
 
+	t.Run("Returns 401 when an unauthorized error happens", func(t *testing.T) {
+		f := func(r *http.Request, serviceProvider services.ServiceProvider) handlerResult {
+			return errorResult{&appErrors.UnauthorizedError{Msg: "wadus"}}
+		}
+
+		handler := Handler{
+			HandlerFunc:     f,
+			ServiceProvider: testSrvProvider,
+		}
+
+		request, _ := http.NewRequest(http.MethodGet, "/lists", nil)
+		response := httptest.NewRecorder()
+
+		handler.ServeHTTP(response, request)
+
+		assert.Equal(t, http.StatusUnauthorized, response.Result().StatusCode)
+		assert.Equal(t, "wadus\n", string(response.Body.String()))
+	})
+
 	t.Run("Returns 500 when an unhandled error happens", func(t *testing.T) {
 		f := func(r *http.Request, serviceProvider services.ServiceProvider) handlerResult {
 			return errorResult{errors.New("wadus")}

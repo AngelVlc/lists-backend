@@ -20,26 +20,35 @@ func AuthHandler(r *http.Request, servicePrv services.ServiceProvider) handlerRe
 }
 
 func processAuthPOST(r *http.Request, servicePrv services.ServiceProvider) handlerResult {
-	l, err := parseAuthBody(r)
-
-	if err != nil {
-		return errorResult{err}
+	var action = ""
+	if len(r.URL.Path) > len("/auth") {
+		action = r.URL.Path[len("/auth/"):]
 	}
 
-	userSrv := servicePrv.GetUsersService()
-	foundUser, err := userSrv.CheckIfUserPasswordIsOk(l.UserName, l.Password)
-	if err != nil {
-		return errorResult{err}
+	if action == "token" {
+		l, err := parseAuthBody(r)
+
+		if err != nil {
+			return errorResult{err}
+		}
+
+		userSrv := servicePrv.GetUsersService()
+		foundUser, err := userSrv.CheckIfUserPasswordIsOk(l.UserName, l.Password)
+		if err != nil {
+			return errorResult{err}
+		}
+
+		authSrv := servicePrv.GetAuthService()
+
+		token, err := authSrv.CreateToken(foundUser)
+		if err != nil {
+			return errorResult{err}
+		}
+
+		return okResult{token, http.StatusOK}
 	}
 
-	authSrv := servicePrv.GetAuthService()
-
-	token, err := authSrv.CreateToken(foundUser)
-	if err != nil {
-		return errorResult{err}
-	}
-
-	return okResult{token, http.StatusOK}
+	return errorResult{&appErrors.UnexpectedError{Msg: "Not implemented", InternalError: nil}}
 }
 
 func parseAuthBody(r *http.Request) (models.Login, error) {

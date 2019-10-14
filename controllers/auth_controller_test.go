@@ -35,7 +35,7 @@ func TestAuthHandler(t *testing.T) {
 	// })
 
 	t.Run("POST with invalid body should return an errorResult with a BadRequestError", func(t *testing.T) {
-		request, _ := http.NewRequest(http.MethodPost, "/auth", strings.NewReader("wadus"))
+		request, _ := http.NewRequest(http.MethodPost, "/auth/token", strings.NewReader("wadus"))
 
 		got := AuthHandler(request, testSrvProvider)
 
@@ -57,7 +57,7 @@ func TestAuthHandler(t *testing.T) {
 		}
 		body, _ := json.Marshal(login)
 
-		request, _ := http.NewRequest(http.MethodPost, "/auth", bytes.NewBuffer(body))
+		request, _ := http.NewRequest(http.MethodPost, "/auth/token", bytes.NewBuffer(body))
 
 		got := AuthHandler(request, testSrvProvider)
 
@@ -79,7 +79,7 @@ func TestAuthHandler(t *testing.T) {
 		}
 		body, _ := json.Marshal(login)
 
-		request, _ := http.NewRequest(http.MethodPost, "/auth", bytes.NewBuffer(body))
+		request, _ := http.NewRequest(http.MethodPost, "/auth/token", bytes.NewBuffer(body))
 
 		got := AuthHandler(request, testSrvProvider)
 
@@ -94,7 +94,7 @@ func TestAuthHandler(t *testing.T) {
 	})
 
 	t.Run("returns and okResult with a 405 status when the method is not GET, POST, PUT or DELETE", func(t *testing.T) {
-		request, _ := http.NewRequest(http.MethodPatch, "/auth", nil)
+		request, _ := http.NewRequest(http.MethodPatch, "/auth/token", nil)
 
 		got := AuthHandler(request, testSrvProvider)
 
