@@ -4,13 +4,13 @@ import (
 	"errors"
 	"fmt"
 	appErrors "github.com/AngelVlc/lists-backend/errors"
-	"github.com/AngelVlc/lists-backend/services"
 	"github.com/AngelVlc/lists-backend/models"
+	"github.com/AngelVlc/lists-backend/services"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"github.com/stretchr/testify/mock"
 )
 
 type mockedAuthService struct {
@@ -185,7 +185,7 @@ func TestHandlerWithAuth(t *testing.T) {
 		handler := Handler{
 			HandlerFunc:     f,
 			ServiceProvider: mockServicePrv,
-			RequireAuth: true,
+			RequireAuth:     true,
 		}
 
 		request, _ := http.NewRequest(http.MethodGet, "/wadus", nil)
@@ -201,7 +201,7 @@ func TestHandlerWithAuth(t *testing.T) {
 		handler := Handler{
 			HandlerFunc:     f,
 			ServiceProvider: mockServicePrv,
-			RequireAuth: true,
+			RequireAuth:     true,
 		}
 
 		request, _ := http.NewRequest(http.MethodGet, "/wadus", nil)
@@ -222,7 +222,7 @@ func TestHandlerWithAuth(t *testing.T) {
 		handler := Handler{
 			HandlerFunc:     f,
 			ServiceProvider: mockServicePrv,
-			RequireAuth: true,
+			RequireAuth:     true,
 		}
 
 		request, _ := http.NewRequest(http.MethodGet, "/wadus", nil)
@@ -238,13 +238,13 @@ func TestHandlerWithAuth(t *testing.T) {
 	t.Run("Returns 403 when the resource requires admin and the user is not admin", func(t *testing.T) {
 		mockServicePrv.On("GetAuthService").Return(mockAuthSvc).Once()
 
-		mockAuthSvc.On("ValidateToken", "token").Return(&models.JwtClaimsInfo{IsAdmin:false}, nil).Once()
+		mockAuthSvc.On("ValidateToken", "token").Return(&models.JwtClaimsInfo{IsAdmin: false}, nil).Once()
 
 		handler := Handler{
 			HandlerFunc:     f,
 			ServiceProvider: mockServicePrv,
-			RequireAuth: true,
-			RequireAdmin: true,
+			RequireAuth:     true,
+			RequireAdmin:    true,
 		}
 
 		request, _ := http.NewRequest(http.MethodGet, "/wadus", nil)

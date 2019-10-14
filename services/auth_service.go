@@ -23,7 +23,13 @@ func NewMyAuthService(jwtp JwtProvider) *MyAuthService {
 
 // CreateToken returns a new jwt token for the given user
 func (s *MyAuthService) CreateToken(u *models.User) (string, error) {
-	t, err := s.jwtPrv.CreateToken(u)
+	claims := map[string]interface{}{
+		"userName": u.UserName,
+		"isAdmin":  u.IsAdmin,
+		"userId":   u.ID,
+	}
+
+	t, err := s.jwtPrv.CreateToken(claims)
 
 	if err != nil {
 		return "", &appErrors.UnexpectedError{Msg: "Error creating jwt token", InternalError: err}

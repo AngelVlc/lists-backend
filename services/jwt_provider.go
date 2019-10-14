@@ -10,7 +10,7 @@ import (
 )
 
 type JwtProvider interface {
-	CreateToken(u *models.User) (string, error)
+	CreateToken(m map[string]interface{}) (string, error)
 	ValidateToken(token string) (*models.JwtClaimsInfo, error)
 }
 
@@ -22,13 +22,14 @@ func NewMyJwtProvider(secret string) *MyJwtProvider {
 	return &MyJwtProvider{secret}
 }
 
-func (p *MyJwtProvider) CreateToken(u *models.User) (string, error) {
+func (p *MyJwtProvider) CreateToken(m map[string]interface{}) (string, error) {
 	token := jwt.New(jwt.SigningMethodHS256)
 
 	claims := token.Claims.(jwt.MapClaims)
-	claims["userName"] = u.UserName
-	claims["userId"] = u.ID
-	claims["isAdmin"] = u.IsAdmin
+
+	for k, v := range m {
+		claims[k] = v
+	}
 	claims["exp"] = time.Now().Add(time.Hour * 72).Unix()
 
 	t, err := token.SignedString([]byte(p.secret))
