@@ -27,7 +27,6 @@ func processAuthPOST(r *http.Request, servicePrv services.ServiceProvider) handl
 
 	if action == "token" {
 		l, err := parseAuthBody(r)
-
 		if err != nil {
 			return errorResult{err}
 		}
