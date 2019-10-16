@@ -14,7 +14,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestAuthTokenHandler(t *testing.T) {
+func TestTokenHandler(t *testing.T) {
 	testUsersSrv := new(mockedUsersService)
 	testAuthSrv := new(mockedAuthService)
 
@@ -23,7 +23,7 @@ func TestAuthTokenHandler(t *testing.T) {
 	t.Run("POST with invalid body should return an errorResult with a BadRequestError", func(t *testing.T) {
 		request, _ := http.NewRequest(http.MethodPost, "/auth/token", strings.NewReader("wadus"))
 
-		got := AuthHandler(request, testSrvProvider)
+		got := TokenHandler(request, testSrvProvider)
 
 		errorRes, isErrorResult := got.(errorResult)
 		assert.Equal(t, true, isErrorResult, "should be an error result")
@@ -45,7 +45,7 @@ func TestAuthTokenHandler(t *testing.T) {
 
 		request, _ := http.NewRequest(http.MethodPost, "/auth/token", bytes.NewBuffer(body))
 
-		got := AuthHandler(request, testSrvProvider)
+		got := TokenHandler(request, testSrvProvider)
 
 		errorRes, isErrorResult := got.(errorResult)
 		assert.Equal(t, true, isErrorResult, "should be an error result")
@@ -67,7 +67,7 @@ func TestAuthTokenHandler(t *testing.T) {
 
 		request, _ := http.NewRequest(http.MethodPost, "/auth/token", bytes.NewBuffer(body))
 
-		got := AuthHandler(request, testSrvProvider)
+		got := TokenHandler(request, testSrvProvider)
 
 		errorRes, isErrorResult := got.(errorResult)
 		assert.Equal(t, true, isErrorResult, "should be an error result")
@@ -82,7 +82,7 @@ func TestAuthTokenHandler(t *testing.T) {
 	t.Run("POST returns and okResult with a 405 status when the method is not GET, POST, PUT or DELETE", func(t *testing.T) {
 		request, _ := http.NewRequest(http.MethodPatch, "/auth/token", nil)
 
-		got := AuthHandler(request, testSrvProvider)
+		got := TokenHandler(request, testSrvProvider)
 
 		want := okResult{nil, http.StatusMethodNotAllowed}
 
@@ -103,7 +103,7 @@ func TestAuthTokenHandler(t *testing.T) {
 
 		testUsersSrv.On("CheckIfUserPasswordIsOk", login.UserName, login.Password).Return(nil, errors.New("wadus")).Once()
 
-		got := AuthHandler(request, testSrvProvider)
+		got := TokenHandler(request, testSrvProvider)
 
 		_, isErrorResult := got.(errorResult)
 		assert.Equal(t, true, isErrorResult, "should be an error result")
@@ -132,7 +132,7 @@ func TestAuthTokenHandler(t *testing.T) {
 
 		testAuthSrv.On("CreateTokens", &user).Return(nil, errors.New("wadus")).Once()
 
-		got := AuthHandler(request, testSrvProvider)
+		got := TokenHandler(request, testSrvProvider)
 
 		_, isErrorResult := got.(errorResult)
 		assert.Equal(t, true, isErrorResult, "should be an error result")
@@ -164,7 +164,7 @@ func TestAuthTokenHandler(t *testing.T) {
 		}
 		testAuthSrv.On("CreateTokens", &user).Return(tokens, nil).Once()
 
-		got := AuthHandler(request, testSrvProvider)
+		got := TokenHandler(request, testSrvProvider)
 
 		want := okResult{tokens, http.StatusOK}
 

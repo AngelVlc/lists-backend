@@ -21,7 +21,7 @@ func newServer(sp services.ServiceProvider) *server {
 	router.Handle("/lists/", s.getHandler(controllers.ListsHandler, true, false))
 	router.Handle("/users", s.getHandler(controllers.UsersHandler, true, true))
 	router.Handle("/users/", s.getHandler(controllers.UsersHandler, true, true))
-	router.Handle("/auth/token", s.getHandler(controllers.AuthHandler, false, false))
+	router.Handle("/auth/token", s.getHandler(controllers.TokenHandler, false, false))
 
 	s.Handler = router
 

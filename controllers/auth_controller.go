@@ -9,48 +9,34 @@ import (
 	"github.com/AngelVlc/lists-backend/services"
 )
 
-// AuthHandler is the handler for the auth endpoints
-func AuthHandler(r *http.Request, servicePrv services.ServiceProvider) handlerResult {
-	switch r.Method {
-	case http.MethodPost:
-		return processAuthPOST(r, servicePrv)
-	default:
+// TokenHandler is the handler for the auth/token endpoint
+func TokenHandler(r *http.Request, servicePrv services.ServiceProvider) handlerResult {
+	if r.Method != http.MethodPost {
 		return okResult{nil, http.StatusMethodNotAllowed}
 	}
-}
 
-func processAuthPOST(r *http.Request, servicePrv services.ServiceProvider) handlerResult {
-	var action = ""
-	if len(r.URL.Path) > len("/auth") {
-		action = r.URL.Path[len("/auth/"):]
+	l, err := parseTokenBody(r)
+	if err != nil {
+		return errorResult{err}
 	}
 
-	if action == "token" {
-		l, err := parseAuthBody(r)
-		if err != nil {
-			return errorResult{err}
-		}
-
-		userSrv := servicePrv.GetUsersService()
-		foundUser, err := userSrv.CheckIfUserPasswordIsOk(l.UserName, l.Password)
-		if err != nil {
-			return errorResult{err}
-		}
-
-		authSrv := servicePrv.GetAuthService()
-
-		tokens, err := authSrv.CreateTokens(foundUser)
-		if err != nil {
-			return errorResult{err}
-		}
-
-		return okResult{tokens, http.StatusOK}
+	userSrv := servicePrv.GetUsersService()
+	foundUser, err := userSrv.CheckIfUserPasswordIsOk(l.UserName, l.Password)
+	if err != nil {
+		return errorResult{err}
 	}
 
-	return errorResult{&appErrors.UnexpectedError{Msg: "Not implemented", InternalError: nil}}
+	authSrv := servicePrv.GetAuthService()
+
+	tokens, err := authSrv.CreateTokens(foundUser)
+	if err != nil {
+		return errorResult{err}
+	}
+
+	return okResult{tokens, http.StatusOK}
 }
 
-func parseAuthBody(r *http.Request) (models.Login, error) {
+func parseTokenBody(r *http.Request) (models.Login, error) {
 	decoder := json.NewDecoder(r.Body)
 
 	var l models.Login
