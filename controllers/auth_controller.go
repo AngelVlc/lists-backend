@@ -39,12 +39,12 @@ func processAuthPOST(r *http.Request, servicePrv services.ServiceProvider) handl
 
 		authSrv := servicePrv.GetAuthService()
 
-		token, err := authSrv.CreateToken(foundUser)
+		tokens, err := authSrv.CreateTokens(foundUser)
 		if err != nil {
 			return errorResult{err}
 		}
 
-		return okResult{token, http.StatusOK}
+		return okResult{tokens, http.StatusOK}
 	}
 
 	return errorResult{&appErrors.UnexpectedError{Msg: "Not implemented", InternalError: nil}}

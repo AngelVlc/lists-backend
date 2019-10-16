@@ -17,9 +17,13 @@ type mockedAuthService struct {
 	mock.Mock
 }
 
-func (s *mockedAuthService) CreateToken(u *models.User) (string, error) {
+func (s *mockedAuthService) CreateTokens(u *models.User) (map[string]string, error) {
 	args := s.Called(u)
-	return args.String(0), args.Error(1)
+	res := args.Get(0)
+	if res == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(map[string]string), args.Error(1)
 }
 
 func (s *mockedAuthService) ParseToken(token string) (*models.JwtClaimsInfo, error) {

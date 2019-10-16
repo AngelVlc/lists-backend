@@ -67,9 +67,9 @@ func TestAuthServiceCreateToken(t *testing.T) {
 	t.Run("should return an UnexpectedError if sign token fails", func(t *testing.T) {
 		mockedJwtProvider.On("SignToken", token).Return("", errors.New("wadus")).Once()
 
-		tokenString, err := service.CreateToken(&u)
+		tokens, err := service.CreateTokens(&u)
 
-		assert.Empty(t, tokenString)
+		assert.Nil(t, tokens)
 		assert.NotNil(t, err)
 		unexpectedErr, isUnexpectedErr := err.(*appErrors.UnexpectedError)
 		assert.Equal(t, true, isUnexpectedErr, "should be an unexpected error")
@@ -81,9 +81,9 @@ func TestAuthServiceCreateToken(t *testing.T) {
 		theToken := "theToken"
 		mockedJwtProvider.On("SignToken", token).Return(theToken, nil).Once()
 
-		tokenString, err := service.CreateToken(&u)
+		tokens, err := service.CreateTokens(&u)
 
-		assert.Equal(t, theToken, tokenString)
+		assert.Equal(t, theToken, tokens["token"])
 		assert.Nil(t, err)
 
 		mockedJwtProvider.AssertExpectations(t)
@@ -156,12 +156,12 @@ func TestAuthServiceJwtProviderIntegration(t *testing.T) {
 		ID:       "theId",
 	}
 
-	tokenString, err := service.CreateToken(&u)
-	assert.NotNil(t, tokenString)
+	tokens, err := service.CreateTokens(&u)
+	assert.NotNil(t, tokens)
 	assert.Nil(t, err)
 
-	jwtInfo, err := service.ParseToken(tokenString)
-	assert.NotNil(t, tokenString)
+	jwtInfo, err := service.ParseToken(tokens["token"])
+	assert.NotNil(t, jwtInfo)
 	assert.Nil(t, err)
 
 	assert.Equal(t, u.UserName, jwtInfo.UserName)

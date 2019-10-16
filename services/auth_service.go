@@ -9,7 +9,7 @@ import (
 
 // AuthService is the interface an auth service must implement
 type AuthService interface {
-	CreateToken(u *models.User) (string, error)
+	CreateTokens(u *models.User) (map[string]string, error)
 	ParseToken(token string) (*models.JwtClaimsInfo, error)
 }
 
@@ -23,22 +23,26 @@ func NewMyAuthService(jwtp JwtProvider) *MyAuthService {
 	return &MyAuthService{jwtp}
 }
 
-// CreateToken returns a new jwt token for the given user
-func (s *MyAuthService) CreateToken(u *models.User) (string, error) {
+// CreateTokens returns a new jwt token and a refresh token for the given user
+func (s *MyAuthService) CreateTokens(u *models.User) (map[string]string, error) {
 	token := s.jwtPrv.NewToken()
 
 	claims := s.jwtPrv.GetTokenClaims(token)
 	claims["userName"] = u.UserName
 	claims["isAdmin"] = u.IsAdmin
 	claims["userId"] = u.ID
-	claims["exp"] = time.Now().Add(time.Hour * 72).Unix()
+	claims["exp"] = time.Now().Add(time.Minute * 15).Unix()
 
 	signedToken, err := s.jwtPrv.SignToken(token)
 	if err != nil {
-		return "", &appErrors.UnexpectedError{Msg: "Error creating jwt token", InternalError: err}
+		return nil, &appErrors.UnexpectedError{Msg: "Error creating jwt token", InternalError: err}
 	}
 
-	return signedToken, nil
+	result := map[string]string{
+		"token": signedToken,
+	}
+
+	return result, nil
 }
 
 // ParseToken takes a token string, parses it and if it is valid returns a JwtClaimsInfo

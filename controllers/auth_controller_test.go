@@ -111,7 +111,7 @@ func TestAuthTokenHandler(t *testing.T) {
 		assertAuthExpectations(t, testSrvProvider, testUsersSrv)
 	})
 
-	t.Run("POST returns an errorResult when CreateToken returns an error", func(t *testing.T) {
+	t.Run("POST returns an errorResult when CreateTokens returns an error", func(t *testing.T) {
 		login := models.Login{
 			UserName: "wadus",
 			Password: "pass",
@@ -130,7 +130,7 @@ func TestAuthTokenHandler(t *testing.T) {
 
 		testSrvProvider.On("GetAuthService").Return(testAuthSrv).Once()
 
-		testAuthSrv.On("CreateToken", &user).Return("", errors.New("wadus")).Once()
+		testAuthSrv.On("CreateTokens", &user).Return(nil, errors.New("wadus")).Once()
 
 		got := AuthHandler(request, testSrvProvider)
 
@@ -159,12 +159,14 @@ func TestAuthTokenHandler(t *testing.T) {
 
 		testSrvProvider.On("GetAuthService").Return(testAuthSrv).Once()
 
-		token := "theToken"
-		testAuthSrv.On("CreateToken", &user).Return(token, nil).Once()
+		tokens := map[string]string{
+			"token": "theToken",
+		}
+		testAuthSrv.On("CreateTokens", &user).Return(tokens, nil).Once()
 
 		got := AuthHandler(request, testSrvProvider)
 
-		want := okResult{token, http.StatusOK}
+		want := okResult{tokens, http.StatusOK}
 
 		assert.Equal(t, want, got, "should be equal")
 		assertAuthExpectations(t, testSrvProvider, testUsersSrv)
