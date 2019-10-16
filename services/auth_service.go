@@ -25,21 +25,32 @@ func NewMyAuthService(jwtp JwtProvider) *MyAuthService {
 
 // CreateTokens returns a new jwt token and a refresh token for the given user
 func (s *MyAuthService) CreateTokens(u *models.User) (map[string]string, error) {
-	token := s.jwtPrv.NewToken()
+	t := s.jwtPrv.NewToken()
 
-	claims := s.jwtPrv.GetTokenClaims(token)
-	claims["userName"] = u.UserName
-	claims["isAdmin"] = u.IsAdmin
-	claims["userId"] = u.ID
-	claims["exp"] = time.Now().Add(time.Minute * 15).Unix()
+	tc := s.jwtPrv.GetTokenClaims(t)
+	tc["userName"] = u.UserName
+	tc["isAdmin"] = u.IsAdmin
+	tc["userId"] = u.ID
+	tc["exp"] = time.Now().Add(time.Minute * 15).Unix()
 
-	signedToken, err := s.jwtPrv.SignToken(token)
+	st, err := s.jwtPrv.SignToken(t)
 	if err != nil {
 		return nil, &appErrors.UnexpectedError{Msg: "Error creating jwt token", InternalError: err}
 	}
 
+	rt := s.jwtPrv.NewToken()
+	rtc := s.jwtPrv.GetTokenClaims(rt)
+	rtc["userId"] = u.ID
+	rtc["exp"] = time.Now().Add(time.Hour * 24).Unix()
+
+	srt, err := s.jwtPrv.SignToken(rt)
+	if err != nil {
+		return nil, &appErrors.UnexpectedError{Msg: "Error creating jwt refresh token", InternalError: err}
+	}
+
 	result := map[string]string{
-		"token": signedToken,
+		"token":        st,
+		"refreshToken": srt,
 	}
 
 	return result, nil

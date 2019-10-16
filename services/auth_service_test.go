@@ -60,11 +60,12 @@ func TestAuthServiceCreateToken(t *testing.T) {
 	u := models.User{}
 	token := struct{}{}
 	claims := map[string]interface{}{}
-
-	mockedJwtProvider.On("NewToken").Return(token)
-	mockedJwtProvider.On("GetTokenClaims", token).Return(claims)
+	refreshToken := struct{}{}
+	refreshTokenClaims := map[string]interface{}{}
 
 	t.Run("should return an UnexpectedError if sign token fails", func(t *testing.T) {
+		mockedJwtProvider.On("NewToken").Return(token).Once()
+		mockedJwtProvider.On("GetTokenClaims", token).Return(claims).Once()
 		mockedJwtProvider.On("SignToken", token).Return("", errors.New("wadus")).Once()
 
 		tokens, err := service.CreateTokens(&u)
@@ -77,13 +78,42 @@ func TestAuthServiceCreateToken(t *testing.T) {
 		mockedJwtProvider.AssertExpectations(t)
 	})
 
-	t.Run("should return a signed token if no error happen", func(t *testing.T) {
-		theToken := "theToken"
-		mockedJwtProvider.On("SignToken", token).Return(theToken, nil).Once()
+	t.Run("should return an UnexpectedError if sign refresh token fails", func(t *testing.T) {
+		mockedJwtProvider.On("NewToken").Return(token).Once()
+		mockedJwtProvider.On("GetTokenClaims", token).Return(claims).Once()
+		mockedJwtProvider.On("NewToken").Return(refreshToken).Once()
+		mockedJwtProvider.On("GetTokenClaims", refreshToken).Return(refreshTokenClaims).Once()
+		mockedJwtProvider.On("SignToken", token).Return("token", nil).Once()
+		mockedJwtProvider.On("SignToken", refreshToken).Return("", errors.New("wadus")).Once()
 
 		tokens, err := service.CreateTokens(&u)
 
-		assert.Equal(t, theToken, tokens["token"])
+		assert.Nil(t, tokens)
+		assert.NotNil(t, err)
+		unexpectedErr, isUnexpectedErr := err.(*appErrors.UnexpectedError)
+		assert.Equal(t, true, isUnexpectedErr, "should be an unexpected error")
+		assert.Equal(t, "Error creating jwt refresh token", unexpectedErr.Error())
+		mockedJwtProvider.AssertExpectations(t)
+	})
+
+	t.Run("should return a signed token if no error happen", func(t *testing.T) {
+		theToken := "theToken"
+		theRefreshToken := "theRefreshToken"
+		mockedJwtProvider.On("NewToken").Return(token).Once()
+		mockedJwtProvider.On("GetTokenClaims", token).Return(claims).Once()
+		mockedJwtProvider.On("NewToken").Return(refreshToken).Once()
+		mockedJwtProvider.On("GetTokenClaims", refreshToken).Return(refreshTokenClaims).Once()
+		mockedJwtProvider.On("SignToken", token).Return(theToken, nil).Once()
+		mockedJwtProvider.On("SignToken", refreshToken).Return(theRefreshToken, nil).Once()
+
+		tokens, err := service.CreateTokens(&u)
+
+		want := map[string]string{
+			"token":        theToken,
+			"refreshToken": theRefreshToken,
+		}
+
+		assert.Equal(t, want, tokens)
 		assert.Nil(t, err)
 
 		mockedJwtProvider.AssertExpectations(t)
