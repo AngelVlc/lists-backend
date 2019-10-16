@@ -63,4 +63,13 @@ func TestServer(t *testing.T) {
 		assert.Equal(t, http.StatusMethodNotAllowed, response.Result().StatusCode, "status are not equal")
 	})
 
+	t.Run("handles /auth/refreshtoken", func(t *testing.T) {
+		request, _ := http.NewRequest(http.MethodGet, "/auth/refreshtoken", nil)
+		response := httptest.NewRecorder()
+
+		server.ServeHTTP(response, request)
+
+		assert.Equal(t, http.StatusMethodNotAllowed, response.Result().StatusCode, "status are not equal")
+	})
+
 }

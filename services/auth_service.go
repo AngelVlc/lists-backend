@@ -11,6 +11,7 @@ import (
 type AuthService interface {
 	CreateTokens(u *models.User) (map[string]string, error)
 	ParseToken(token string) (*models.JwtClaimsInfo, error)
+	ParseRefreshToken(refreshTokenString string) (*models.RefreshTokenClaimsInfo, error)
 }
 
 // MyAuthService is the service for auth methods
@@ -69,4 +70,19 @@ func (s *MyAuthService) ParseToken(tokenString string) (*models.JwtClaimsInfo, e
 	}
 
 	return s.jwtPrv.GetJwtInfo(token), nil
+}
+
+// ParseRefreshToken takes a refresh token string, parses it and if it is valid returns a
+// RefreshTokenClaimsInfo with its claims values
+func (s *MyAuthService) ParseRefreshToken(refreshTokenString string) (*models.RefreshTokenClaimsInfo, error) {
+	refreshToken, err := s.jwtPrv.ParseToken(refreshTokenString)
+	if err != nil {
+		return nil, &appErrors.UnauthorizedError{Msg: "Invalid refresh token", InternalError: err}
+	}
+
+	if !s.jwtPrv.IsTokenValid(refreshToken) {
+		return nil, &appErrors.UnauthorizedError{Msg: "Invalid refresh token"}
+	}
+
+	return s.jwtPrv.GetRefreshTokenInfo(refreshToken), nil
 }

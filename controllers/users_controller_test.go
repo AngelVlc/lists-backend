@@ -32,6 +32,11 @@ func (us *mockedUsersService) CheckIfUserPasswordIsOk(userName string, password 
 	return args.Get(0).(*models.User), args.Error(1)
 }
 
+func (us *mockedUsersService) GetSingleUser(id string, u *models.User) error {
+	args := us.Called(id, u)
+	return args.Error(0)
+}
+
 func TestUsersHandler(t *testing.T) {
 	testUsersSrv := new(mockedUsersService)
 

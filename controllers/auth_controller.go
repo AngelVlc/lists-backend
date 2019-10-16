@@ -36,6 +36,38 @@ func TokenHandler(r *http.Request, servicePrv services.ServiceProvider) handlerR
 	return okResult{tokens, http.StatusOK}
 }
 
+// RefreshTokenHandler is the handler for the auth/refreshtoken endpoint
+func RefreshTokenHandler(r *http.Request, servicePrv services.ServiceProvider) handlerResult {
+	if r.Method != http.MethodPost {
+		return okResult{nil, http.StatusMethodNotAllowed}
+	}
+
+	rt, err := parseRefreshTokenBody(r)
+	if err != nil {
+		return errorResult{err}
+	}
+
+	authSrv := servicePrv.GetAuthService()
+	rtInfo, err := authSrv.ParseRefreshToken(rt.RefreshToken)
+
+	userSrv := servicePrv.GetUsersService()
+
+	foundUser := models.User{}
+
+	err = userSrv.GetSingleUser(rtInfo.ID, &foundUser)
+
+	if err != nil {
+		return errorResult{&appErrors.BadRequestError{Msg: "The user is no longer valid", InternalError: nil}}
+	}
+
+	tokens, err := authSrv.CreateTokens(&foundUser)
+	if err != nil {
+		return errorResult{err}
+	}
+
+	return okResult{tokens, http.StatusOK}
+}
+
 func parseTokenBody(r *http.Request) (models.Login, error) {
 	decoder := json.NewDecoder(r.Body)
 
@@ -54,4 +86,20 @@ func parseTokenBody(r *http.Request) (models.Login, error) {
 	}
 
 	return l, nil
+}
+
+func parseRefreshTokenBody(r *http.Request) (*models.RefreshToken, error) {
+	decoder := json.NewDecoder(r.Body)
+
+	var rt models.RefreshToken
+	err := decoder.Decode(&rt)
+	if err != nil {
+		return nil, &appErrors.BadRequestError{Msg: "Invalid body", InternalError: err}
+	}
+
+	if len(rt.RefreshToken) == 0 {
+		return nil, &appErrors.BadRequestError{Msg: "RefreshToken is mandatory", InternalError: nil}
+	}
+
+	return &rt, nil
 }

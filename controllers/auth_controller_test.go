@@ -173,6 +173,57 @@ func TestTokenHandler(t *testing.T) {
 	})
 }
 
+func TestRefreshTokenHandler(t *testing.T) {
+	testUsersSrv := new(mockedUsersService)
+	// testAuthSrv := new(mockedAuthService)
+
+	testSrvProvider := new(mockedServiceProvider)
+
+	t.Run("POST with invalid body should return an errorResult with a BadRequestError", func(t *testing.T) {
+		request, _ := http.NewRequest(http.MethodPost, "/auth/refreshtoken", strings.NewReader("wadus"))
+
+		got := RefreshTokenHandler(request, testSrvProvider)
+
+		errorRes, isErrorResult := got.(errorResult)
+		assert.Equal(t, true, isErrorResult, "should be an error result")
+
+		badReqErr, isInvalidBodyError := errorRes.err.(*appErrors.BadRequestError)
+		assert.Equal(t, true, isInvalidBodyError, "should be a bad request error")
+		assert.Equal(t, "Invalid body", badReqErr.Error())
+
+		assertAuthExpectations(t, testSrvProvider, testUsersSrv)
+	})
+
+	t.Run("POST without user name in body should return an errorResult with a BadRequestError", func(t *testing.T) {
+		refreshToken := struct{}{}
+		body, _ := json.Marshal(refreshToken)
+
+		request, _ := http.NewRequest(http.MethodPost, "/auth/refreshtoken", bytes.NewBuffer(body))
+
+		got := RefreshTokenHandler(request, testSrvProvider)
+
+		errorRes, isErrorResult := got.(errorResult)
+		assert.Equal(t, true, isErrorResult, "should be an error result")
+
+		badReqErr, isInvalidBodyError := errorRes.err.(*appErrors.BadRequestError)
+		assert.Equal(t, true, isInvalidBodyError, "should be a bad request error")
+		assert.Equal(t, "RefreshToken is mandatory", badReqErr.Error())
+
+		assertAuthExpectations(t, testSrvProvider, testUsersSrv)
+	})
+
+	t.Run("POST returns and okResult with a 405 status when the method is not GET, POST, PUT or DELETE", func(t *testing.T) {
+		request, _ := http.NewRequest(http.MethodPatch, "/auth/refreshtoken", nil)
+
+		got := RefreshTokenHandler(request, testSrvProvider)
+
+		want := okResult{nil, http.StatusMethodNotAllowed}
+
+		assert.Equal(t, want, got, "should be equal")
+		assertAuthExpectations(t, testSrvProvider, testUsersSrv)
+	})
+}
+
 func assertAuthExpectations(t *testing.T, sp *mockedServiceProvider, us *mockedUsersService) {
 	t.Helper()
 

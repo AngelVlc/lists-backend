@@ -31,6 +31,11 @@ func (s *mockedAuthService) ParseToken(token string) (*models.JwtClaimsInfo, err
 	return args.Get(0).(*models.JwtClaimsInfo), args.Error(1)
 }
 
+func (s *mockedAuthService) ParseRefreshToken(refreshTokenString string) (*models.RefreshTokenClaimsInfo, error) {
+	args := s.Called(refreshTokenString)
+	return args.Get(0).(*models.RefreshTokenClaimsInfo), args.Error(1)
+}
+
 func TestHandlerWithoutAuth(t *testing.T) {
 	mockServicePrv := new(mockedServiceProvider)
 

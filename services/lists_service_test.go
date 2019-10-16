@@ -101,7 +101,7 @@ func TestListsService(t *testing.T) {
 		mockedRepository.AssertExpectations(t)
 	})
 
-	t.Run("GetSingleList() should call repository.RemoveList", func(t *testing.T) {
+	t.Run("GetSingleList() should call repository.GetById", func(t *testing.T) {
 		l := models.List{}
 
 		mockedRepository.On("GetByID", "id", &l).Return(errors.New("error")).Once()

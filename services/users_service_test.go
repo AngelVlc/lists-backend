@@ -2,6 +2,7 @@ package services
 
 import (
 	"errors"
+	"fmt"
 	"testing"
 
 	appErrors "github.com/AngelVlc/lists-backend/errors"
@@ -207,5 +208,36 @@ func TestUserService(t *testing.T) {
 		mockedSession.AssertExpectations(t)
 		mockedRepository.AssertExpectations(t)
 		mockedBcryptProvider.AssertExpectations(t)
+	})
+
+	t.Run("GetSingleUser() should call repository.GetById", func(t *testing.T) {
+		u := models.User{}
+
+		mockedRepository.On("GetByID", "id", &u).Return(errors.New("error")).Once()
+		mockedRepository.On("IsValidID", "id").Return(true).Once()
+
+		err := service.GetSingleUser("id", &u)
+
+		assert.NotNil(t, err)
+
+		mockedSession.AssertExpectations(t)
+		mockedRepository.AssertExpectations(t)
+	})
+
+	t.Run("GetSingleList() should return a badRequestError when the id is not valid", func(t *testing.T) {
+		id := "wadus"
+
+		mockedRepository.On("IsValidID", id).Return(false).Once()
+
+		err := service.GetSingleUser(id, &models.User{})
+
+		assert.NotNil(t, err)
+
+		assert.IsType(t, &appErrors.BadRequestError{}, err)
+
+		assert.Equal(t, fmt.Sprintf("%q is not a valid id", id), err.Error())
+
+		mockedSession.AssertExpectations(t)
+		mockedRepository.AssertExpectations(t)
 	})
 }

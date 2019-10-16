@@ -15,6 +15,7 @@ type JwtProvider interface {
 	ParseToken(tokenString string) (interface{}, error)
 	IsTokenValid(token interface{}) bool
 	GetJwtInfo(token interface{}) *models.JwtClaimsInfo
+	GetRefreshTokenInfo(refreshToken interface{}) *models.RefreshTokenClaimsInfo
 }
 
 // MyJwtProvider is the type used as JwtProvider
@@ -62,7 +63,7 @@ func (p *MyJwtProvider) IsTokenValid(token interface{}) bool {
 	return p.getJwtToken(token).Valid
 }
 
-// GetJwtInfo returns a JwtClaimsInfo obtained from the token claims
+// GetJwtInfo returns a JwtClaimsInfo got from the token claims
 func (p *MyJwtProvider) GetJwtInfo(token interface{}) *models.JwtClaimsInfo {
 	claims := p.GetTokenClaims(token)
 
@@ -70,6 +71,16 @@ func (p *MyJwtProvider) GetJwtInfo(token interface{}) *models.JwtClaimsInfo {
 		UserName: parseStringClaim(claims["userName"]),
 		ID:       parseStringClaim(claims["userId"]),
 		IsAdmin:  parseBoolClaim(claims["isAdmin"]),
+	}
+	return &info
+}
+
+/// GetRefreshTokenInfo returns a RefreshTokenClaimsInfo got from the refresh token claims
+func (p *MyJwtProvider) GetRefreshTokenInfo(refreshToken interface{}) *models.RefreshTokenClaimsInfo {
+	claims := p.GetTokenClaims(refreshToken)
+
+	info := models.RefreshTokenClaimsInfo{
+		ID: parseStringClaim(claims["userId"]),
 	}
 	return &info
 }

@@ -52,6 +52,11 @@ func (m *mockedJwtProvider) GetJwtInfo(token interface{}) *models.JwtClaimsInfo 
 	return args.Get(0).(*models.JwtClaimsInfo)
 }
 
+func (m *mockedJwtProvider) GetRefreshTokenInfo(refreshToken interface{}) *models.RefreshTokenClaimsInfo {
+	args := m.Called(refreshToken)
+	return args.Get(0).(*models.RefreshTokenClaimsInfo)
+}
+
 func TestAuthServiceCreateToken(t *testing.T) {
 	mockedJwtProvider := new(mockedJwtProvider)
 
@@ -175,6 +180,61 @@ func TestAuthServiceParseToken(t *testing.T) {
 	})
 }
 
+func TestAuthServiceParseRefreshToken(t *testing.T) {
+	mockedJwtProvider := new(mockedJwtProvider)
+
+	service := NewMyAuthService(mockedJwtProvider)
+
+	theRefreshToken := "theRefreshToken"
+
+	t.Run("should return an unathorized error when jwt ParseToken() fails", func(t *testing.T) {
+		mockedJwtProvider.On("ParseToken", theRefreshToken).Return(nil, errors.New("wadus")).Once()
+
+		jwtInfo, err := service.ParseRefreshToken(theRefreshToken)
+
+		assert.Nil(t, jwtInfo)
+		assert.NotNil(t, err)
+		unauthErr, isUnauthErr := err.(*appErrors.UnauthorizedError)
+		assert.Equal(t, true, isUnauthErr, "should be an unauthorized error")
+		assert.Equal(t, "Invalid refresh token", unauthErr.Error())
+		mockedJwtProvider.AssertExpectations(t)
+	})
+
+	t.Run("should return an unauthorized error when the jwt IsTokenValid() return false", func(t *testing.T) {
+		refreshToken := struct{}{}
+
+		mockedJwtProvider.On("ParseToken", theRefreshToken).Return(refreshToken, nil).Once()
+		mockedJwtProvider.On("IsTokenValid", refreshToken).Return(false).Once()
+
+		rtInfo, err := service.ParseRefreshToken(theRefreshToken)
+
+		assert.Nil(t, rtInfo)
+		assert.NotNil(t, err)
+		unauthErr, isUnauthErr := err.(*appErrors.UnauthorizedError)
+		assert.Equal(t, true, isUnauthErr, "should be an unauthorized error")
+		assert.Equal(t, "Invalid refresh token", unauthErr.Error())
+		mockedJwtProvider.AssertExpectations(t)
+	})
+
+	t.Run("should return a refresh token claims info when the token is valid", func(t *testing.T) {
+		refreshToken := struct{}{}
+
+		rtInfo := models.RefreshTokenClaimsInfo{
+			ID: "id",
+		}
+
+		mockedJwtProvider.On("ParseToken", theRefreshToken).Return(refreshToken, nil).Once()
+		mockedJwtProvider.On("IsTokenValid", refreshToken).Return(true).Once()
+		mockedJwtProvider.On("GetRefreshTokenInfo", refreshToken).Return(&rtInfo).Once()
+
+		res, err := service.ParseRefreshToken(theRefreshToken)
+
+		assert.Equal(t, &rtInfo, res)
+		assert.Nil(t, err)
+		mockedJwtProvider.AssertExpectations(t)
+	})
+}
+
 func TestAuthServiceJwtProviderIntegration(t *testing.T) {
 	jwtPrv := NewMyJwtProvider("theSecret")
 
@@ -197,4 +257,10 @@ func TestAuthServiceJwtProviderIntegration(t *testing.T) {
 	assert.Equal(t, u.UserName, jwtInfo.UserName)
 	assert.Equal(t, u.IsAdmin, jwtInfo.IsAdmin)
 	assert.Equal(t, u.ID, jwtInfo.ID)
+
+	rtClaims, err := service.ParseRefreshToken(tokens["refreshToken"])
+	assert.NotNil(t, rtClaims)
+	assert.Nil(t, err)
+
+	assert.Equal(t, u.ID, rtClaims.ID)
 }

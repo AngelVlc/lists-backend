@@ -1,6 +1,7 @@
 package services
 
 import (
+	"fmt"
 	appErrors "github.com/AngelVlc/lists-backend/errors"
 	"github.com/AngelVlc/lists-backend/models"
 	"github.com/AngelVlc/lists-backend/stores"
@@ -11,6 +12,7 @@ import (
 type UsersService interface {
 	AddUser(dto *models.UserDto) (string, error)
 	CheckIfUserPasswordIsOk(userName string, password string) (*models.User, error)
+	GetSingleUser(id string, u *models.User) error
 }
 
 // MyUsersService is the service for the users entity
@@ -75,6 +77,15 @@ func (s *MyUsersService) CheckIfUserPasswordIsOk(userName string, password strin
 	return foundUser, nil
 }
 
+// GetSingleUser returns a single user from its id
+func (s *MyUsersService) GetSingleUser(id string, u *models.User) error {
+	if !s.usersRepository().IsValidID(id) {
+		return s.getInvalidIDError(id)
+	}
+
+	return s.usersRepository().GetByID(id, u)
+}
+
 func (s *MyUsersService) usersRepository() stores.Repository {
 	return s.session.GetRepository("users")
 }
@@ -101,4 +112,8 @@ func (s *MyUsersService) getUserByUserName(userName string) (*models.User, error
 	}
 
 	return &foundUsers[0], nil
+}
+
+func (s *MyUsersService) getInvalidIDError(id string) error {
+	return &appErrors.BadRequestError{Msg: fmt.Sprintf("%q is not a valid id", id), InternalError: nil}
 }
