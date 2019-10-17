@@ -47,16 +47,6 @@ func (m *mockedJwtProvider) IsTokenValid(token interface{}) bool {
 	return args.Bool(0)
 }
 
-func (m *mockedJwtProvider) GetJwtInfo(token interface{}) *models.JwtClaimsInfo {
-	args := m.Called(token)
-	return args.Get(0).(*models.JwtClaimsInfo)
-}
-
-func (m *mockedJwtProvider) GetRefreshTokenInfo(refreshToken interface{}) *models.RefreshTokenClaimsInfo {
-	args := m.Called(refreshToken)
-	return args.Get(0).(*models.RefreshTokenClaimsInfo)
-}
-
 func TestAuthServiceCreateToken(t *testing.T) {
 	mockedJwtProvider := new(mockedJwtProvider)
 
@@ -166,11 +156,19 @@ func TestAuthServiceParseToken(t *testing.T) {
 
 		jwtInfo := models.JwtClaimsInfo{
 			UserName: "wadus",
+			IsAdmin:  true,
+			ID:       "11",
 		}
 
 		mockedJwtProvider.On("ParseToken", theToken).Return(token, nil).Once()
 		mockedJwtProvider.On("IsTokenValid", token).Return(true).Once()
-		mockedJwtProvider.On("GetJwtInfo", token).Return(&jwtInfo).Once()
+
+		c := map[string]interface{}{
+			"userName": "wadus",
+			"isAdmin":  true,
+			"userId":   "11",
+		}
+		mockedJwtProvider.On("GetTokenClaims", token).Return(c).Once()
 
 		res, err := service.ParseToken(theToken)
 
@@ -225,7 +223,11 @@ func TestAuthServiceParseRefreshToken(t *testing.T) {
 
 		mockedJwtProvider.On("ParseToken", theRefreshToken).Return(refreshToken, nil).Once()
 		mockedJwtProvider.On("IsTokenValid", refreshToken).Return(true).Once()
-		mockedJwtProvider.On("GetRefreshTokenInfo", refreshToken).Return(&rtInfo).Once()
+
+		c := map[string]interface{}{
+			"userId": rtInfo.ID,
+		}
+		mockedJwtProvider.On("GetTokenClaims", refreshToken).Return(c).Once()
 
 		res, err := service.ParseRefreshToken(theRefreshToken)
 

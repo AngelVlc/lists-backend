@@ -3,14 +3,15 @@ package controllers
 import (
 	"errors"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
 	appErrors "github.com/AngelVlc/lists-backend/errors"
 	"github.com/AngelVlc/lists-backend/models"
 	"github.com/AngelVlc/lists-backend/services"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"net/http"
-	"net/http/httptest"
-	"testing"
 )
 
 type mockedAuthService struct {
@@ -33,6 +34,10 @@ func (s *mockedAuthService) ParseToken(token string) (*models.JwtClaimsInfo, err
 
 func (s *mockedAuthService) ParseRefreshToken(refreshTokenString string) (*models.RefreshTokenClaimsInfo, error) {
 	args := s.Called(refreshTokenString)
+	res := args.Get(0)
+	if res == nil {
+		return nil, args.Error(1)
+	}
 	return args.Get(0).(*models.RefreshTokenClaimsInfo), args.Error(1)
 }
 

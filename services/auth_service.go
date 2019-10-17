@@ -69,7 +69,7 @@ func (s *MyAuthService) ParseToken(tokenString string) (*models.JwtClaimsInfo, e
 		return nil, &appErrors.UnauthorizedError{Msg: "Invalid token"}
 	}
 
-	return s.jwtPrv.GetJwtInfo(token), nil
+	return s.getJwtInfo(token), nil
 }
 
 // ParseRefreshToken takes a refresh token string, parses it and if it is valid returns a
@@ -84,5 +84,37 @@ func (s *MyAuthService) ParseRefreshToken(refreshTokenString string) (*models.Re
 		return nil, &appErrors.UnauthorizedError{Msg: "Invalid refresh token"}
 	}
 
-	return s.jwtPrv.GetRefreshTokenInfo(refreshToken), nil
+	return s.getRefreshTokenInfo(refreshToken), nil
+}
+
+// GetJwtInfo returns a JwtClaimsInfo got from the token claims
+func (s *MyAuthService) getJwtInfo(token interface{}) *models.JwtClaimsInfo {
+	claims := s.jwtPrv.GetTokenClaims(token)
+
+	info := models.JwtClaimsInfo{
+		UserName: parseStringClaim(claims["userName"]),
+		ID:       parseStringClaim(claims["userId"]),
+		IsAdmin:  parseBoolClaim(claims["isAdmin"]),
+	}
+	return &info
+}
+
+/// GetRefreshTokenInfo returns a RefreshTokenClaimsInfo got from the refresh token claims
+func (s *MyAuthService) getRefreshTokenInfo(refreshToken interface{}) *models.RefreshTokenClaimsInfo {
+	claims := s.jwtPrv.GetTokenClaims(refreshToken)
+
+	info := models.RefreshTokenClaimsInfo{
+		ID: parseStringClaim(claims["userId"]),
+	}
+	return &info
+}
+
+func parseStringClaim(value interface{}) string {
+	result, _ := value.(string)
+	return result
+}
+
+func parseBoolClaim(value interface{}) bool {
+	result, _ := value.(bool)
+	return result
 }

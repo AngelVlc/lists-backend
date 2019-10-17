@@ -3,7 +3,6 @@ package services
 import (
 	"fmt"
 
-	"github.com/AngelVlc/lists-backend/models"
 	"github.com/dgrijalva/jwt-go"
 )
 
@@ -14,8 +13,6 @@ type JwtProvider interface {
 	SignToken(token interface{}) (string, error)
 	ParseToken(tokenString string) (interface{}, error)
 	IsTokenValid(token interface{}) bool
-	GetJwtInfo(token interface{}) *models.JwtClaimsInfo
-	GetRefreshTokenInfo(refreshToken interface{}) *models.RefreshTokenClaimsInfo
 }
 
 // MyJwtProvider is the type used as JwtProvider
@@ -61,36 +58,4 @@ func (p *MyJwtProvider) ParseToken(tokenString string) (interface{}, error) {
 // IsTokenValid returns true if the given token is valid
 func (p *MyJwtProvider) IsTokenValid(token interface{}) bool {
 	return p.getJwtToken(token).Valid
-}
-
-// GetJwtInfo returns a JwtClaimsInfo got from the token claims
-func (p *MyJwtProvider) GetJwtInfo(token interface{}) *models.JwtClaimsInfo {
-	claims := p.GetTokenClaims(token)
-
-	info := models.JwtClaimsInfo{
-		UserName: parseStringClaim(claims["userName"]),
-		ID:       parseStringClaim(claims["userId"]),
-		IsAdmin:  parseBoolClaim(claims["isAdmin"]),
-	}
-	return &info
-}
-
-/// GetRefreshTokenInfo returns a RefreshTokenClaimsInfo got from the refresh token claims
-func (p *MyJwtProvider) GetRefreshTokenInfo(refreshToken interface{}) *models.RefreshTokenClaimsInfo {
-	claims := p.GetTokenClaims(refreshToken)
-
-	info := models.RefreshTokenClaimsInfo{
-		ID: parseStringClaim(claims["userId"]),
-	}
-	return &info
-}
-
-func parseStringClaim(value interface{}) string {
-	result, _ := value.(string)
-	return result
-}
-
-func parseBoolClaim(value interface{}) bool {
-	result, _ := value.(bool)
-	return result
 }
