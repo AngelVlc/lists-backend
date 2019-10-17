@@ -33,3 +33,13 @@ type BadRequestError struct {
 func (e *BadRequestError) Error() string {
 	return e.Msg
 }
+
+// UnauthorizedError happens when the request is unauthorized
+type UnauthorizedError struct {
+	Msg           string
+	InternalError error
+}
+
+func (e *UnauthorizedError) Error() string {
+	return e.Msg
+}
