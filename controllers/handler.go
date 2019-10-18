@@ -3,6 +3,7 @@ package controllers
 import (
 	"encoding/json"
 	appErrors "github.com/AngelVlc/lists-backend/errors"
+	"github.com/AngelVlc/lists-backend/models"
 	"github.com/AngelVlc/lists-backend/services"
 	"log"
 	"net/http"
@@ -39,11 +40,12 @@ func (r okResult) IsError() bool {
 }
 
 // HandlerFunc is the type for the handler functions
-type HandlerFunc func(*http.Request, services.ServiceProvider) handlerResult
+type HandlerFunc func(*http.Request, services.ServiceProvider, *models.JwtClaimsInfo) handlerResult
 
 func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	log.Printf("%v %q", r.Method, r.URL)
 
+	var jwtInfo *models.JwtClaimsInfo
 	if h.RequireAuth {
 		token, err := getAuthToken(r)
 		if err != nil {
@@ -52,8 +54,7 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 
 		authSrv := h.ServiceProvider.GetAuthService()
-		jwtInfo, err := authSrv.ParseToken(token)
-
+		jwtInfo, err = authSrv.ParseToken(token)
 		if err != nil {
 			writeErrorResponse(w, http.StatusUnauthorized, "Invalid auth token", err)
 			return
@@ -65,7 +66,7 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	res := h.HandlerFunc(r, h.ServiceProvider)
+	res := h.HandlerFunc(r, h.ServiceProvider, jwtInfo)
 
 	if res.IsError() {
 		errorRes, _ := res.(errorResult)

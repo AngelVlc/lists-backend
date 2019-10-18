@@ -11,7 +11,7 @@ import (
 )
 
 // ListsHandler is the handler for the lists endpoints
-func ListsHandler(r *http.Request, servicePrv services.ServiceProvider) handlerResult {
+func ListsHandler(r *http.Request, servicePrv services.ServiceProvider, jwtInfo *models.JwtClaimsInfo) handlerResult {
 	switch r.Method {
 	case http.MethodGet:
 		return processListsGET(r, servicePrv)

@@ -53,7 +53,7 @@ func TestUsersHandler(t *testing.T) {
 		request, _ := http.NewRequest(http.MethodPost, "/users", bytes.NewBuffer(body))
 		request.Header.Set("Content-type", "application/json")
 
-		got := UsersHandler(request, testSrvProvider)
+		got := UsersHandler(request, testSrvProvider, nil)
 		want := okResult{"id", http.StatusCreated}
 
 		assert.Equal(t, want, got, "should be equal")
@@ -63,7 +63,7 @@ func TestUsersHandler(t *testing.T) {
 	t.Run("POST with invalid body should return an errorResult with a BadRequestError", func(t *testing.T) {
 		request, _ := http.NewRequest(http.MethodPost, "/users", strings.NewReader("wadus"))
 
-		got := UsersHandler(request, testSrvProvider)
+		got := UsersHandler(request, testSrvProvider, nil)
 
 		errorRes, isErrorResult := got.(errorResult)
 		assert.Equal(t, true, isErrorResult, "should be an error result")
@@ -87,7 +87,7 @@ func TestUsersHandler(t *testing.T) {
 		request, _ := http.NewRequest(http.MethodPost, "/users", bytes.NewBuffer(body))
 		request.Header.Set("Content-type", "application/json")
 
-		got := UsersHandler(request, testSrvProvider)
+		got := UsersHandler(request, testSrvProvider, nil)
 
 		errorResult, isErrorResult := got.(errorResult)
 		assert.Equal(t, true, isErrorResult, "should be an error result")
@@ -99,7 +99,7 @@ func TestUsersHandler(t *testing.T) {
 	t.Run("returns and okResult with a 405 status when the method is not GET, POST, PUT or DELETE", func(t *testing.T) {
 		request, _ := http.NewRequest(http.MethodPatch, "/users", nil)
 
-		got := UsersHandler(request, testSrvProvider)
+		got := UsersHandler(request, testSrvProvider, nil)
 
 		want := okResult{nil, http.StatusMethodNotAllowed}
 

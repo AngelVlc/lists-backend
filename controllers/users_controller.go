@@ -9,7 +9,7 @@ import (
 )
 
 // UsersHandler is the handler for the users endpoints
-func UsersHandler(r *http.Request, servicePrv services.ServiceProvider) handlerResult {
+func UsersHandler(r *http.Request, servicePrv services.ServiceProvider, jwtInfo *models.JwtClaimsInfo) handlerResult {
 	switch r.Method {
 	case http.MethodPost:
 		return processUsersGET(r, servicePrv)
