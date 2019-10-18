@@ -6,3 +6,4 @@
 - Expiration from ENV
 - Add active field to user
 - Refactor handler ServeHTTP
+- Rename JwtClaimsInfo.ID with UserID

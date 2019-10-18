@@ -16,7 +16,7 @@ func ListsHandler(r *http.Request, servicePrv services.ServiceProvider, jwtInfo 
 	case http.MethodGet:
 		return processListsGET(r, servicePrv)
 	case http.MethodPost:
-		return processListsPOST(r, servicePrv)
+		return processListsPOST(r, servicePrv, jwtInfo.ID)
 	case http.MethodDelete:
 		return processListsDELETE(r, servicePrv)
 	case http.MethodPut:
@@ -46,7 +46,7 @@ func processListsGET(r *http.Request, servicePrv services.ServiceProvider) handl
 	return okResult{l, http.StatusOK}
 }
 
-func processListsPOST(r *http.Request, servicePrv services.ServiceProvider) handlerResult {
+func processListsPOST(r *http.Request, servicePrv services.ServiceProvider, userId string) handlerResult {
 	l, err := parseListBody(r)
 
 	if err != nil {

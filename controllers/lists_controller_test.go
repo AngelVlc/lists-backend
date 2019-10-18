@@ -48,6 +48,10 @@ func TestLists(t *testing.T) {
 
 	testSrvProvider := new(mockedServiceProvider)
 
+	jwtInfo := models.JwtClaimsInfo{
+		ID: "id",
+	}
+
 	t.Run("GET returns an okResult when there is no error", func(t *testing.T) {
 		data := models.SampleGetListsResultDto()
 
@@ -132,7 +136,7 @@ func TestLists(t *testing.T) {
 		request, _ := http.NewRequest(http.MethodPost, "/lists", bytes.NewBuffer(body))
 		request.Header.Set("Content-type", "application/json")
 
-		got := ListsHandler(request, testSrvProvider, nil)
+		got := ListsHandler(request, testSrvProvider, &jwtInfo)
 		want := okResult{"id", http.StatusCreated}
 
 		assert.Equal(t, want, got, "should be equal")
@@ -142,7 +146,7 @@ func TestLists(t *testing.T) {
 	t.Run("POST with invalid body should return an errorResult with a BadRequestError", func(t *testing.T) {
 		request, _ := http.NewRequest(http.MethodPost, "/lists", strings.NewReader("wadus"))
 
-		got := ListsHandler(request, testSrvProvider, nil)
+		got := ListsHandler(request, testSrvProvider, &jwtInfo)
 
 		errorRes, isErrorResult := got.(errorResult)
 		assert.Equal(t, true, isErrorResult, "should be an error result")
@@ -167,7 +171,7 @@ func TestLists(t *testing.T) {
 		request, _ := http.NewRequest(http.MethodPost, "/lists", bytes.NewBuffer(body))
 		request.Header.Set("Content-type", "application/json")
 
-		got := ListsHandler(request, testSrvProvider, nil)
+		got := ListsHandler(request, testSrvProvider, &jwtInfo)
 		errorRes, isErrorResult := got.(errorResult)
 		assert.Equal(t, true, isErrorResult, "should be an error result")
 
