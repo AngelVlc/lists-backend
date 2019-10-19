@@ -57,7 +57,7 @@ func RefreshTokenHandler(r *http.Request, servicePrv services.ServiceProvider, j
 
 	foundUser := models.User{}
 
-	err = userSrv.GetSingleUser(rtInfo.ID, &foundUser)
+	err = userSrv.GetUserByID(rtInfo.ID, &foundUser)
 	if err != nil {
 		return errorResult{&appErrors.BadRequestError{Msg: "The user is no longer valid", InternalError: nil}}
 	}

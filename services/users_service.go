@@ -13,7 +13,8 @@ import (
 type UsersService interface {
 	AddUser(dto *models.UserDto) (string, error)
 	CheckIfUserPasswordIsOk(userName string, password string) (*models.User, error)
-	GetSingleUser(id string, u *models.User) error
+	GetUserByID(id string, u *models.User) error
+	GetUserByUserName(userName string, u *models.User) error
 }
 
 // MyUsersService is the service for the users entity
@@ -78,13 +79,18 @@ func (s *MyUsersService) CheckIfUserPasswordIsOk(userName string, password strin
 	return foundUser, nil
 }
 
-// GetSingleUser returns a single user from its id
-func (s *MyUsersService) GetSingleUser(id string, u *models.User) error {
+// GetUserByID returns a single user from its id
+func (s *MyUsersService) GetUserByID(id string, u *models.User) error {
 	if !s.usersRepository().IsValidID(id) {
 		return s.getInvalidIDError(id)
 	}
 
 	return s.usersRepository().GetOne(u, bson.D{{"_id", id}}, nil)
+}
+
+// GetUserByUserName returns a single user from its id
+func (s *MyUsersService) GetUserByUserName(userName string, u *models.User) error {
+	return s.usersRepository().GetOne(u, bson.D{{"userName", userName}}, nil)
 }
 
 func (s *MyUsersService) usersRepository() stores.Repository {

@@ -210,13 +210,13 @@ func TestUserService(t *testing.T) {
 		mockedBcryptProvider.AssertExpectations(t)
 	})
 
-	t.Run("GetSingleUser() should call repository.GetOne", func(t *testing.T) {
+	t.Run("GetUserByID() should call repository.GetOne", func(t *testing.T) {
 		u := models.User{}
 
 		mockedRepository.On("GetOne", &u, bson.D{{"_id", "id"}}, nil).Return(errors.New("error")).Once()
 		mockedRepository.On("IsValidID", "id").Return(true).Once()
 
-		err := service.GetSingleUser("id", &u)
+		err := service.GetUserByID("id", &u)
 
 		assert.NotNil(t, err)
 
@@ -224,18 +224,31 @@ func TestUserService(t *testing.T) {
 		mockedRepository.AssertExpectations(t)
 	})
 
-	t.Run("GetSingleList() should return a badRequestError when the id is not valid", func(t *testing.T) {
+	t.Run("GetUserByID() should return a badRequestError when the id is not valid", func(t *testing.T) {
 		id := "wadus"
 
 		mockedRepository.On("IsValidID", id).Return(false).Once()
 
-		err := service.GetSingleUser(id, &models.User{})
+		err := service.GetUserByID(id, &models.User{})
 
 		assert.NotNil(t, err)
 
 		assert.IsType(t, &appErrors.BadRequestError{}, err)
 
 		assert.Equal(t, fmt.Sprintf("%q is not a valid id", id), err.Error())
+
+		mockedSession.AssertExpectations(t)
+		mockedRepository.AssertExpectations(t)
+	})
+
+	t.Run("GetUserByUserName() should call repository.GetOne", func(t *testing.T) {
+		u := models.User{}
+
+		mockedRepository.On("GetOne", &u, bson.D{{"userName", "name"}}, nil).Return(errors.New("error")).Once()
+
+		err := service.GetUserByUserName("name", &u)
+
+		assert.NotNil(t, err)
 
 		mockedSession.AssertExpectations(t)
 		mockedRepository.AssertExpectations(t)

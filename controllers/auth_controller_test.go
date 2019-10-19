@@ -236,7 +236,7 @@ func TestRefreshTokenHandler(t *testing.T) {
 		assertAuthExpectations(t, testSrvProvider, testUsersSrv, testAuthSrv)
 	})
 
-	t.Run("POST returns an errorResult when GetSingleUser returns an error", func(t *testing.T) {
+	t.Run("POST returns an errorResult when GetUserByID returns an error", func(t *testing.T) {
 		refreshToken := models.RefreshToken{
 			RefreshToken: "theRefreshToken",
 		}
@@ -251,7 +251,7 @@ func TestRefreshTokenHandler(t *testing.T) {
 		testAuthSrv.On("ParseRefreshToken", refreshToken.RefreshToken).Return(&rtInfo, nil).Once()
 		testSrvProvider.On("GetUsersService").Return(testUsersSrv).Once()
 		u := models.User{}
-		testUsersSrv.On("GetSingleUser", rtInfo.ID, &u).Return(errors.New("wadus")).Once()
+		testUsersSrv.On("GetUserByID", rtInfo.ID, &u).Return(errors.New("wadus")).Once()
 
 		got := RefreshTokenHandler(request, testSrvProvider, nil)
 
@@ -285,7 +285,7 @@ func TestRefreshTokenHandler(t *testing.T) {
 			UserName: "user",
 			ID:       "1",
 		}
-		testUsersSrv.On("GetSingleUser", rtInfo.ID, &u).Return(nil).Run(func(args mock.Arguments) {
+		testUsersSrv.On("GetUserByID", rtInfo.ID, &u).Return(nil).Run(func(args mock.Arguments) {
 			arg := args.Get(1).(*models.User)
 			*arg = fu
 		})
@@ -323,7 +323,7 @@ func TestRefreshTokenHandler(t *testing.T) {
 			UserName: "user",
 			ID:       "1",
 		}
-		testUsersSrv.On("GetSingleUser", rtInfo.ID, &u).Return(nil).Run(func(args mock.Arguments) {
+		testUsersSrv.On("GetUserByID", rtInfo.ID, &u).Return(nil).Run(func(args mock.Arguments) {
 			arg := args.Get(1).(*models.User)
 			*arg = fu
 		})
