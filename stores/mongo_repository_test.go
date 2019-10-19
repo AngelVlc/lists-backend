@@ -2,13 +2,13 @@ package stores
 
 import (
 	"errors"
-	"fmt"
+	"testing"
+
 	appErrors "github.com/AngelVlc/lists-backend/errors"
 	"github.com/AngelVlc/lists-backend/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"gopkg.in/mgo.v2/bson"
-	"testing"
 )
 
 type MockedMongoCollection struct {
@@ -20,8 +20,13 @@ func (m *MockedMongoCollection) Find(doc interface{}, query interface{}, selecto
 	return args.Error(0)
 }
 
-func (m *MockedMongoCollection) FindOneById(id string, doc interface{}) error {
-	args := m.Called(id, doc)
+func (m *MockedMongoCollection) GetOne(doc interface{}, query interface{}, selector interface{}) error {
+	args := m.Called(doc, query, selector)
+	return args.Error(0)
+}
+
+func (m *MockedMongoCollection) FindOne(doc interface{}, query interface{}, selector interface{}) error {
+	args := m.Called(doc, query, selector)
 	return args.Error(0)
 }
 
@@ -73,8 +78,7 @@ func TestUpdate(t *testing.T) {
 
 		assert.IsType(t, &appErrors.NotFoundError{}, err)
 
-		msg := fmt.Sprintf("document with id %q not found", id)
-		assertFailedOperation(t, testMongoCollection, err, msg)
+		assertFailedOperation(t, testMongoCollection, err, "document not found")
 	})
 
 	t.Run("Update() updates a list", func(t *testing.T) {
@@ -115,8 +119,7 @@ func TestRemove(t *testing.T) {
 
 		assert.IsType(t, &appErrors.NotFoundError{}, err)
 
-		msg := fmt.Sprintf("document with id %q not found", id)
-		assertFailedOperation(t, testMongoCollection, err, msg)
+		assertFailedOperation(t, testMongoCollection, err, "document not found")
 	})
 
 	t.Run("Remove() removes a list", func(t *testing.T) {
@@ -125,52 +128,6 @@ func TestRemove(t *testing.T) {
 		testMongoCollection.On("Remove", oidHex).Return(nil).Once()
 
 		err := repository.Remove(oidHex)
-
-		assertSuccededOperation(t, testMongoCollection, err)
-	})
-}
-
-func TestGetSingle(t *testing.T) {
-	testMongoCollection := new(MockedMongoCollection)
-
-	repository := MongoRepository{testMongoCollection}
-
-	t.Run("GetByID() returns an unexpected error when the remove fails", func(t *testing.T) {
-		data := sampleList()
-		testMongoCollection.On("FindOneById", data.ID, &models.List{}).Return(errors.New("wadus")).Once()
-
-		err := repository.GetByID(data.ID, &models.List{})
-
-		assert.IsType(t, &appErrors.UnexpectedError{}, err)
-
-		assertFailedOperation(t, testMongoCollection, err, "Error retrieving from the database")
-	})
-
-	t.Run("GetByID() returns a not found error when document does not exits", func(t *testing.T) {
-		data := sampleList()
-		testMongoCollection.On("FindOneById", data.ID, &models.List{}).Return(errors.New("not found")).Once()
-		testMongoCollection.On("Name").Return("document").Once()
-
-		err := repository.GetByID(data.ID, &models.List{})
-
-		assert.IsType(t, &appErrors.NotFoundError{}, err)
-
-		msg := fmt.Sprintf("document with id %q not found", data.ID)
-		assertFailedOperation(t, testMongoCollection, err, msg)
-	})
-
-	t.Run("GetByID() returns a single list", func(t *testing.T) {
-		data := sampleList()
-		testMongoCollection.On("FindOneById", data.ID, &models.List{}).Return(nil).Once().Run(func(args mock.Arguments) {
-			arg := args.Get(1).(*models.List)
-			*arg = data
-		})
-
-		want := data
-		got := models.List{}
-		err := repository.GetByID(data.ID, &got)
-
-		assert.Equal(t, want, got, "they should be equal")
 
 		assertSuccededOperation(t, testMongoCollection, err)
 	})
@@ -210,7 +167,7 @@ func TestGet(t *testing.T) {
 
 	repository := MongoRepository{testMongoCollection}
 
-	t.Run("Get() returns all the list items", func(t *testing.T) {
+	t.Run("Get() returns the collection items", func(t *testing.T) {
 		data := models.SampleGetListsResultDto()
 		testMongoCollection.On("Find", &[]models.GetListsResultDto{}, nil, bson.M{"name": 1}).Return(nil).Once().Run(func(args mock.Arguments) {
 			arg := args.Get(0).(*[]models.GetListsResultDto)
@@ -233,6 +190,54 @@ func TestGet(t *testing.T) {
 		err := repository.Get(&r, nil, bson.M{"name": 1})
 
 		assertFailedOperation(t, testMongoCollection, err, "Error retrieving from the database")
+	})
+}
+
+func TestGetOne(t *testing.T) {
+	testMongoCollection := new(MockedMongoCollection)
+
+	repository := MongoRepository{testMongoCollection}
+
+	t.Run("GetOne() returns one item", func(t *testing.T) {
+		data := models.List{
+			ID:   "id",
+			Name: "list1",
+		}
+		testMongoCollection.On("FindOne", &models.List{}, nil, bson.M{"name": "list1"}).Return(nil).Once().Run(func(args mock.Arguments) {
+			arg := args.Get(0).(*models.List)
+			*arg = data
+		})
+
+		want := data
+		got := models.List{}
+		err := repository.GetOne(&got, nil, bson.M{"name": "list1"})
+
+		assert.Equal(t, want, got, "they should be equal")
+
+		assertSuccededOperation(t, testMongoCollection, err)
+	})
+
+	t.Run("GetOne() returns an error when the query fails", func(t *testing.T) {
+		testMongoCollection.On("FindOne", &models.List{}, nil, bson.M{"name": "1"}).Return(errors.New("wadus")).Once()
+
+		r := models.List{}
+		err := repository.GetOne(&r, nil, bson.M{"name": "1"})
+
+		assert.IsType(t, &appErrors.UnexpectedError{}, err)
+
+		assertFailedOperation(t, testMongoCollection, err, "Error retrieving from the database")
+	})
+
+	t.Run("GetOne() returns a not found error when document does not exits", func(t *testing.T) {
+		testMongoCollection.On("FindOne", &models.List{}, nil, bson.M{"name": "1"}).Return(errors.New("not found")).Once()
+		testMongoCollection.On("Name").Return("document").Once()
+
+		r := models.List{}
+		err := repository.GetOne(&r, nil, bson.M{"name": "1"})
+
+		assert.IsType(t, &appErrors.NotFoundError{}, err)
+
+		assertFailedOperation(t, testMongoCollection, err, "document not found")
 	})
 }
 

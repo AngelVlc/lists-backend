@@ -210,10 +210,10 @@ func TestUserService(t *testing.T) {
 		mockedBcryptProvider.AssertExpectations(t)
 	})
 
-	t.Run("GetSingleUser() should call repository.GetById", func(t *testing.T) {
+	t.Run("GetSingleUser() should call repository.GetOne", func(t *testing.T) {
 		u := models.User{}
 
-		mockedRepository.On("GetByID", "id", &u).Return(errors.New("error")).Once()
+		mockedRepository.On("GetOne", &u, bson.D{{"_id", "id"}}, nil).Return(errors.New("error")).Once()
 		mockedRepository.On("IsValidID", "id").Return(true).Once()
 
 		err := service.GetSingleUser("id", &u)

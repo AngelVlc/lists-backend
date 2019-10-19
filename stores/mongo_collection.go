@@ -8,7 +8,7 @@ import (
 // for testing purposes
 type MongoCollection interface {
 	Find(doc interface{}, query interface{}, selector interface{}) error
-	FindOneById(id string, doc interface{}) error
+	FindOne(doc interface{}, query interface{}, selector interface{}) error
 	Insert(doc interface{}) error
 	Remove(id string) error
 	Update(id string, doc interface{}) error
@@ -30,9 +30,9 @@ func (c *MyMongoCollection) Find(doc interface{}, query interface{}, selector in
 	return c.collection.Find(query).Select(selector).All(doc)
 }
 
-// FindOneById returns a single document
-func (c *MyMongoCollection) FindOneById(id string, doc interface{}) error {
-	if err := c.collection.FindId(id).One(doc); err != nil {
+// FindById returns a single document
+func (c *MyMongoCollection) FindOne(doc interface{}, query interface{}, selector interface{}) error {
+	if err := c.collection.Find(query).One(doc); err != nil {
 		return err
 	}
 

@@ -1,10 +1,11 @@
 package stores
 
 import (
+	"testing"
+
 	"github.com/AngelVlc/lists-backend/models"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/mgo.v2/bson"
-	"testing"
 )
 
 func TestMongoStore(t *testing.T) {
@@ -23,7 +24,7 @@ func TestMongoStore(t *testing.T) {
 	assert.NotEmpty(t, id)
 
 	foundList := models.List{}
-	err = repository.GetByID(id, &foundList)
+	err = repository.GetOne(&foundList, bson.D{{"_id", id}}, nil)
 	assert.Nil(t, err)
 	assert.Equal(t, data.Name, foundList.Name)
 
@@ -33,7 +34,7 @@ func TestMongoStore(t *testing.T) {
 	assert.Nil(t, err)
 
 	foundList = models.List{}
-	err = repository.GetByID(gotLists[0].ID, &foundList)
+	err = repository.GetOne(&foundList, bson.D{{"_id", gotLists[0].ID}}, nil)
 	assert.Nil(t, err)
 	assert.Equal(t, data.Name, foundList.Name)
 
@@ -43,7 +44,7 @@ func TestMongoStore(t *testing.T) {
 	assert.Nil(t, err)
 
 	foundList = models.List{}
-	err = repository.GetByID(gotLists[0].ID, &foundList)
+	err = repository.GetOne(&foundList, bson.D{{"_id", gotLists[0].ID}}, nil)
 	assert.Nil(t, err)
 	assert.Equal(t, dataToReplace.Name, foundList.Name)
 
@@ -51,7 +52,7 @@ func TestMongoStore(t *testing.T) {
 	assert.Nil(t, err)
 
 	foundList = models.List{}
-	err = repository.GetByID(gotLists[0].ID, &foundList)
+	err = repository.GetOne(&foundList, bson.D{{"_id", gotLists[0].ID}}, nil)
 	assert.NotNil(t, err)
 
 	err = session.session.DB(session.databaseName).C("lists").DropCollection()

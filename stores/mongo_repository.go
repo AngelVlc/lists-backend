@@ -1,9 +1,10 @@
 package stores
 
 import (
+	"reflect"
+
 	appErrors "github.com/AngelVlc/lists-backend/errors"
 	"gopkg.in/mgo.v2/bson"
-	"reflect"
 )
 
 // MongoRepository is the store which uses mongo db
@@ -11,9 +12,26 @@ type MongoRepository struct {
 	mongoCollection MongoCollection
 }
 
-// Get returns the lists collection
+// Get returns several items from a collection
 func (s *MongoRepository) Get(doc interface{}, query interface{}, selector interface{}) error {
 	if err := s.mongoCollection.Find(doc, query, selector); err != nil {
+		return &appErrors.UnexpectedError{
+			Msg:           "Error retrieving from the database",
+			InternalError: err,
+		}
+	}
+
+	return nil
+}
+
+// GetOne returns a single item
+func (s *MongoRepository) GetOne(doc interface{}, query interface{}, selector interface{}) error {
+	if err := s.mongoCollection.FindOne(doc, query, selector); err != nil {
+		if err.Error() == "not found" {
+			return &appErrors.NotFoundError{
+				Model: s.mongoCollection.Name(),
+			}
+		}
 		return &appErrors.UnexpectedError{
 			Msg:           "Error retrieving from the database",
 			InternalError: err,
@@ -45,7 +63,6 @@ func (s *MongoRepository) Update(id string, doc interface{}) error {
 	if err := s.mongoCollection.Update(id, doc); err != nil {
 		if err.Error() == "not found" {
 			return &appErrors.NotFoundError{
-				ID:    id,
 				Model: s.mongoCollection.Name(),
 			}
 		}
@@ -63,30 +80,11 @@ func (s *MongoRepository) Remove(id string) error {
 	if err := s.mongoCollection.Remove(id); err != nil {
 		if err.Error() == "not found" {
 			return &appErrors.NotFoundError{
-				ID:    id,
 				Model: s.mongoCollection.Name(),
 			}
 		}
 		return &appErrors.UnexpectedError{
 			Msg:           "Error removing from the database",
-			InternalError: err,
-		}
-	}
-
-	return nil
-}
-
-// GetByID returns a single document
-func (s *MongoRepository) GetByID(id string, doc interface{}) error {
-	if err := s.mongoCollection.FindOneById(id, doc); err != nil {
-		if err.Error() == "not found" {
-			return &appErrors.NotFoundError{
-				ID:    id,
-				Model: s.mongoCollection.Name(),
-			}
-		}
-		return &appErrors.UnexpectedError{
-			Msg:           "Error retrieving from the database",
 			InternalError: err,
 		}
 	}

@@ -23,6 +23,11 @@ func (m *mockedRepository) Get(doc interface{}, query interface{}, selector inte
 	return args.Error(0)
 }
 
+func (m *mockedRepository) GetOne(doc interface{}, query interface{}, selector interface{}) error {
+	args := m.Called(doc, query, selector)
+	return args.Error(0)
+}
+
 func (m *mockedRepository) Remove(id string) error {
 	args := m.Called(id)
 	return args.Error(0)
@@ -30,11 +35,6 @@ func (m *mockedRepository) Remove(id string) error {
 
 func (m *mockedRepository) Update(id string, doc interface{}) error {
 	args := m.Called(id, doc)
-	return args.Error(0)
-}
-
-func (m *mockedRepository) GetByID(id string, item interface{}) error {
-	args := m.Called(id, item)
 	return args.Error(0)
 }
 

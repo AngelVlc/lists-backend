@@ -16,12 +16,11 @@ func (e *UnexpectedError) Error() string {
 
 // NotFoundError happens when the document does not exist in the store
 type NotFoundError struct {
-	ID    string
 	Model string
 }
 
 func (e *NotFoundError) Error() string {
-	return fmt.Sprintf("%v with id %q not found", e.Model, e.ID)
+	return fmt.Sprintf("%v not found", e.Model)
 }
 
 // BadRequestError happens when an id is not valid

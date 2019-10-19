@@ -111,7 +111,7 @@ func TestHandlerWithoutAuth(t *testing.T) {
 
 	t.Run("Returns 404 when a not found error happens", func(t *testing.T) {
 		f := func(r *http.Request, serviceProvider services.ServiceProvider, jwtInfo *models.JwtClaimsInfo) handlerResult {
-			return errorResult{&appErrors.NotFoundError{ID: "id", Model: "model"}}
+			return errorResult{&appErrors.NotFoundError{Model: "model"}}
 		}
 
 		handler := Handler{
@@ -125,7 +125,7 @@ func TestHandlerWithoutAuth(t *testing.T) {
 		handler.ServeHTTP(response, request)
 
 		assert.Equal(t, http.StatusNotFound, response.Result().StatusCode)
-		assert.Equal(t, "model with id \"id\" not found\n", string(response.Body.String()))
+		assert.Equal(t, "model not found\n", string(response.Body.String()))
 	})
 
 	t.Run("Returns 400 when a bad request error happens", func(t *testing.T) {

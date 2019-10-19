@@ -3,11 +3,12 @@ package services
 import (
 	"errors"
 	"fmt"
+	"testing"
+
 	appErrors "github.com/AngelVlc/lists-backend/errors"
 	"github.com/AngelVlc/lists-backend/models"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/mgo.v2/bson"
-	"testing"
 )
 
 func TestListsService(t *testing.T) {
@@ -101,10 +102,10 @@ func TestListsService(t *testing.T) {
 		mockedRepository.AssertExpectations(t)
 	})
 
-	t.Run("GetSingleList() should call repository.GetById", func(t *testing.T) {
+	t.Run("GetSingleList() should call repository.GetOne", func(t *testing.T) {
 		l := models.List{}
 
-		mockedRepository.On("GetByID", "id", &l).Return(errors.New("error")).Once()
+		mockedRepository.On("GetOne", &l, bson.D{{"_id", "id"}}, nil).Return(errors.New("error")).Once()
 		mockedRepository.On("IsValidID", "id").Return(true).Once()
 
 		err := service.GetSingleList("id", &l)

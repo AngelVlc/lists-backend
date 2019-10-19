@@ -2,6 +2,7 @@ package services
 
 import (
 	"fmt"
+
 	appErrors "github.com/AngelVlc/lists-backend/errors"
 	"github.com/AngelVlc/lists-backend/models"
 	"github.com/AngelVlc/lists-backend/stores"
@@ -83,7 +84,7 @@ func (s *MyUsersService) GetSingleUser(id string, u *models.User) error {
 		return s.getInvalidIDError(id)
 	}
 
-	return s.usersRepository().GetByID(id, u)
+	return s.usersRepository().GetOne(u, bson.D{{"_id", id}}, nil)
 }
 
 func (s *MyUsersService) usersRepository() stores.Repository {

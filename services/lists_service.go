@@ -2,6 +2,7 @@ package services
 
 import (
 	"fmt"
+
 	appErrors "github.com/AngelVlc/lists-backend/errors"
 	"github.com/AngelVlc/lists-backend/models"
 	"github.com/AngelVlc/lists-backend/stores"
@@ -58,7 +59,7 @@ func (s *MyListsService) GetSingleList(id string, l *models.List) error {
 		return s.getInvalidIDError(id)
 	}
 
-	return s.listsRepository().GetByID(id, l)
+	return s.listsRepository().GetOne(l, bson.D{{"_id", id}}, nil)
 }
 
 // GetLists returns the lists
