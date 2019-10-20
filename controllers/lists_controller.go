@@ -11,23 +11,24 @@ import (
 )
 
 // ListsHandler is the handler for the lists endpoints
-func ListsHandler(r *http.Request, servicePrv services.ServiceProvider, jwtInfo *models.JwtClaimsInfo) handlerResult {
+func ListsHandler(r *http.Request, servicePrv services.ServiceProvider) handlerResult {
 	switch r.Method {
 	case http.MethodGet:
-		return processListsGET(r, servicePrv, jwtInfo.ID)
+		return processListsGET(r, servicePrv)
 	case http.MethodPost:
-		return processListsPOST(r, servicePrv, jwtInfo.ID)
+		return processListsPOST(r, servicePrv)
 	case http.MethodDelete:
-		return processListsDELETE(r, servicePrv, jwtInfo.ID)
+		return processListsDELETE(r, servicePrv)
 	case http.MethodPut:
-		return processListsPUT(r, servicePrv, jwtInfo.ID)
+		return processListsPUT(r, servicePrv)
 	default:
 		return okResult{nil, http.StatusMethodNotAllowed}
 	}
 }
 
-func processListsGET(r *http.Request, servicePrv services.ServiceProvider, userID string) handlerResult {
+func processListsGET(r *http.Request, servicePrv services.ServiceProvider) handlerResult {
 	listID := getListIDFromURL(r.URL)
+	userID := getUserIDFromContext(r)
 
 	listSrv := servicePrv.GetListsService()
 	if listID == "" {
@@ -46,8 +47,9 @@ func processListsGET(r *http.Request, servicePrv services.ServiceProvider, userI
 	return okResult{l, http.StatusOK}
 }
 
-func processListsPOST(r *http.Request, servicePrv services.ServiceProvider, userID string) handlerResult {
+func processListsPOST(r *http.Request, servicePrv services.ServiceProvider) handlerResult {
 	l, err := parseListBody(r)
+	userID := getUserIDFromContext(r)
 
 	if err != nil {
 		return errorResult{err}
@@ -61,8 +63,9 @@ func processListsPOST(r *http.Request, servicePrv services.ServiceProvider, user
 	return okResult{id, http.StatusCreated}
 }
 
-func processListsPUT(r *http.Request, servicePrv services.ServiceProvider, userID string) handlerResult {
+func processListsPUT(r *http.Request, servicePrv services.ServiceProvider) handlerResult {
 	listID := getListIDFromURL(r.URL)
+	userID := getUserIDFromContext(r)
 
 	l, err := parseListBody(r)
 	if err != nil {
@@ -76,8 +79,9 @@ func processListsPUT(r *http.Request, servicePrv services.ServiceProvider, userI
 	return okResult{l, http.StatusOK}
 }
 
-func processListsDELETE(r *http.Request, servicePrv services.ServiceProvider, userID string) handlerResult {
+func processListsDELETE(r *http.Request, servicePrv services.ServiceProvider) handlerResult {
 	listID := getListIDFromURL(r.URL)
+	userID := getUserIDFromContext(r)
 
 	listSrv := servicePrv.GetListsService()
 	err := listSrv.RemoveUserList(listID, userID)

@@ -45,7 +45,7 @@ func TestHandlerWithoutAuth(t *testing.T) {
 	mockServicePrv := new(mockedServiceProvider)
 
 	t.Run("Returns 200 when no error", func(t *testing.T) {
-		f := func(r *http.Request, serviceProvider services.ServiceProvider, jwtInfo *models.JwtClaimsInfo) handlerResult {
+		f := func(r *http.Request, serviceProvider services.ServiceProvider) handlerResult {
 			return okResult{nil, http.StatusOK}
 		}
 
@@ -63,7 +63,7 @@ func TestHandlerWithoutAuth(t *testing.T) {
 	})
 
 	t.Run("Returns 200 with content when no error", func(t *testing.T) {
-		f := func(r *http.Request, serviceProvider services.ServiceProvider, jwtInfo *models.JwtClaimsInfo) handlerResult {
+		f := func(r *http.Request, serviceProvider services.ServiceProvider) handlerResult {
 			obj := struct {
 				Field1 string
 				Field2 string
@@ -91,7 +91,7 @@ func TestHandlerWithoutAuth(t *testing.T) {
 	})
 
 	t.Run("Returns 500 when an unexpected error happens", func(t *testing.T) {
-		f := func(r *http.Request, serviceProvider services.ServiceProvider, jwtInfo *models.JwtClaimsInfo) handlerResult {
+		f := func(r *http.Request, serviceProvider services.ServiceProvider) handlerResult {
 			return errorResult{&appErrors.UnexpectedError{Msg: "error", InternalError: errors.New("msg")}}
 		}
 
@@ -110,7 +110,7 @@ func TestHandlerWithoutAuth(t *testing.T) {
 	})
 
 	t.Run("Returns 404 when a not found error happens", func(t *testing.T) {
-		f := func(r *http.Request, serviceProvider services.ServiceProvider, jwtInfo *models.JwtClaimsInfo) handlerResult {
+		f := func(r *http.Request, serviceProvider services.ServiceProvider) handlerResult {
 			return errorResult{&appErrors.NotFoundError{Model: "model"}}
 		}
 
@@ -129,7 +129,7 @@ func TestHandlerWithoutAuth(t *testing.T) {
 	})
 
 	t.Run("Returns 400 when a bad request error happens", func(t *testing.T) {
-		f := func(r *http.Request, serviceProvider services.ServiceProvider, jwtInfo *models.JwtClaimsInfo) handlerResult {
+		f := func(r *http.Request, serviceProvider services.ServiceProvider) handlerResult {
 			return errorResult{&appErrors.BadRequestError{Msg: fmt.Sprintf("%q is not a valid id", "id")}}
 		}
 
@@ -148,7 +148,7 @@ func TestHandlerWithoutAuth(t *testing.T) {
 	})
 
 	t.Run("Returns 401 when an unauthorized error happens", func(t *testing.T) {
-		f := func(r *http.Request, serviceProvider services.ServiceProvider, jwtInfo *models.JwtClaimsInfo) handlerResult {
+		f := func(r *http.Request, serviceProvider services.ServiceProvider) handlerResult {
 			return errorResult{&appErrors.UnauthorizedError{Msg: "wadus"}}
 		}
 
@@ -167,7 +167,7 @@ func TestHandlerWithoutAuth(t *testing.T) {
 	})
 
 	t.Run("Returns 500 when an unhandled error happens", func(t *testing.T) {
-		f := func(r *http.Request, serviceProvider services.ServiceProvider, jwtInfo *models.JwtClaimsInfo) handlerResult {
+		f := func(r *http.Request, serviceProvider services.ServiceProvider) handlerResult {
 			return errorResult{errors.New("wadus")}
 		}
 
@@ -191,7 +191,7 @@ func TestHandlerWithAuth(t *testing.T) {
 
 	mockAuthSvc := new(mockedAuthService)
 
-	f := func(r *http.Request, serviceProvider services.ServiceProvider, jwtInfo *models.JwtClaimsInfo) handlerResult {
+	f := func(r *http.Request, serviceProvider services.ServiceProvider) handlerResult {
 		return errorResult{errors.New("wadus")}
 	}
 

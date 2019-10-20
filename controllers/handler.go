@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"context"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -41,7 +42,11 @@ func (r okResult) IsError() bool {
 }
 
 // HandlerFunc is the type for the handler functions
-type HandlerFunc func(*http.Request, services.ServiceProvider, *models.JwtClaimsInfo) handlerResult
+type HandlerFunc func(*http.Request, services.ServiceProvider) handlerResult
+
+type contextKey string
+
+const reqContextUserKey contextKey = "userID"
 
 func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	var jwtInfo *models.JwtClaimsInfo
@@ -69,9 +74,11 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		log.Printf("%v %q", r.Method, r.URL)
 	} else {
 		log.Printf("[%v] %v %q", jwtInfo.UserName, r.Method, r.URL)
+
+		r = addUserIDToContext(jwtInfo.ID, r)
 	}
 
-	res := h.HandlerFunc(r, h.ServiceProvider, jwtInfo)
+	res := h.HandlerFunc(r, h.ServiceProvider)
 
 	if res.IsError() {
 		errorRes, _ := res.(errorResult)
@@ -132,4 +139,20 @@ func getAuthToken(r *http.Request) (string, error) {
 	}
 
 	return authHeaderParts[1], nil
+}
+
+func addUserIDToContext(userID string, r *http.Request) *http.Request {
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, reqContextUserKey, userID)
+
+	return r.WithContext(ctx)
+}
+
+func getUserIDFromContext(r *http.Request) string {
+	userIDRaw := r.Context().Value(reqContextUserKey)
+
+	userID, _ := userIDRaw.(string)
+
+	return userID
 }

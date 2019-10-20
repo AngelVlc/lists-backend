@@ -2,23 +2,24 @@ package controllers
 
 import (
 	"encoding/json"
+	"net/http"
+
 	appErrors "github.com/AngelVlc/lists-backend/errors"
 	"github.com/AngelVlc/lists-backend/models"
 	"github.com/AngelVlc/lists-backend/services"
-	"net/http"
 )
 
 // UsersHandler is the handler for the users endpoints
-func UsersHandler(r *http.Request, servicePrv services.ServiceProvider, jwtInfo *models.JwtClaimsInfo) handlerResult {
+func UsersHandler(r *http.Request, servicePrv services.ServiceProvider) handlerResult {
 	switch r.Method {
 	case http.MethodPost:
-		return processUsersGET(r, servicePrv)
+		return processUsersPOST(r, servicePrv)
 	default:
 		return okResult{nil, http.StatusMethodNotAllowed}
 	}
 }
 
-func processUsersGET(r *http.Request, servicePrv services.ServiceProvider) handlerResult {
+func processUsersPOST(r *http.Request, servicePrv services.ServiceProvider) handlerResult {
 	dto, err := parseUserBody(r)
 	if err != nil {
 		return errorResult{err}

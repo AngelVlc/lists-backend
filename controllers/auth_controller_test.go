@@ -24,7 +24,7 @@ func TestTokenHandler(t *testing.T) {
 	t.Run("POST with invalid body should return an errorResult with a BadRequestError", func(t *testing.T) {
 		request, _ := http.NewRequest(http.MethodPost, "/auth/token", strings.NewReader("wadus"))
 
-		got := TokenHandler(request, testSrvProvider, nil)
+		got := TokenHandler(request, testSrvProvider)
 
 		errorRes, isErrorResult := got.(errorResult)
 		assert.Equal(t, true, isErrorResult, "should be an error result")
@@ -46,7 +46,7 @@ func TestTokenHandler(t *testing.T) {
 
 		request, _ := http.NewRequest(http.MethodPost, "/auth/token", bytes.NewBuffer(body))
 
-		got := TokenHandler(request, testSrvProvider, nil)
+		got := TokenHandler(request, testSrvProvider)
 
 		errorRes, isErrorResult := got.(errorResult)
 		assert.Equal(t, true, isErrorResult, "should be an error result")
@@ -68,7 +68,7 @@ func TestTokenHandler(t *testing.T) {
 
 		request, _ := http.NewRequest(http.MethodPost, "/auth/token", bytes.NewBuffer(body))
 
-		got := TokenHandler(request, testSrvProvider, nil)
+		got := TokenHandler(request, testSrvProvider)
 
 		errorRes, isErrorResult := got.(errorResult)
 		assert.Equal(t, true, isErrorResult, "should be an error result")
@@ -83,7 +83,7 @@ func TestTokenHandler(t *testing.T) {
 	t.Run("POST returns and okResult with a 405 status when the method is not GET, POST, PUT or DELETE", func(t *testing.T) {
 		request, _ := http.NewRequest(http.MethodPatch, "/auth/token", nil)
 
-		got := TokenHandler(request, testSrvProvider, nil)
+		got := TokenHandler(request, testSrvProvider)
 
 		want := okResult{nil, http.StatusMethodNotAllowed}
 
@@ -104,7 +104,7 @@ func TestTokenHandler(t *testing.T) {
 
 		testUsersSrv.On("CheckIfUserPasswordIsOk", login.UserName, login.Password).Return(nil, errors.New("wadus")).Once()
 
-		got := TokenHandler(request, testSrvProvider, nil)
+		got := TokenHandler(request, testSrvProvider)
 
 		_, isErrorResult := got.(errorResult)
 		assert.Equal(t, true, isErrorResult, "should be an error result")
@@ -133,7 +133,7 @@ func TestTokenHandler(t *testing.T) {
 
 		testAuthSrv.On("CreateTokens", &user).Return(nil, errors.New("wadus")).Once()
 
-		got := TokenHandler(request, testSrvProvider, nil)
+		got := TokenHandler(request, testSrvProvider)
 
 		_, isErrorResult := got.(errorResult)
 		assert.Equal(t, true, isErrorResult, "should be an error result")
@@ -165,7 +165,7 @@ func TestTokenHandler(t *testing.T) {
 		}
 		testAuthSrv.On("CreateTokens", &user).Return(tokens, nil).Once()
 
-		got := TokenHandler(request, testSrvProvider, nil)
+		got := TokenHandler(request, testSrvProvider)
 
 		want := okResult{tokens, http.StatusOK}
 
@@ -183,7 +183,7 @@ func TestRefreshTokenHandler(t *testing.T) {
 	t.Run("POST with invalid body should return an errorResult with a BadRequestError", func(t *testing.T) {
 		request, _ := http.NewRequest(http.MethodPost, "/auth/refreshtoken", strings.NewReader("wadus"))
 
-		got := RefreshTokenHandler(request, testSrvProvider, nil)
+		got := RefreshTokenHandler(request, testSrvProvider)
 
 		errorRes, isErrorResult := got.(errorResult)
 		assert.Equal(t, true, isErrorResult, "should be an error result")
@@ -201,7 +201,7 @@ func TestRefreshTokenHandler(t *testing.T) {
 
 		request, _ := http.NewRequest(http.MethodPost, "/auth/refreshtoken", bytes.NewBuffer(body))
 
-		got := RefreshTokenHandler(request, testSrvProvider, nil)
+		got := RefreshTokenHandler(request, testSrvProvider)
 
 		errorRes, isErrorResult := got.(errorResult)
 		assert.Equal(t, true, isErrorResult, "should be an error result")
@@ -224,7 +224,7 @@ func TestRefreshTokenHandler(t *testing.T) {
 		testSrvProvider.On("GetAuthService").Return(testAuthSrv).Once()
 		testAuthSrv.On("ParseRefreshToken", refreshToken.RefreshToken).Return(nil, &appErrors.UnauthorizedError{Msg: "Invalid refresh token"}).Once()
 
-		got := RefreshTokenHandler(request, testSrvProvider, nil)
+		got := RefreshTokenHandler(request, testSrvProvider)
 
 		errorRes, isErrorResult := got.(errorResult)
 		assert.Equal(t, true, isErrorResult, "should be an error result")
@@ -253,7 +253,7 @@ func TestRefreshTokenHandler(t *testing.T) {
 		u := models.User{}
 		testUsersSrv.On("GetUserByID", rtInfo.ID, &u).Return(errors.New("wadus")).Once()
 
-		got := RefreshTokenHandler(request, testSrvProvider, nil)
+		got := RefreshTokenHandler(request, testSrvProvider)
 
 		errorRes, isErrorResult := got.(errorResult)
 		assert.Equal(t, true, isErrorResult, "should be an error result")
@@ -292,7 +292,7 @@ func TestRefreshTokenHandler(t *testing.T) {
 
 		testAuthSrv.On("CreateTokens", &fu).Return(nil, &appErrors.UnexpectedError{Msg: "Error creating jwt token"}).Once()
 
-		got := RefreshTokenHandler(request, testSrvProvider, nil)
+		got := RefreshTokenHandler(request, testSrvProvider)
 
 		errorRes, isErrorResult := got.(errorResult)
 		assert.Equal(t, true, isErrorResult, "should be an error result")
@@ -334,7 +334,7 @@ func TestRefreshTokenHandler(t *testing.T) {
 		}
 		testAuthSrv.On("CreateTokens", &fu).Return(tokens, nil).Once()
 
-		got := RefreshTokenHandler(request, testSrvProvider, nil)
+		got := RefreshTokenHandler(request, testSrvProvider)
 
 		want := okResult{tokens, http.StatusOK}
 
@@ -345,7 +345,7 @@ func TestRefreshTokenHandler(t *testing.T) {
 	t.Run("POST returns and okResult with a 405 status when the method is not GET, POST, PUT or DELETE", func(t *testing.T) {
 		request, _ := http.NewRequest(http.MethodPatch, "/auth/refreshtoken", nil)
 
-		got := RefreshTokenHandler(request, testSrvProvider, nil)
+		got := RefreshTokenHandler(request, testSrvProvider)
 
 		want := okResult{nil, http.StatusMethodNotAllowed}
 

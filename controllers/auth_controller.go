@@ -10,7 +10,7 @@ import (
 )
 
 // TokenHandler is the handler for the auth/token endpoint
-func TokenHandler(r *http.Request, servicePrv services.ServiceProvider, jwtInfo *models.JwtClaimsInfo) handlerResult {
+func TokenHandler(r *http.Request, servicePrv services.ServiceProvider) handlerResult {
 	if r.Method != http.MethodPost {
 		return okResult{nil, http.StatusMethodNotAllowed}
 	}
@@ -37,7 +37,7 @@ func TokenHandler(r *http.Request, servicePrv services.ServiceProvider, jwtInfo 
 }
 
 // RefreshTokenHandler is the handler for the auth/refreshtoken endpoint
-func RefreshTokenHandler(r *http.Request, servicePrv services.ServiceProvider, jwtInfo *models.JwtClaimsInfo) handlerResult {
+func RefreshTokenHandler(r *http.Request, servicePrv services.ServiceProvider) handlerResult {
 	if r.Method != http.MethodPost {
 		return okResult{nil, http.StatusMethodNotAllowed}
 	}
