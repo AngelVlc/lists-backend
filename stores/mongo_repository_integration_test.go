@@ -40,7 +40,8 @@ func TestMongoStore(t *testing.T) {
 
 	dataToReplace := models.SampleList()
 	dataToReplace.Name = "REPLACED"
-	err = repository.Update(foundList.ID, &dataToReplace)
+	dataToReplace.ID = foundList.ID
+	err = repository.Update(bson.D{{"_id", foundList.ID}}, &dataToReplace)
 	assert.Nil(t, err)
 
 	foundList = models.List{}
@@ -48,7 +49,7 @@ func TestMongoStore(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, dataToReplace.Name, foundList.Name)
 
-	err = repository.Remove(data.ID)
+	err = repository.Remove(bson.D{{"_id", data.ID}})
 	assert.Nil(t, err)
 
 	foundList = models.List{}

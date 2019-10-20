@@ -44,6 +44,7 @@ func checkAdminUser(sp services.ServiceProvider) {
 	err := us.GetUserByUserName("admin", &u)
 
 	if err == nil {
+		log.Printf("Admin user already exists")
 		return
 	}
 
@@ -64,5 +65,4 @@ func checkAdminUser(sp services.ServiceProvider) {
 
 		log.Printf("Created admin user")
 	}
-
 }

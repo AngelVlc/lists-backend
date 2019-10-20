@@ -28,13 +28,13 @@ func (m *mockedRepository) GetOne(doc interface{}, query interface{}, selector i
 	return args.Error(0)
 }
 
-func (m *mockedRepository) Remove(id string) error {
-	args := m.Called(id)
+func (m *mockedRepository) Remove(query interface{}) error {
+	args := m.Called(query)
 	return args.Error(0)
 }
 
-func (m *mockedRepository) Update(id string, doc interface{}) error {
-	args := m.Called(id, doc)
+func (m *mockedRepository) Update(query interface{}, doc interface{}) error {
+	args := m.Called(query, doc)
 	return args.Error(0)
 }
 

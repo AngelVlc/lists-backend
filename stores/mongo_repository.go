@@ -57,10 +57,8 @@ func (s *MongoRepository) Add(doc interface{}) (string, error) {
 }
 
 // Update updates a document
-func (s *MongoRepository) Update(id string, doc interface{}) error {
-	reflect.ValueOf(doc).Elem().FieldByName("ID").SetString(id)
-
-	if err := s.mongoCollection.Update(id, doc); err != nil {
+func (s *MongoRepository) Update(query interface{}, doc interface{}) error {
+	if err := s.mongoCollection.Update(query, doc); err != nil {
 		if err.Error() == "not found" {
 			return &appErrors.NotFoundError{
 				Model: s.mongoCollection.Name(),
@@ -76,8 +74,8 @@ func (s *MongoRepository) Update(id string, doc interface{}) error {
 }
 
 // Remove removes a document from the collection
-func (s *MongoRepository) Remove(id string) error {
-	if err := s.mongoCollection.Remove(id); err != nil {
+func (s *MongoRepository) Remove(query interface{}) error {
+	if err := s.mongoCollection.Remove(query); err != nil {
 		if err.Error() == "not found" {
 			return &appErrors.NotFoundError{
 				Model: s.mongoCollection.Name(),

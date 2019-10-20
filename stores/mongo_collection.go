@@ -10,8 +10,8 @@ type MongoCollection interface {
 	Find(doc interface{}, query interface{}, selector interface{}) error
 	FindOne(doc interface{}, query interface{}, selector interface{}) error
 	Insert(doc interface{}) error
-	Remove(id string) error
-	Update(id string, doc interface{}) error
+	Remove(query interface{}) error
+	Update(query interface{}, doc interface{}) error
 	Name() string
 }
 
@@ -30,13 +30,9 @@ func (c *MyMongoCollection) Find(doc interface{}, query interface{}, selector in
 	return c.collection.Find(query).Select(selector).All(doc)
 }
 
-// FindById returns a single document
+// FindOne returns a single document
 func (c *MyMongoCollection) FindOne(doc interface{}, query interface{}, selector interface{}) error {
-	if err := c.collection.Find(query).One(doc); err != nil {
-		return err
-	}
-
-	return nil
+	return c.collection.Find(query).Select(selector).One(doc)
 }
 
 // Insert adds a new document
@@ -45,13 +41,13 @@ func (c *MyMongoCollection) Insert(doc interface{}) error {
 }
 
 // Remove removes a document
-func (c *MyMongoCollection) Remove(id string) error {
-	return c.collection.RemoveId(id)
+func (c *MyMongoCollection) Remove(query interface{}) error {
+	return c.collection.Remove(query)
 }
 
 // Update updates a list
-func (c *MyMongoCollection) Update(id string, doc interface{}) error {
-	return c.collection.UpdateId(id, doc)
+func (c *MyMongoCollection) Update(query interface{}, doc interface{}) error {
+	return c.collection.Update(query, doc)
 }
 
 // Name returns the mongo collection name

@@ -2,12 +2,13 @@ package controllers
 
 import (
 	"encoding/json"
-	appErrors "github.com/AngelVlc/lists-backend/errors"
-	"github.com/AngelVlc/lists-backend/models"
-	"github.com/AngelVlc/lists-backend/services"
 	"log"
 	"net/http"
 	"strings"
+
+	appErrors "github.com/AngelVlc/lists-backend/errors"
+	"github.com/AngelVlc/lists-backend/models"
+	"github.com/AngelVlc/lists-backend/services"
 )
 
 // Handler is the type used to handle the endpoints
@@ -43,8 +44,6 @@ func (r okResult) IsError() bool {
 type HandlerFunc func(*http.Request, services.ServiceProvider, *models.JwtClaimsInfo) handlerResult
 
 func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	log.Printf("%v %q", r.Method, r.URL)
-
 	var jwtInfo *models.JwtClaimsInfo
 	if h.RequireAuth {
 		token, err := getAuthToken(r)
@@ -64,6 +63,12 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			writeErrorResponse(w, http.StatusForbidden, "Access forbidden", err)
 			return
 		}
+	}
+
+	if jwtInfo == nil {
+		log.Printf("%v %q", r.Method, r.URL)
+	} else {
+		log.Printf("[%v] %v %q", jwtInfo.UserName, r.Method, r.URL)
 	}
 
 	res := h.HandlerFunc(r, h.ServiceProvider, jwtInfo)

@@ -4,42 +4,43 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"net/http"
+	"strings"
+	"testing"
+
 	appErrors "github.com/AngelVlc/lists-backend/errors"
 	"github.com/AngelVlc/lists-backend/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"gopkg.in/mgo.v2/bson"
-	"net/http"
-	"strings"
-	"testing"
 )
 
 type mockedListsService struct {
 	mock.Mock
 }
 
-func (us *mockedListsService) AddList(l *models.List) (string, error) {
-	args := us.Called(l)
+func (us *mockedListsService) AddUserList(userID string, l *models.List) (string, error) {
+	args := us.Called(userID, l)
 	return args.String(0), args.Error(1)
 }
 
-func (us *mockedListsService) RemoveList(id string) error {
-	args := us.Called(id)
+func (us *mockedListsService) RemoveUserList(id string, userID string) error {
+	args := us.Called(id, userID)
 	return args.Error(0)
 }
 
-func (us *mockedListsService) UpdateList(id string, l *models.List) error {
-	args := us.Called(id, l)
+func (us *mockedListsService) UpdateUserList(id string, userID string, l *models.List) error {
+	args := us.Called(id, userID, l)
 	return args.Error(0)
 }
 
-func (us *mockedListsService) GetSingleList(id string, l *models.List) error {
-	args := us.Called(id, l)
+func (us *mockedListsService) GetSingleUserList(i string, u string, l *models.List) error {
+	args := us.Called(i, u, l)
 	return args.Error(0)
 }
 
-func (us *mockedListsService) GetLists(r *[]models.GetListsResultDto) error {
-	args := us.Called(r)
+func (us *mockedListsService) GetUserLists(u string, r *[]models.GetListsResultDto) error {
+	args := us.Called(u, r)
 	return args.Error(0)
 }
 
@@ -56,14 +57,14 @@ func TestLists(t *testing.T) {
 		data := models.SampleGetListsResultDto()
 
 		testSrvProvider.On("GetListsService").Return(testListsSrv).Once()
-		testListsSrv.On("GetLists", &[]models.GetListsResultDto{}).Return(nil).Once().Run(func(args mock.Arguments) {
-			arg := args.Get(0).(*[]models.GetListsResultDto)
+		testListsSrv.On("GetUserLists", jwtInfo.ID, &[]models.GetListsResultDto{}).Return(nil).Once().Run(func(args mock.Arguments) {
+			arg := args.Get(1).(*[]models.GetListsResultDto)
 			*arg = data
 		})
 
 		request, _ := http.NewRequest(http.MethodGet, "/lists", nil)
 
-		got := ListsHandler(request, testSrvProvider, nil)
+		got := ListsHandler(request, testSrvProvider, &jwtInfo)
 
 		want := okResult{data, http.StatusOK}
 
@@ -74,11 +75,11 @@ func TestLists(t *testing.T) {
 	t.Run("GET returns an errorResult with the service error when the query fails", func(t *testing.T) {
 		testSrvProvider.On("GetListsService").Return(testListsSrv).Once()
 		err := errors.New("wadus")
-		testListsSrv.On("GetLists", &[]models.GetListsResultDto{}).Return(err).Once()
+		testListsSrv.On("GetUserLists", jwtInfo.ID, &[]models.GetListsResultDto{}).Return(err).Once()
 
 		request, _ := http.NewRequest(http.MethodGet, "/lists", nil)
 
-		got := ListsHandler(request, testSrvProvider, nil)
+		got := ListsHandler(request, testSrvProvider, &jwtInfo)
 
 		errorResult, isErrorResult := got.(errorResult)
 		assert.Equal(t, true, isErrorResult, "should be an error result")
@@ -91,11 +92,11 @@ func TestLists(t *testing.T) {
 		id := bson.NewObjectId().Hex()
 		testSrvProvider.On("GetListsService").Return(testListsSrv).Once()
 		err := errors.New("wadus")
-		testListsSrv.On("GetSingleList", id, &models.List{}).Return(errors.New("wadus")).Once()
+		testListsSrv.On("GetSingleUserList", id, jwtInfo.ID, &models.List{}).Return(errors.New("wadus")).Once()
 
 		request, _ := http.NewRequest(http.MethodGet, "/lists/"+id, nil)
 
-		got := ListsHandler(request, testSrvProvider, nil)
+		got := ListsHandler(request, testSrvProvider, &jwtInfo)
 
 		errorResult, isErrorResult := got.(errorResult)
 		assert.Equal(t, true, isErrorResult, "should be an error result")
@@ -108,14 +109,14 @@ func TestLists(t *testing.T) {
 		data := models.SampleListSlice()[0]
 
 		testSrvProvider.On("GetListsService").Return(testListsSrv).Once()
-		testListsSrv.On("GetSingleList", data.ID, &models.List{}).Return(nil).Once().Run(func(args mock.Arguments) {
-			arg := args.Get(1).(*models.List)
+		testListsSrv.On("GetSingleUserList", data.ID, jwtInfo.ID, &models.List{}).Return(nil).Once().Run(func(args mock.Arguments) {
+			arg := args.Get(2).(*models.List)
 			*arg = data
 		})
 
 		request, _ := http.NewRequest(http.MethodGet, "/lists/"+data.ID, nil)
 
-		got := ListsHandler(request, testSrvProvider, nil)
+		got := ListsHandler(request, testSrvProvider, &jwtInfo)
 
 		want := okResult{data, http.StatusOK}
 
@@ -130,7 +131,7 @@ func TestLists(t *testing.T) {
 
 		testSrvProvider.On("GetListsService").Return(testListsSrv).Once()
 
-		testListsSrv.On("AddList", &data).Return("id", nil).Once()
+		testListsSrv.On("AddUserList", jwtInfo.ID, &data).Return("id", nil).Once()
 
 		body, _ := json.Marshal(listDto)
 		request, _ := http.NewRequest(http.MethodPost, "/lists", bytes.NewBuffer(body))
@@ -165,7 +166,7 @@ func TestLists(t *testing.T) {
 
 		testSrvProvider.On("GetListsService").Return(testListsSrv).Once()
 		err := errors.New("wadus")
-		testListsSrv.On("AddList", &data).Return("", err).Once()
+		testListsSrv.On("AddUserList", jwtInfo.ID, &data).Return("", err).Once()
 
 		body, _ := json.Marshal(listDto)
 		request, _ := http.NewRequest(http.MethodPost, "/lists", bytes.NewBuffer(body))
@@ -184,11 +185,11 @@ func TestLists(t *testing.T) {
 
 		testSrvProvider.On("GetListsService").Return(testListsSrv).Once()
 		err := errors.New("wadus")
-		testListsSrv.On("RemoveList", id).Return(err).Once()
+		testListsSrv.On("RemoveUserList", id, jwtInfo.ID).Return(err).Once()
 
 		request, _ := http.NewRequest(http.MethodDelete, "/lists/"+id, nil)
 
-		got := ListsHandler(request, testSrvProvider, nil)
+		got := ListsHandler(request, testSrvProvider, &jwtInfo)
 		errorRes, isErrorResult := got.(errorResult)
 		assert.Equal(t, true, isErrorResult, "should be an error result")
 
@@ -200,11 +201,11 @@ func TestLists(t *testing.T) {
 		id := bson.NewObjectId().Hex()
 
 		testSrvProvider.On("GetListsService").Return(testListsSrv).Once()
-		testListsSrv.On("RemoveList", id).Return(nil).Once()
+		testListsSrv.On("RemoveUserList", id, jwtInfo.ID).Return(nil).Once()
 
 		request, _ := http.NewRequest(http.MethodDelete, "/lists/"+id, nil)
 
-		got := ListsHandler(request, testSrvProvider, nil)
+		got := ListsHandler(request, testSrvProvider, &jwtInfo)
 		want := okResult{nil, http.StatusNoContent}
 
 		assert.Equal(t, want, got, "should be equal")
@@ -214,7 +215,7 @@ func TestLists(t *testing.T) {
 	t.Run("PUT with invalid body should return an errorResult with a BadRequestError", func(t *testing.T) {
 		request, _ := http.NewRequest(http.MethodPut, "/lists", strings.NewReader("wadus"))
 
-		got := ListsHandler(request, testSrvProvider, nil)
+		got := ListsHandler(request, testSrvProvider, &jwtInfo)
 
 		errorRes, isErrorResult := got.(errorResult)
 		assert.Equal(t, true, isErrorResult, "should be an error result")
@@ -232,13 +233,13 @@ func TestLists(t *testing.T) {
 
 		testSrvProvider.On("GetListsService").Return(testListsSrv).Once()
 		err := errors.New("wadus")
-		testListsSrv.On("UpdateList", id, mock.Anything).Return(err).Once()
+		testListsSrv.On("UpdateUserList", id, jwtInfo.ID, mock.Anything).Return(err).Once()
 
 		body, _ := json.Marshal(listDto)
 		request, _ := http.NewRequest(http.MethodPut, "/lists/"+id, bytes.NewBuffer(body))
 		request.Header.Set("Content-type", "application/json")
 
-		got := ListsHandler(request, testSrvProvider, nil)
+		got := ListsHandler(request, testSrvProvider, &jwtInfo)
 		errorRes, isErrorResult := got.(errorResult)
 		assert.Equal(t, true, isErrorResult, "should be an error result")
 
@@ -254,13 +255,13 @@ func TestLists(t *testing.T) {
 		id := bson.NewObjectId().Hex()
 
 		testSrvProvider.On("GetListsService").Return(testListsSrv).Once()
-		testListsSrv.On("UpdateList", id, &data).Return(nil).Once()
+		testListsSrv.On("UpdateUserList", id, jwtInfo.ID, &data).Return(nil).Once()
 
 		body, _ := json.Marshal(listDto)
 		request, _ := http.NewRequest(http.MethodPut, "/lists/"+id, bytes.NewBuffer(body))
 		request.Header.Set("Content-type", "application/json")
 
-		got := ListsHandler(request, testSrvProvider, nil)
+		got := ListsHandler(request, testSrvProvider, &jwtInfo)
 		want := okResult{data, http.StatusOK}
 
 		assert.Equal(t, want, got, "should be equal")
@@ -270,7 +271,7 @@ func TestLists(t *testing.T) {
 	t.Run("returns and okResult with a 405 status when the method is not GET, POST, PUT or DELETE", func(t *testing.T) {
 		request, _ := http.NewRequest(http.MethodPatch, "/lists", nil)
 
-		ListsHandler(request, testSrvProvider, nil)
+		ListsHandler(request, testSrvProvider, &jwtInfo)
 
 		assertListsExpectations(t, testSrvProvider, testListsSrv)
 	})

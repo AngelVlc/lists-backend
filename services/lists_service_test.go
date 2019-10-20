@@ -19,15 +19,17 @@ func TestListsService(t *testing.T) {
 
 	mockedSession.On("GetRepository", "lists").Return(mockedRepository)
 
-	t.Run("AddList() should call repository.AddList", func(t *testing.T) {
+	t.Run("AddUserList() should call repository.AddList", func(t *testing.T) {
+		u := "userId"
 		l := models.List{
-			ID:   "1",
-			Name: "list",
+			ID:     "1",
+			Name:   "list",
+			UserID: u,
 		}
 
 		mockedRepository.On("Add", &l).Return("", errors.New("error")).Once()
 
-		id, err := service.AddList(&l)
+		id, err := service.AddUserList(u, &models.List{ID: l.ID, Name: l.Name})
 
 		assert.Empty(t, id)
 		assert.NotNil(t, err)
@@ -36,11 +38,11 @@ func TestListsService(t *testing.T) {
 		mockedRepository.AssertExpectations(t)
 	})
 
-	t.Run("RemoveList() should call repository.RemoveList", func(t *testing.T) {
-		mockedRepository.On("Remove", "id").Return(errors.New("error")).Once()
+	t.Run("RemoveUserList() should call repository.Remove", func(t *testing.T) {
+		mockedRepository.On("Remove", bson.D{{"_id", "id"}, {"userId", "uid"}}).Return(errors.New("error")).Once()
 		mockedRepository.On("IsValidID", "id").Return(true).Once()
 
-		err := service.RemoveList("id")
+		err := service.RemoveUserList("id", "uid")
 
 		assert.NotNil(t, err)
 
@@ -48,10 +50,10 @@ func TestListsService(t *testing.T) {
 		mockedRepository.AssertExpectations(t)
 	})
 
-	t.Run("RemoveList() should return a badRequestError when the id is not valid", func(t *testing.T) {
+	t.Run("RemoveUserList() should return a badRequestError when the id is not valid", func(t *testing.T) {
 		mockedRepository.On("IsValidID", "id").Return(false).Once()
 
-		err := service.RemoveList("id")
+		err := service.RemoveUserList("id", "uid")
 
 		assert.NotNil(t, err)
 
@@ -63,16 +65,18 @@ func TestListsService(t *testing.T) {
 		mockedRepository.AssertExpectations(t)
 	})
 
-	t.Run("UpdateList() should call repository.RemoveList when the id is valid", func(t *testing.T) {
+	t.Run("UpdateUserList() should call repository.Update when the id is valid", func(t *testing.T) {
 		l := models.List{
 			ID:   "1",
 			Name: "list",
 		}
 
-		mockedRepository.On("IsValidID", l.ID).Return(true).Once()
-		mockedRepository.On("Update", l.ID, &l).Return(errors.New("error")).Once()
+		u := "userId"
 
-		err := service.UpdateList(l.ID, &l)
+		mockedRepository.On("IsValidID", l.ID).Return(true).Once()
+		mockedRepository.On("Update", bson.D{{"_id", l.ID}, {"userId", u}}, &l).Return(errors.New("error")).Once()
+
+		err := service.UpdateUserList(l.ID, u, &l)
 
 		assert.NotNil(t, err)
 
@@ -80,7 +84,7 @@ func TestListsService(t *testing.T) {
 		mockedRepository.AssertExpectations(t)
 	})
 
-	t.Run("UpdateList() should return a badRequestError when the id is not valid", func(t *testing.T) {
+	t.Run("UpdateUserList() should return a badRequestError when the id is not valid", func(t *testing.T) {
 		id := "wadus"
 
 		l := models.List{
@@ -88,9 +92,11 @@ func TestListsService(t *testing.T) {
 			Name: "list",
 		}
 
-		mockedRepository.On("IsValidID", l.ID).Return(false).Once()
+		u := "userId"
 
-		err := service.UpdateList(id, &l)
+		mockedRepository.On("IsValidID", id).Return(false).Once()
+
+		err := service.UpdateUserList(id, u, &l)
 
 		assert.NotNil(t, err)
 
@@ -102,13 +108,15 @@ func TestListsService(t *testing.T) {
 		mockedRepository.AssertExpectations(t)
 	})
 
-	t.Run("GetSingleList() should call repository.GetOne", func(t *testing.T) {
+	t.Run("GetSingleUserList() should call repository.GetOne", func(t *testing.T) {
 		l := models.List{}
+		i := "listId"
+		u := "userId"
 
-		mockedRepository.On("GetOne", &l, bson.D{{"_id", "id"}}, nil).Return(errors.New("error")).Once()
-		mockedRepository.On("IsValidID", "id").Return(true).Once()
+		mockedRepository.On("GetOne", &l, bson.D{{"_id", i}, {"userId", u}}, nil).Return(errors.New("error")).Once()
+		mockedRepository.On("IsValidID", i).Return(true).Once()
 
-		err := service.GetSingleList("id", &l)
+		err := service.GetSingleUserList(i, u, &l)
 
 		assert.NotNil(t, err)
 
@@ -116,12 +124,12 @@ func TestListsService(t *testing.T) {
 		mockedRepository.AssertExpectations(t)
 	})
 
-	t.Run("GetSingleList() should return a badRequestError when the id is not valid", func(t *testing.T) {
+	t.Run("GetSingleUserList() should return a badRequestError when the id is not valid", func(t *testing.T) {
 		id := "wadus"
 
 		mockedRepository.On("IsValidID", id).Return(false).Once()
 
-		err := service.GetSingleList(id, &models.List{})
+		err := service.GetSingleUserList(id, "", &models.List{})
 
 		assert.NotNil(t, err)
 
@@ -133,12 +141,13 @@ func TestListsService(t *testing.T) {
 		mockedRepository.AssertExpectations(t)
 	})
 
-	t.Run("GetLists() should call repository.RemoveList", func(t *testing.T) {
+	t.Run("GetUserLists() should call repository.Get", func(t *testing.T) {
 		r := []models.GetListsResultDto{}
+		u := "userId"
 
-		mockedRepository.On("Get", &r, nil, bson.M{"name": 1}).Return(errors.New("error")).Once()
+		mockedRepository.On("Get", &r, bson.D{{"userId", u}}, bson.M{"name": 1}).Return(errors.New("error")).Once()
 
-		err := service.GetLists(&r)
+		err := service.GetUserLists(u, &r)
 
 		assert.NotNil(t, err)
 

@@ -35,13 +35,13 @@ func (m *MockedMongoCollection) Insert(doc interface{}) error {
 	return args.Error(0)
 }
 
-func (m *MockedMongoCollection) Remove(id string) error {
-	args := m.Called(id)
+func (m *MockedMongoCollection) Remove(query interface{}) error {
+	args := m.Called(query)
 	return args.Error(0)
 }
 
-func (m *MockedMongoCollection) Update(id string, doc interface{}) error {
-	args := m.Called(id, doc)
+func (m *MockedMongoCollection) Update(query interface{}, doc interface{}) error {
+	args := m.Called(query, doc)
 	return args.Error(0)
 }
 
@@ -59,9 +59,9 @@ func TestUpdate(t *testing.T) {
 		id := bson.NewObjectId().Hex()
 		l := models.SampleList()
 
-		testMongoCollection.On("Update", id, &l).Return(errors.New("wadus")).Once()
+		testMongoCollection.On("Update", bson.D{{"_id", id}}, &l).Return(errors.New("wadus")).Once()
 
-		err := repository.Update(id, &l)
+		err := repository.Update(bson.D{{"_id", id}}, &l)
 
 		assert.IsType(t, &appErrors.UnexpectedError{}, err)
 
@@ -71,10 +71,10 @@ func TestUpdate(t *testing.T) {
 	t.Run("Update() returns a not found error when document does not exits", func(t *testing.T) {
 		id := bson.NewObjectId().Hex()
 		l := models.SampleList()
-		testMongoCollection.On("Update", id, &l).Return(errors.New("not found")).Once()
+		testMongoCollection.On("Update", bson.D{{"_id", id}}, &l).Return(errors.New("not found")).Once()
 		testMongoCollection.On("Name").Return("document").Once()
 
-		err := repository.Update(id, &l)
+		err := repository.Update(bson.D{{"_id", id}}, &l)
 
 		assert.IsType(t, &appErrors.NotFoundError{}, err)
 
@@ -85,9 +85,9 @@ func TestUpdate(t *testing.T) {
 		id := bson.NewObjectId().Hex()
 		l := models.SampleList()
 
-		testMongoCollection.On("Update", id, &l).Return(nil).Once()
+		testMongoCollection.On("Update", bson.D{{"_id", id}}, &l).Return(nil).Once()
 
-		err := repository.Update(id, &l)
+		err := repository.Update(bson.D{{"_id", id}}, &l)
 
 		assertSuccededOperation(t, testMongoCollection, err)
 	})
@@ -101,9 +101,9 @@ func TestRemove(t *testing.T) {
 	t.Run("Remove() returns an unexpected error when the remove fails", func(t *testing.T) {
 		id := bson.NewObjectId().Hex()
 
-		testMongoCollection.On("Remove", id).Return(errors.New("wadus")).Once()
+		testMongoCollection.On("Remove", bson.D{{"_id", id}}).Return(errors.New("wadus")).Once()
 
-		err := repository.Remove(id)
+		err := repository.Remove(bson.D{{"_id", id}})
 
 		assert.IsType(t, &appErrors.UnexpectedError{}, err)
 
@@ -112,10 +112,10 @@ func TestRemove(t *testing.T) {
 
 	t.Run("Remove() returns a not found error when document does not exits", func(t *testing.T) {
 		id := bson.NewObjectId().Hex()
-		testMongoCollection.On("Remove", id).Return(errors.New("not found")).Once()
+		testMongoCollection.On("Remove", bson.D{{"_id", id}}).Return(errors.New("not found")).Once()
 		testMongoCollection.On("Name").Return("document").Once()
 
-		err := repository.Remove(id)
+		err := repository.Remove(bson.D{{"_id", id}})
 
 		assert.IsType(t, &appErrors.NotFoundError{}, err)
 
@@ -123,11 +123,11 @@ func TestRemove(t *testing.T) {
 	})
 
 	t.Run("Remove() removes a list", func(t *testing.T) {
-		oidHex := bson.NewObjectId().Hex()
+		id := bson.NewObjectId().Hex()
 
-		testMongoCollection.On("Remove", oidHex).Return(nil).Once()
+		testMongoCollection.On("Remove", bson.D{{"_id", id}}).Return(nil).Once()
 
-		err := repository.Remove(oidHex)
+		err := repository.Remove(bson.D{{"_id", id}})
 
 		assertSuccededOperation(t, testMongoCollection, err)
 	})

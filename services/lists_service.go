@@ -11,11 +11,11 @@ import (
 
 // ListsService is the interface a lists service must implement
 type ListsService interface {
-	AddList(l *models.List) (string, error)
-	RemoveList(id string) error
-	UpdateList(id string, l *models.List) error
-	GetSingleList(id string, l *models.List) error
-	GetLists(r *[]models.GetListsResultDto) error
+	AddUserList(userID string, l *models.List) (string, error)
+	RemoveUserList(id string, userID string) error
+	UpdateUserList(id string, userID string, l *models.List) error
+	GetSingleUserList(id string, userID string, l *models.List) error
+	GetUserLists(userID string, r *[]models.GetListsResultDto) error
 }
 
 // MyListsService is the service for the list entity
@@ -30,41 +30,45 @@ func NewMyListsService(session stores.MongoSession) *MyListsService {
 	}
 }
 
-// AddList  adds a user
-func (s *MyListsService) AddList(l *models.List) (string, error) {
+// AddUserList  adds a user
+func (s *MyListsService) AddUserList(userID string, l *models.List) (string, error) {
+	l.UserID = userID
 	return s.listsRepository().Add(l)
 }
 
-// RemoveList removes a list
-func (s *MyListsService) RemoveList(id string) error {
+// RemoveUserList removes a list
+func (s *MyListsService) RemoveUserList(id string, userID string) error {
 	if !s.listsRepository().IsValidID(id) {
 		return s.getInvalidIDError(id)
 	}
 
-	return s.listsRepository().Remove(id)
+	return s.listsRepository().Remove(bson.D{{"_id", id}, {"userId", userID}})
 }
 
-// UpdateList updates an existing list
-func (s *MyListsService) UpdateList(id string, l *models.List) error {
+// UpdateUserList updates an existing list
+func (s *MyListsService) UpdateUserList(id string, userID string, l *models.List) error {
 	if !s.listsRepository().IsValidID(id) {
 		return s.getInvalidIDError(id)
 	}
 
-	return s.listsRepository().Update(id, l)
+	l.ID = id
+	l.UserID = userID
+
+	return s.listsRepository().Update(bson.D{{"_id", id}, {"userId", userID}}, l)
 }
 
-// GetSingleList returns a single list from its id
-func (s *MyListsService) GetSingleList(id string, l *models.List) error {
+// GetSingleUserList returns a single list from its id
+func (s *MyListsService) GetSingleUserList(id string, userID string, l *models.List) error {
 	if !s.listsRepository().IsValidID(id) {
 		return s.getInvalidIDError(id)
 	}
 
-	return s.listsRepository().GetOne(l, bson.D{{"_id", id}}, nil)
+	return s.listsRepository().GetOne(l, bson.D{{"_id", id}, {"userId", userID}}, nil)
 }
 
-// GetLists returns the lists
-func (s *MyListsService) GetLists(r *[]models.GetListsResultDto) error {
-	return s.listsRepository().Get(r, nil, bson.M{"name": 1})
+// GetUserLists returns the lists for the given user
+func (s *MyListsService) GetUserLists(userID string, r *[]models.GetListsResultDto) error {
+	return s.listsRepository().Get(r, bson.D{{"userId", userID}}, bson.M{"name": 1})
 }
 
 func (s *MyListsService) listsRepository() stores.Repository {
