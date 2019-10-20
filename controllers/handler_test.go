@@ -41,8 +41,36 @@ func (s *mockedAuthService) ParseRefreshToken(refreshTokenString string) (*model
 	return args.Get(0).(*models.RefreshTokenClaimsInfo), args.Error(1)
 }
 
+type mockedCountersService struct {
+	mock.Mock
+}
+
+func (s *mockedCountersService) AddCounter(name string) error {
+	args := s.Called(name)
+	return args.Error(0)
+}
+
+func (s *mockedCountersService) IncrementCounter(name string) error {
+	args := s.Called(name)
+	return args.Error(0)
+}
+
+func (s *mockedCountersService) ExistsCounter(name string) bool {
+	args := s.Called(name)
+	return args.Bool(0)
+}
+
+func (s *mockedCountersService) GetCounterValue(name string) (int, error) {
+	args := s.Called(name)
+	return args.Int(0), args.Error(1)
+}
+
 func TestHandlerWithoutAuth(t *testing.T) {
 	mockServicePrv := new(mockedServiceProvider)
+	mockCountersService := new(mockedCountersService)
+	mockServicePrv.On("GetCountersService").Return(mockCountersService)
+	mockCountersService.On("IncrementCounter", "requests").Return(nil)
+	mockCountersService.On("GetCounterValue", "requests").Return(1, nil)
 
 	t.Run("Returns 200 when no error", func(t *testing.T) {
 		f := func(r *http.Request, serviceProvider services.ServiceProvider) handlerResult {
@@ -60,6 +88,7 @@ func TestHandlerWithoutAuth(t *testing.T) {
 		handler.ServeHTTP(response, request)
 
 		assert.Equal(t, http.StatusOK, response.Result().StatusCode)
+		assertHandlerExpectations(t, mockServicePrv, mockCountersService)
 	})
 
 	t.Run("Returns 200 with content when no error", func(t *testing.T) {
@@ -88,6 +117,7 @@ func TestHandlerWithoutAuth(t *testing.T) {
 		assert.Equal(t, want, got, "they should be equal")
 
 		assert.Equal(t, http.StatusOK, response.Result().StatusCode)
+		assertHandlerExpectations(t, mockServicePrv, mockCountersService)
 	})
 
 	t.Run("Returns 500 when an unexpected error happens", func(t *testing.T) {
@@ -107,6 +137,7 @@ func TestHandlerWithoutAuth(t *testing.T) {
 
 		assert.Equal(t, http.StatusInternalServerError, response.Result().StatusCode)
 		assert.Equal(t, "error\n", string(response.Body.String()))
+		assertHandlerExpectations(t, mockServicePrv, mockCountersService)
 	})
 
 	t.Run("Returns 404 when a not found error happens", func(t *testing.T) {
@@ -126,6 +157,7 @@ func TestHandlerWithoutAuth(t *testing.T) {
 
 		assert.Equal(t, http.StatusNotFound, response.Result().StatusCode)
 		assert.Equal(t, "model not found\n", string(response.Body.String()))
+		assertHandlerExpectations(t, mockServicePrv, mockCountersService)
 	})
 
 	t.Run("Returns 400 when a bad request error happens", func(t *testing.T) {
@@ -145,6 +177,7 @@ func TestHandlerWithoutAuth(t *testing.T) {
 
 		assert.Equal(t, http.StatusBadRequest, response.Result().StatusCode)
 		assert.Equal(t, "\"id\" is not a valid id\n", string(response.Body.String()))
+		assertHandlerExpectations(t, mockServicePrv, mockCountersService)
 	})
 
 	t.Run("Returns 401 when an unauthorized error happens", func(t *testing.T) {
@@ -164,6 +197,7 @@ func TestHandlerWithoutAuth(t *testing.T) {
 
 		assert.Equal(t, http.StatusUnauthorized, response.Result().StatusCode)
 		assert.Equal(t, "wadus\n", string(response.Body.String()))
+		assertHandlerExpectations(t, mockServicePrv, mockCountersService)
 	})
 
 	t.Run("Returns 500 when an unhandled error happens", func(t *testing.T) {
@@ -183,11 +217,16 @@ func TestHandlerWithoutAuth(t *testing.T) {
 
 		assert.Equal(t, http.StatusInternalServerError, response.Result().StatusCode)
 		assert.Equal(t, "Internal error\n", string(response.Body.String()))
+		assertHandlerExpectations(t, mockServicePrv, mockCountersService)
 	})
 }
 
 func TestHandlerWithAuth(t *testing.T) {
 	mockServicePrv := new(mockedServiceProvider)
+	mockCountersService := new(mockedCountersService)
+	mockServicePrv.On("GetCountersService").Return(mockCountersService)
+	mockCountersService.On("IncrementCounter", "requests").Return(nil)
+	mockCountersService.On("GetCounterValue", "requests").Return(1, nil)
 
 	mockAuthSvc := new(mockedAuthService)
 
@@ -209,6 +248,9 @@ func TestHandlerWithAuth(t *testing.T) {
 
 		assert.Equal(t, http.StatusUnauthorized, response.Result().StatusCode)
 		assert.Equal(t, "No authorization header\n", string(response.Body.String()))
+
+		assertHandlerExpectations(t, mockServicePrv, mockCountersService)
+		mockAuthSvc.AssertExpectations(t)
 	})
 
 	t.Run("Returns 401 when the request auth header is not valid", func(t *testing.T) {
@@ -226,6 +268,9 @@ func TestHandlerWithAuth(t *testing.T) {
 
 		assert.Equal(t, http.StatusUnauthorized, response.Result().StatusCode)
 		assert.Equal(t, "Invalid authorization header\n", string(response.Body.String()))
+
+		assertHandlerExpectations(t, mockServicePrv, mockCountersService)
+		mockAuthSvc.AssertExpectations(t)
 	})
 
 	t.Run("Returns 401 when the auth token is not valid", func(t *testing.T) {
@@ -247,6 +292,9 @@ func TestHandlerWithAuth(t *testing.T) {
 
 		assert.Equal(t, http.StatusUnauthorized, response.Result().StatusCode)
 		assert.Equal(t, "Invalid auth token\n", string(response.Body.String()))
+
+		assertHandlerExpectations(t, mockServicePrv, mockCountersService)
+		mockAuthSvc.AssertExpectations(t)
 	})
 
 	t.Run("Returns 403 when the resource requires admin and the user is not admin", func(t *testing.T) {
@@ -269,6 +317,16 @@ func TestHandlerWithAuth(t *testing.T) {
 
 		assert.Equal(t, http.StatusForbidden, response.Result().StatusCode)
 		assert.Equal(t, "Access forbidden\n", string(response.Body.String()))
+
+		assertHandlerExpectations(t, mockServicePrv, mockCountersService)
+		mockAuthSvc.AssertExpectations(t)
 	})
 
+}
+
+func 	assertHandlerExpectations(t *testing.T, sp *mockedServiceProvider, cs *mockedCountersService) {
+	t.Helper()
+
+	sp.AssertExpectations(t)
+	cs.AssertExpectations(t)
 }

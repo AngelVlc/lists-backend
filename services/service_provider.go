@@ -8,6 +8,7 @@ type ServiceProvider interface {
 	GetUsersService() UsersService
 	GetListsService() ListsService
 	GetAuthService() AuthService
+	GetCountersService() CountersService
 }
 
 type MyServiceProvider struct {
@@ -34,4 +35,8 @@ func (sp *MyServiceProvider) GetListsService() ListsService {
 
 func (sp *MyServiceProvider) GetAuthService() AuthService {
 	return NewMyAuthService(sp.jwtPrv)
+}
+
+func (sp *MyServiceProvider) GetCountersService() CountersService {
+	return NewMyCountersService(sp.session)
 }

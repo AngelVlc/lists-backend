@@ -1,6 +1,8 @@
 package main
 
 import (
+	"github.com/AngelVlc/lists-backend/services"
+	"github.com/AngelVlc/lists-backend/stores"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"log"
@@ -16,7 +18,9 @@ func TestMain(m *testing.M) {
 }
 
 func TestServer(t *testing.T) {
-	server := newServer(nil)
+	ms := stores.NewMyMongoSession(false)
+	sp := services.NewMyServiceProvider(ms, nil, nil)
+	server := newServer(sp)
 
 	t.Run("handles /users", func(t *testing.T) {
 		request, _ := http.NewRequest(http.MethodGet, "/users", nil)

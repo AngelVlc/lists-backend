@@ -27,6 +27,7 @@ func main() {
 	sp := services.NewMyServiceProvider(ms, bp, jwtp)
 
 	checkAdminUser(sp)
+	checkRequestsCounter(sp)
 
 	server := newServer(sp)
 
@@ -64,5 +65,16 @@ func checkAdminUser(sp services.ServiceProvider) {
 		}
 
 		log.Printf("Created admin user")
+	}
+}
+
+func checkRequestsCounter(sp services.ServiceProvider) {
+	s := sp.GetCountersService()
+
+	n := "requests"
+
+	if !s.ExistsCounter(n) {
+		log.Println("Created requests counter")
+		s.AddCounter(n)
 	}
 }

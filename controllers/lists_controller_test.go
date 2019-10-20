@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -319,4 +320,11 @@ func assertListsExpectations(t *testing.T, sp *mockedServiceProvider, ls *mocked
 
 	sp.AssertExpectations(t)
 	ls.AssertExpectations(t)
+}
+
+func addUserIDToContext(userID string, r *http.Request) *http.Request {
+	ctx := r.Context()
+	ctx = context.WithValue(ctx, reqContextUserKey, userID)
+
+	return r.WithContext(ctx)
 }

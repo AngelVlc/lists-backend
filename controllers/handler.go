@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 
 	appErrors "github.com/AngelVlc/lists-backend/errors"
@@ -47,35 +48,40 @@ type HandlerFunc func(*http.Request, services.ServiceProvider) handlerResult
 type contextKey string
 
 const reqContextUserKey contextKey = "userID"
+const reqContextRequestKey contextKey = "requestID"
 
 func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	var jwtInfo *models.JwtClaimsInfo
+
+	r = h.addRequestIDToContext(r)
+
 	if h.RequireAuth {
-		token, err := getAuthToken(r)
+		token, err := h.getAuthToken(r)
 		if err != nil {
-			writeErrorResponse(w, http.StatusUnauthorized, err.Error(), nil)
+			h.writeErrorResponse(r, w, http.StatusUnauthorized, err.Error(), nil)
 			return
 		}
 
 		authSrv := h.ServiceProvider.GetAuthService()
 		jwtInfo, err = authSrv.ParseToken(token)
 		if err != nil {
-			writeErrorResponse(w, http.StatusUnauthorized, "Invalid auth token", err)
+			h.writeErrorResponse(r, w, http.StatusUnauthorized, "Invalid auth token", err)
 			return
 		}
 
 		if h.RequireAdmin && !jwtInfo.IsAdmin {
-			writeErrorResponse(w, http.StatusForbidden, "Access forbidden", err)
+			h.writeErrorResponse(r, w, http.StatusForbidden, "Access forbidden", err)
 			return
 		}
 	}
 
+	requestID := h.getRequestIDFromContext(r)
 	if jwtInfo == nil {
-		log.Printf("%v %q", r.Method, r.URL)
+		log.Printf("[%v] %v %q", requestID, r.Method, r.URL)
 	} else {
-		log.Printf("[%v] %v %q", jwtInfo.UserName, r.Method, r.URL)
+		log.Printf("[%v] %v %v %q", requestID, jwtInfo.UserName, r.Method, r.URL)
 
-		r = addUserIDToContext(jwtInfo.ID, r)
+		r = h.addUserIDToContext(jwtInfo.ID, r)
 	}
 
 	res := h.HandlerFunc(r, h.ServiceProvider)
@@ -84,35 +90,36 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		errorRes, _ := res.(errorResult)
 		err := errorRes.err
 		if unexErr, ok := err.(*appErrors.UnexpectedError); ok {
-			writeErrorResponse(w, http.StatusInternalServerError, unexErr.Error(), unexErr.InternalError)
+			h.writeErrorResponse(r, w, http.StatusInternalServerError, unexErr.Error(), unexErr.InternalError)
 		} else if unauthErr, ok := err.(*appErrors.UnauthorizedError); ok {
-			writeErrorResponse(w, http.StatusUnauthorized, unauthErr.Error(), unauthErr.InternalError)
+			h.writeErrorResponse(r, w, http.StatusUnauthorized, unauthErr.Error(), unauthErr.InternalError)
 		} else if notFoundErr, ok := err.(*appErrors.NotFoundError); ok {
-			writeErrorResponse(w, http.StatusNotFound, notFoundErr.Error(), nil)
+			h.writeErrorResponse(r, w, http.StatusNotFound, notFoundErr.Error(), nil)
 		} else if badRequestErr, ok := err.(*appErrors.BadRequestError); ok {
-			writeErrorResponse(w, http.StatusBadRequest, badRequestErr.Error(), badRequestErr.InternalError)
+			h.writeErrorResponse(r, w, http.StatusBadRequest, badRequestErr.Error(), badRequestErr.InternalError)
 		} else {
-			writeErrorResponse(w, http.StatusInternalServerError, "Internal error", err)
+			h.writeErrorResponse(r, w, http.StatusInternalServerError, "Internal error", err)
 		}
 	} else {
 		okRes, _ := res.(okResult)
-		writeOkResponse(w, okRes.statusCode, okRes.content)
+		h.writeOkResponse(r, w, okRes.statusCode, okRes.content)
 	}
 }
 
 // writeErrorResponse is used when and endpoind responds with an error
-func writeErrorResponse(w http.ResponseWriter, statusCode int, msg string, internalError error) {
+func (h Handler) writeErrorResponse(r *http.Request, w http.ResponseWriter, statusCode int, msg string, internalError error) {
+	requestID := h.getRequestIDFromContext(r)
 	if internalError != nil {
-		log.Printf("%v %v [%v]", statusCode, msg, internalError)
+		log.Printf("[%v] %v %v (%v)", requestID, statusCode, msg, internalError)
 	} else {
-		log.Printf("%v %v", statusCode, msg)
+		log.Printf("[%v] %v %v", requestID, statusCode, msg)
 	}
 	http.Error(w, msg, statusCode)
 }
 
 // writeOkResponse is used when and endpoind does not respond with an error
-func writeOkResponse(w http.ResponseWriter, statusCode int, content interface{}) {
-	log.Println(statusCode)
+func (h Handler) writeOkResponse(r *http.Request, w http.ResponseWriter, statusCode int, content interface{}) {
+	log.Printf("[%v] %v", h.getRequestIDFromContext(r), statusCode)
 
 	const jsonContentType = "application/json"
 
@@ -125,7 +132,7 @@ func writeOkResponse(w http.ResponseWriter, statusCode int, content interface{})
 	}
 }
 
-func getAuthToken(r *http.Request) (string, error) {
+func (h Handler) getAuthToken(r *http.Request) (string, error) {
 	authHeader := r.Header.Get("Authorization")
 
 	if len(authHeader) == 0 {
@@ -141,12 +148,29 @@ func getAuthToken(r *http.Request) (string, error) {
 	return authHeaderParts[1], nil
 }
 
-func addUserIDToContext(userID string, r *http.Request) *http.Request {
+func (h Handler) addUserIDToContext(userID string, r *http.Request) *http.Request {
 	ctx := r.Context()
-
 	ctx = context.WithValue(ctx, reqContextUserKey, userID)
 
 	return r.WithContext(ctx)
+}
+
+func (h Handler) addRequestIDToContext(r *http.Request) *http.Request {
+	s := h.ServiceProvider.GetCountersService()
+
+	s.IncrementCounter("requests")
+
+	v, err := s.GetCounterValue("requests")
+
+	if err == nil {
+		ctx := r.Context()
+		ctx = context.WithValue(ctx, reqContextRequestKey, strconv.Itoa(v))
+
+		return r.WithContext(ctx)
+	}
+
+	log.Fatalf("Error incrementing requests counter. Error: %v", err)
+	return nil
 }
 
 func getUserIDFromContext(r *http.Request) string {
@@ -155,4 +179,12 @@ func getUserIDFromContext(r *http.Request) string {
 	userID, _ := userIDRaw.(string)
 
 	return userID
+}
+
+func (h Handler) getRequestIDFromContext(r *http.Request) string {
+	requestIDRaw := r.Context().Value(reqContextRequestKey)
+
+	requestID, _ := requestIDRaw.(string)
+
+	return requestID
 }

@@ -23,3 +23,8 @@ func (sp *mockedServiceProvider) GetAuthService() services.AuthService {
 	args := sp.Called()
 	return args.Get(0).(services.AuthService)
 }
+
+func (sp *mockedServiceProvider) GetCountersService() services.CountersService {
+	args := sp.Called()
+	return args.Get(0).(services.CountersService)
+}
