@@ -246,12 +246,12 @@ func TestRefreshTokenHandler(t *testing.T) {
 
 		testSrvProvider.On("GetAuthService").Return(testAuthSrv).Once()
 		rtInfo := models.RefreshTokenClaimsInfo{
-			ID: "1",
+			UserID: "1",
 		}
 		testAuthSrv.On("ParseRefreshToken", refreshToken.RefreshToken).Return(&rtInfo, nil).Once()
 		testSrvProvider.On("GetUsersService").Return(testUsersSrv).Once()
 		u := models.User{}
-		testUsersSrv.On("GetUserByID", rtInfo.ID, &u).Return(errors.New("wadus")).Once()
+		testUsersSrv.On("GetUserByID", rtInfo.UserID, &u).Return(errors.New("wadus")).Once()
 
 		got := RefreshTokenHandler(request, testSrvProvider)
 
@@ -276,7 +276,7 @@ func TestRefreshTokenHandler(t *testing.T) {
 
 		testSrvProvider.On("GetAuthService").Return(testAuthSrv).Once()
 		rtInfo := models.RefreshTokenClaimsInfo{
-			ID: "1",
+			UserID: "1",
 		}
 		testAuthSrv.On("ParseRefreshToken", refreshToken.RefreshToken).Return(&rtInfo, nil).Once()
 		testSrvProvider.On("GetUsersService").Return(testUsersSrv).Once()
@@ -285,7 +285,7 @@ func TestRefreshTokenHandler(t *testing.T) {
 			UserName: "user",
 			ID:       "1",
 		}
-		testUsersSrv.On("GetUserByID", rtInfo.ID, &u).Return(nil).Run(func(args mock.Arguments) {
+		testUsersSrv.On("GetUserByID", rtInfo.UserID, &u).Return(nil).Run(func(args mock.Arguments) {
 			arg := args.Get(1).(*models.User)
 			*arg = fu
 		})
@@ -314,7 +314,7 @@ func TestRefreshTokenHandler(t *testing.T) {
 
 		testSrvProvider.On("GetAuthService").Return(testAuthSrv).Once()
 		rtInfo := models.RefreshTokenClaimsInfo{
-			ID: "1",
+			UserID: "1",
 		}
 		testAuthSrv.On("ParseRefreshToken", refreshToken.RefreshToken).Return(&rtInfo, nil).Once()
 		testSrvProvider.On("GetUsersService").Return(testUsersSrv).Once()
@@ -323,7 +323,7 @@ func TestRefreshTokenHandler(t *testing.T) {
 			UserName: "user",
 			ID:       "1",
 		}
-		testUsersSrv.On("GetUserByID", rtInfo.ID, &u).Return(nil).Run(func(args mock.Arguments) {
+		testUsersSrv.On("GetUserByID", rtInfo.UserID, &u).Return(nil).Run(func(args mock.Arguments) {
 			arg := args.Get(1).(*models.User)
 			*arg = fu
 		})

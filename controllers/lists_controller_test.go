@@ -51,20 +51,20 @@ func TestLists(t *testing.T) {
 	testSrvProvider := new(mockedServiceProvider)
 
 	jwtInfo := models.JwtClaimsInfo{
-		ID: "id",
+		UserID: "id",
 	}
 
 	t.Run("GET returns an okResult when there is no error", func(t *testing.T) {
 		data := models.SampleGetListsResultDto()
 
 		testSrvProvider.On("GetListsService").Return(testListsSrv).Once()
-		testListsSrv.On("GetUserLists", jwtInfo.ID, &[]models.GetListsResultDto{}).Return(nil).Once().Run(func(args mock.Arguments) {
+		testListsSrv.On("GetUserLists", jwtInfo.UserID, &[]models.GetListsResultDto{}).Return(nil).Once().Run(func(args mock.Arguments) {
 			arg := args.Get(1).(*[]models.GetListsResultDto)
 			*arg = data
 		})
 
 		request, _ := http.NewRequest(http.MethodGet, "/lists", nil)
-		request = addUserIDToContext(jwtInfo.ID, request)
+		request = addUserIDToContext(jwtInfo.UserID, request)
 
 		got := ListsHandler(request, testSrvProvider)
 
@@ -77,10 +77,10 @@ func TestLists(t *testing.T) {
 	t.Run("GET returns an errorResult with the service error when the query fails", func(t *testing.T) {
 		testSrvProvider.On("GetListsService").Return(testListsSrv).Once()
 		err := errors.New("wadus")
-		testListsSrv.On("GetUserLists", jwtInfo.ID, &[]models.GetListsResultDto{}).Return(err).Once()
+		testListsSrv.On("GetUserLists", jwtInfo.UserID, &[]models.GetListsResultDto{}).Return(err).Once()
 
 		request, _ := http.NewRequest(http.MethodGet, "/lists", nil)
-		request = addUserIDToContext(jwtInfo.ID, request)
+		request = addUserIDToContext(jwtInfo.UserID, request)
 
 		got := ListsHandler(request, testSrvProvider)
 
@@ -95,10 +95,10 @@ func TestLists(t *testing.T) {
 		id := bson.NewObjectId().Hex()
 		testSrvProvider.On("GetListsService").Return(testListsSrv).Once()
 		err := errors.New("wadus")
-		testListsSrv.On("GetSingleUserList", id, jwtInfo.ID, &models.List{}).Return(errors.New("wadus")).Once()
+		testListsSrv.On("GetSingleUserList", id, jwtInfo.UserID, &models.List{}).Return(errors.New("wadus")).Once()
 
 		request, _ := http.NewRequest(http.MethodGet, "/lists/"+id, nil)
-		request = addUserIDToContext(jwtInfo.ID, request)
+		request = addUserIDToContext(jwtInfo.UserID, request)
 
 		got := ListsHandler(request, testSrvProvider)
 
@@ -113,13 +113,13 @@ func TestLists(t *testing.T) {
 		data := models.SampleListSlice()[0]
 
 		testSrvProvider.On("GetListsService").Return(testListsSrv).Once()
-		testListsSrv.On("GetSingleUserList", data.ID, jwtInfo.ID, &models.List{}).Return(nil).Once().Run(func(args mock.Arguments) {
+		testListsSrv.On("GetSingleUserList", data.ID, jwtInfo.UserID, &models.List{}).Return(nil).Once().Run(func(args mock.Arguments) {
 			arg := args.Get(2).(*models.List)
 			*arg = data
 		})
 
 		request, _ := http.NewRequest(http.MethodGet, "/lists/"+data.ID, nil)
-		request = addUserIDToContext(jwtInfo.ID, request)
+		request = addUserIDToContext(jwtInfo.UserID, request)
 
 		got := ListsHandler(request, testSrvProvider)
 
@@ -136,11 +136,11 @@ func TestLists(t *testing.T) {
 
 		testSrvProvider.On("GetListsService").Return(testListsSrv).Once()
 
-		testListsSrv.On("AddUserList", jwtInfo.ID, &data).Return("id", nil).Once()
+		testListsSrv.On("AddUserList", jwtInfo.UserID, &data).Return("id", nil).Once()
 
 		body, _ := json.Marshal(listDto)
 		request, _ := http.NewRequest(http.MethodPost, "/lists", bytes.NewBuffer(body))
-		request = addUserIDToContext(jwtInfo.ID, request)
+		request = addUserIDToContext(jwtInfo.UserID, request)
 		request.Header.Set("Content-type", "application/json")
 
 		got := ListsHandler(request, testSrvProvider)
@@ -152,7 +152,7 @@ func TestLists(t *testing.T) {
 
 	t.Run("POST with invalid body should return an errorResult with a BadRequestError", func(t *testing.T) {
 		request, _ := http.NewRequest(http.MethodPost, "/lists", strings.NewReader("wadus"))
-		request = addUserIDToContext(jwtInfo.ID, request)
+		request = addUserIDToContext(jwtInfo.UserID, request)
 
 		got := ListsHandler(request, testSrvProvider)
 
@@ -173,11 +173,11 @@ func TestLists(t *testing.T) {
 
 		testSrvProvider.On("GetListsService").Return(testListsSrv).Once()
 		err := errors.New("wadus")
-		testListsSrv.On("AddUserList", jwtInfo.ID, &data).Return("", err).Once()
+		testListsSrv.On("AddUserList", jwtInfo.UserID, &data).Return("", err).Once()
 
 		body, _ := json.Marshal(listDto)
 		request, _ := http.NewRequest(http.MethodPost, "/lists", bytes.NewBuffer(body))
-		request = addUserIDToContext(jwtInfo.ID, request)
+		request = addUserIDToContext(jwtInfo.UserID, request)
 		request.Header.Set("Content-type", "application/json")
 
 		got := ListsHandler(request, testSrvProvider)
@@ -193,10 +193,10 @@ func TestLists(t *testing.T) {
 
 		testSrvProvider.On("GetListsService").Return(testListsSrv).Once()
 		err := errors.New("wadus")
-		testListsSrv.On("RemoveUserList", id, jwtInfo.ID).Return(err).Once()
+		testListsSrv.On("RemoveUserList", id, jwtInfo.UserID).Return(err).Once()
 
 		request, _ := http.NewRequest(http.MethodDelete, "/lists/"+id, nil)
-		request = addUserIDToContext(jwtInfo.ID, request)
+		request = addUserIDToContext(jwtInfo.UserID, request)
 
 		got := ListsHandler(request, testSrvProvider)
 		errorRes, isErrorResult := got.(errorResult)
@@ -210,10 +210,10 @@ func TestLists(t *testing.T) {
 		id := bson.NewObjectId().Hex()
 
 		testSrvProvider.On("GetListsService").Return(testListsSrv).Once()
-		testListsSrv.On("RemoveUserList", id, jwtInfo.ID).Return(nil).Once()
+		testListsSrv.On("RemoveUserList", id, jwtInfo.UserID).Return(nil).Once()
 
 		request, _ := http.NewRequest(http.MethodDelete, "/lists/"+id, nil)
-		request = addUserIDToContext(jwtInfo.ID, request)
+		request = addUserIDToContext(jwtInfo.UserID, request)
 
 		got := ListsHandler(request, testSrvProvider)
 		want := okResult{nil, http.StatusNoContent}
@@ -224,7 +224,7 @@ func TestLists(t *testing.T) {
 
 	t.Run("PUT with invalid body should return an errorResult with a BadRequestError", func(t *testing.T) {
 		request, _ := http.NewRequest(http.MethodPut, "/lists", strings.NewReader("wadus"))
-		request = addUserIDToContext(jwtInfo.ID, request)
+		request = addUserIDToContext(jwtInfo.UserID, request)
 
 		got := ListsHandler(request, testSrvProvider)
 
@@ -244,11 +244,11 @@ func TestLists(t *testing.T) {
 
 		testSrvProvider.On("GetListsService").Return(testListsSrv).Once()
 		err := errors.New("wadus")
-		testListsSrv.On("UpdateUserList", id, jwtInfo.ID, mock.Anything).Return(err).Once()
+		testListsSrv.On("UpdateUserList", id, jwtInfo.UserID, mock.Anything).Return(err).Once()
 
 		body, _ := json.Marshal(listDto)
 		request, _ := http.NewRequest(http.MethodPut, "/lists/"+id, bytes.NewBuffer(body))
-		request = addUserIDToContext(jwtInfo.ID, request)
+		request = addUserIDToContext(jwtInfo.UserID, request)
 		request.Header.Set("Content-type", "application/json")
 
 		got := ListsHandler(request, testSrvProvider)
@@ -267,11 +267,11 @@ func TestLists(t *testing.T) {
 		id := bson.NewObjectId().Hex()
 
 		testSrvProvider.On("GetListsService").Return(testListsSrv).Once()
-		testListsSrv.On("UpdateUserList", id, jwtInfo.ID, &data).Return(nil).Once()
+		testListsSrv.On("UpdateUserList", id, jwtInfo.UserID, &data).Return(nil).Once()
 
 		body, _ := json.Marshal(listDto)
 		request, _ := http.NewRequest(http.MethodPut, "/lists/"+id, bytes.NewBuffer(body))
-		request = addUserIDToContext(jwtInfo.ID, request)
+		request = addUserIDToContext(jwtInfo.UserID, request)
 		request.Header.Set("Content-type", "application/json")
 
 		got := ListsHandler(request, testSrvProvider)
@@ -283,7 +283,7 @@ func TestLists(t *testing.T) {
 
 	t.Run("returns and okResult with a 405 status when the method is not GET, POST, PUT or DELETE", func(t *testing.T) {
 		request, _ := http.NewRequest(http.MethodPatch, "/lists", nil)
-		request = addUserIDToContext(jwtInfo.ID, request)
+		request = addUserIDToContext(jwtInfo.UserID, request)
 
 		ListsHandler(request, testSrvProvider)
 

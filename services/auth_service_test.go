@@ -157,7 +157,7 @@ func TestAuthServiceParseToken(t *testing.T) {
 		jwtInfo := models.JwtClaimsInfo{
 			UserName: "wadus",
 			IsAdmin:  true,
-			ID:       "11",
+			UserID:       "11",
 		}
 
 		mockedJwtProvider.On("ParseToken", theToken).Return(token, nil).Once()
@@ -218,14 +218,14 @@ func TestAuthServiceParseRefreshToken(t *testing.T) {
 		refreshToken := struct{}{}
 
 		rtInfo := models.RefreshTokenClaimsInfo{
-			ID: "id",
+			UserID: "id",
 		}
 
 		mockedJwtProvider.On("ParseToken", theRefreshToken).Return(refreshToken, nil).Once()
 		mockedJwtProvider.On("IsTokenValid", refreshToken).Return(true).Once()
 
 		c := map[string]interface{}{
-			"userId": rtInfo.ID,
+			"userId": rtInfo.UserID,
 		}
 		mockedJwtProvider.On("GetTokenClaims", refreshToken).Return(c).Once()
 
@@ -258,11 +258,11 @@ func TestAuthServiceJwtProviderIntegration(t *testing.T) {
 
 	assert.Equal(t, u.UserName, jwtInfo.UserName)
 	assert.Equal(t, u.IsAdmin, jwtInfo.IsAdmin)
-	assert.Equal(t, u.ID, jwtInfo.ID)
+	assert.Equal(t, u.ID, jwtInfo.UserID)
 
 	rtClaims, err := service.ParseRefreshToken(tokens["refreshToken"])
 	assert.NotNil(t, rtClaims)
 	assert.Nil(t, err)
 
-	assert.Equal(t, u.ID, rtClaims.ID)
+	assert.Equal(t, u.ID, rtClaims.UserID)
 }

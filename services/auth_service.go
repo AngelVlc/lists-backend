@@ -93,7 +93,7 @@ func (s *MyAuthService) getJwtInfo(token interface{}) *models.JwtClaimsInfo {
 
 	info := models.JwtClaimsInfo{
 		UserName: parseStringClaim(claims["userName"]),
-		ID:       parseStringClaim(claims["userId"]),
+		UserID:       parseStringClaim(claims["userId"]),
 		IsAdmin:  parseBoolClaim(claims["isAdmin"]),
 	}
 	return &info
@@ -104,7 +104,7 @@ func (s *MyAuthService) getRefreshTokenInfo(refreshToken interface{}) *models.Re
 	claims := s.jwtPrv.GetTokenClaims(refreshToken)
 
 	info := models.RefreshTokenClaimsInfo{
-		ID: parseStringClaim(claims["userId"]),
+		UserID: parseStringClaim(claims["userId"]),
 	}
 	return &info
 }

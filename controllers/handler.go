@@ -81,7 +81,7 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	} else {
 		log.Printf("[%v] %v %v %q", requestID, jwtInfo.UserName, r.Method, r.URL)
 
-		r = h.addUserIDToContext(jwtInfo.ID, r)
+		r = h.addUserIDToContext(jwtInfo.UserID, r)
 	}
 
 	res := h.HandlerFunc(r, h.ServiceProvider)
