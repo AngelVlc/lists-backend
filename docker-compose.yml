@@ -18,3 +18,5 @@ services:
   mongo:
     image: mongo
     init: true
+    ports:
+      - 27017:27017
