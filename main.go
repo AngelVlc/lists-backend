@@ -18,7 +18,8 @@ func main() {
 
 	jwtSecret := os.Getenv("JWT_SECRET")
 
-	ms := stores.NewMyMongoSession(false)
+	mongoUri := os.Getenv("MONGODB_URI")
+	ms := stores.NewMyMongoSession(mongoUri)
 
 	bp := services.NewMyBcryptProvider()
 

@@ -1,9 +1,10 @@
 package main
 
 import (
+	"net/http"
+
 	"github.com/AngelVlc/lists-backend/controllers"
 	"github.com/AngelVlc/lists-backend/services"
-	"net/http"
 )
 
 type server struct {

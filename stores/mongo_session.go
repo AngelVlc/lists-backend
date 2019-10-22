@@ -1,9 +1,10 @@
 package stores
 
 import (
-	"gopkg.in/mgo.v2"
 	"log"
-	"os"
+	"strings"
+
+	"gopkg.in/mgo.v2"
 )
 
 // MongoSession is the interface used to retrieve the mongo collection
@@ -18,16 +19,11 @@ type MyMongoSession struct {
 }
 
 // NewMyMongoSession returns a new MyMongoSession
-func NewMyMongoSession(useTestConfig bool) *MyMongoSession {
-	url := os.Getenv("MONGO_URL")
-	var databaseName string
-	if !useTestConfig {
-		databaseName = os.Getenv("MONGO_DATABASE_NAME")
-	} else {
-		databaseName = os.Getenv("MONGO_TEST_DATABASE_NAME")
-	}
+func NewMyMongoSession(mongoUri string) *MyMongoSession {
+	parts := strings.Split(mongoUri, "/")
+	databaseName := parts[len(parts)-1]
 
-	s, err := mgo.Dial(url)
+	s, err := mgo.Dial(mongoUri)
 	if err != nil {
 		panic(err)
 	}

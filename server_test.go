@@ -1,15 +1,16 @@
 package main
 
 import (
-	"github.com/AngelVlc/lists-backend/services"
-	"github.com/AngelVlc/lists-backend/stores"
-	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"testing"
+
+	"github.com/AngelVlc/lists-backend/services"
+	"github.com/AngelVlc/lists-backend/stores"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestMain(m *testing.M) {
@@ -18,8 +19,10 @@ func TestMain(m *testing.M) {
 }
 
 func TestServer(t *testing.T) {
-	ms := stores.NewMyMongoSession(false)
+	ms := stores.NewMyMongoSession(os.Getenv("MONGODB_URI_TEST"))
 	sp := services.NewMyServiceProvider(ms, nil, nil)
+	cs := sp.GetCountersService()
+	cs.AddCounter("requests")
 	server := newServer(sp)
 
 	t.Run("handles /users", func(t *testing.T) {

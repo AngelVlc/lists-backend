@@ -1,6 +1,7 @@
 package stores
 
 import (
+	"os"
 	"testing"
 
 	"github.com/AngelVlc/lists-backend/models"
@@ -9,7 +10,7 @@ import (
 )
 
 func TestMongoStore(t *testing.T) {
-	session := NewMyMongoSession(true)
+	session := NewMyMongoSession(os.Getenv("MONGODB_URI_TEST"))
 
 	repository := session.GetRepository("lists")
 
