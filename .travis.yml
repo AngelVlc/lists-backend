@@ -1,0 +1,13 @@
+  
+jobs:
+  include:
+    - stage: test
+      language: minimal
+      before_install:
+      - curl -sLo /tmp/terraform.zip https://releases.hashicorp.com/terraform/0.8.8/terraform_0.8.8_linux_amd64.zip
+      - unzip /tmp/terraform.zip -d /tmp
+      - mv /tmp/terraform ~/bin
+      - export PATH="~/bin:$PATH"
+      script:
+      - make build
+      - make test
