@@ -26,3 +26,8 @@ heroku login
 heroku container:login
 heroku container:release --app app_name worker
 ```
+
+## Terraform
+
+- https://www.terraform.io/docs/providers/heroku/r/config.html
+- https://devcenter.heroku.com/articles/using-terraform-with-heroku

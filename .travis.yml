@@ -1,13 +1,19 @@
-  
+env:
+  global:
+  - secure: iVrtmIHxfEq05GzTRB7JfBZkksPEJLFNCxoTu5S2zHpkH4NDsTdUMR/mLsEbKyxM9KTETxXBRLXiSFJAEWrUKmq/oL1WQaztZMvIBcvYunfeAxdwu93bxKHNoS05aBAwOEi2xhLK2DiQrnlnUpwAnvYcnbv7J2Iq4GiZdMGG1SXsw5/s34cwBjwFJQURdvl2D+FoGOWVVbsqUd0wvgq5+e7X1gNh9ZcI0l5wgJJFwl4QHrKKFW3oGWZSfohEpf+V2XpuXQmse49ia0/yenCuJG6izWqW4WNXU552k3SNuQOuTx6+8MP4uNjnXQfzV7aD51SUkydy63f1s31dDSJIu+hwYP75rH6TtM2ASiGdLR1WEoDy1uknxAyU+M/pTmdNjta3Ut8n1EEd2AD2hG6d8WU6HUHDPbdatDVb3zzOlSsl++OL2aUYtLLQFfkDG4n1UWq4C21ipQgBTrNCeiq+GPmtiLYCd0gqSvW9pQ/Z8qKXZct+kNvby5kyArq87rXp3Jq1xbLhU6eOoFiml482FvvD9WQHld2VEAFMUPNeq0tLXKTqG+d8DOS9FxVY98qagMvCP1ZKW5zQ9PYnXpdiTo18zhr1Ot1jLQOaLN7exhy+ZUv0RHsArEU8uqHawOwEIkHsfr/Rsw1Anr5Ctanu2G+6f+eBH4+L4KMqjE05nzE=
+  - secure: Y8IcQP/4b7UzVgQ5CM0PEn4oyuMQIR9/QM/anTlL+1vtTmOWh1B3J/uYllhXjzuiUoSq4elQsaKf9HpVqcvBdLisIQpQd7xmYIA6rsAjCL8bWlbFdXHTpZZyyLlSfGaAUseZerFaBQmI2iDouSu6140od2/irFW7nPy1L/lG4Z+2jNXq/W2LPLTXbwB26V2hshbr90a26jAT/9SyLscr8KSc7nbUM+nQvy677coACaQVgAWAsxeNnPMN3KaUgEN3VEJd/Xjz2OR7Y1A2Zc6SzDaps3FNHCNqXeuKELQJZMZLOwGFaTq9MGcVJ2lXgFT04wvXSV5pV4qwUoVKPN3yQf9EiHklgNUcwJGV9YGbmdXYaYi4Kj2gZi4LDCDAVo9GSjIPRlA8k3JnDfisbM6cngYYxNJ/Bp52sedwJPwXaTXkdvwy2TXoNU4SkdNmaWywDAKxlCCc17mtYrJESJJDc3ENIYv7l8Ntm9wBHHvhosYG7hS3wzDYBnYmZ1kFFXPQbHC2vLSEhTVS+F5MVEgxtthb5H2Yf80WNERmrwY50YYrr0YgRdZqZMXaCctE+Ds2OBM5YJrouyGNeqe9rzW9ZAfIKmmRaGiT4RLrqTdc/S/E3wlNMd4O+rVOIfHbteJQxjD+cEWE6bxMU663U7xXVRCNPK54pQIuGMsnlw1UP+k=
+  - secure: KVFvZpBar+khJ4U9I0WJGzc9qpG09NTazDhuQ/XKNmDVKvmal/a9nDDu8yyGBHxdfq9XJkTZ8otOMYuN+HWf7YSo/UGf0UoLiYAg6EQAPWgJH0uGykcvAg4RuUydeNpib9LC1zxtarGxQEEY/FA2seZpvFFcjdfY4Gs/Z999XGklsdf+94Wudk4RoVXI3b9Rf3DGOC1+h7yWTVCSktT6U9+ooSQ4FXXjKYdtiPZDawOsR6k41/MZAt/nLkovWYfKUN2MibWbkZyNSUFwgcf84zExxP6FvxrkXru85OCloNlmLoGRadkH4Btj5MKmvTwTZ6yBaSnfAIFw59Pw+cwu0801H3LT5iLIkrlC6efLInHLKe2UOxheHUBnJOgM9djb0m4pRP1cdZ+3fVm6AXszPInQyPErCT0+HvyZmz4oknmqIZh+OopbABMJqzCpzoQaeAvKcLJUdi36tBYbL1MtTuHVw3gjzrvLZNXmkOw0/jH72uLh9wBhLI3HBJiwEHtBkDymSftxVH8eNmaWnNaNkqQxxT1l66NDeOheFC2Mduwhfwx1msk+bMV5RHii6uABAxsy5KQlXiRfujFZWVtNWqjK6s9m+o0SGadKs6jswnFkGyfIeXngDzxmW9vtbQMF+QTl+Mh5QcKf4+R3L5QHH7AWJdmG5v1LTr8H+ABjX8Y=
+  - secure: hGvIF8aUJLaKo0nrKBfydf7B2P+MudIFpsF7OrxI3zgW82x94Q9mENozJ45lrbbBBdzm9Pynrrd+l8ckroZGcskyMpM1JBfn6axGSzRZuuMErx0RehDGFu0eg2LGz/vdaPP2SHIKRoVMNQKRuGqKqnbrCZaQp3i02lWt4JTDK9CHXm5DthHeMmStwVgeO9Xc/TzmWKlk7QkcFgZk+Y0gUyfTixweVXoBJhYpPcQ6RaxZpGAgn3Wb6NZGYU+MZbOgyRSznpZQoYsTCZvvNva0z72q0xFcuOa1vJLRCq1d1+DFZgE5cECSvebekyH13AT34zqKV2yPe7/FwX2poSHLXEnpgBWXhvuaKCyAAwJnWCPAA9Xj9cFLz6n6soe2tOdbAuwAQYzoAuqw6HOzHz1ndeG+T/tZA9eTiZKb3UzhqK4EGQv1m8dKHPpumwJRGSxlOY2A9U00ZXwerVyGLPnbYGKSr+c02nVRYC8cv09BxKy4WnGfjDpAXjbhRTWQ0KBoFjtaGuaEy2rff+I5YoSK4a4kisq7UYNEf7TlX/ngkAAlaqt17CxWfAGxzy8tYiuvs5J8ehUNm2u5v15UpxBJFUceNXBx0v71AJ+EoxMwb8/I0Hw2l9yo1+tW3v+9nUC+pUxfekvX0jXlMYeV/OGw9/0hO41nxKpbNHSAuVdZL8o=
 jobs:
   include:
-    - stage: test
-      language: minimal
-      before_install:
-      - curl -sLo /tmp/terraform.zip https://releases.hashicorp.com/terraform/0.8.8/terraform_0.8.8_linux_amd64.zip
-      - unzip /tmp/terraform.zip -d /tmp
-      - mv /tmp/terraform ~/bin
-      - export PATH="~/bin:$PATH"
-      script:
-      - make build
-      - make test
+  - stage: test
+    language: minimal
+    before_install:
+    - curl -sLo /tmp/terraform.zip https://releases.hashicorp.com/terraform/0.12.12/terraform_0.12.12_linux_amd64.zip
+    - unzip /tmp/terraform.zip -d /tmp
+    - mv /tmp/terraform ~/bin
+    - export PATH="~/bin:$PATH"
+    script:
+    - make build
+    - make test
+    - terraform plan -var heroku_username=$HEROKU_USER_NAME -var heroku_api_key=$HEROKU_API_KEY -var app_name=$APP_NAME -var jwt_secret=$JWT_SECRET
