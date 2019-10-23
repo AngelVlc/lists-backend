@@ -1,0 +1,30 @@
+jobs:
+  include:
+  - stage: test
+    language: minimal
+    before_install:
+    - curl -sLo /tmp/terraform.zip https://releases.hashicorp.com/terraform/0.12.12/terraform_0.12.12_linux_amd64.zip
+    - unzip /tmp/terraform.zip -d /tmp
+    - mv /tmp/terraform ~/bin
+    - export PATH="~/bin:$PATH"
+    script:
+    - make build
+    - make test
+    - heroku container:login    
+    - terraform init -input=false -backend-config="conn_str=$TERRAFORM_BACKEND"
+    - terraform plan -var heroku_username=$HEROKU_USERNAME -var heroku_api_key=$HEROKU_API_KEY -var app_name=$APP_NAME -var jwt_secret=$JWT_SECRET
+  - stage: deploy
+    language: minimal
+    before_install:
+    - curl -sLo /tmp/terraform.zip https://releases.hashicorp.com/terraform/0.12.12/terraform_0.12.12_linux_amd64.zip
+    - unzip /tmp/terraform.zip -d /tmp
+    - mv /tmp/terraform ~/bin
+    - export PATH="~/bin:$PATH"    
+    script:
+    - terraform init -input=false -backend-config="conn_str=$TERRAFORM_BACKEND"
+    - terraform apply -input=false -auto-approve -var heroku_username=$HEROKU_USERNAME -var heroku_api_key=$HEROKU_API_KEY -var app_name=$APP_NAME -var jwt_secret=$JWT_SECRET
+    - docker build -t lists-release --target release .
+    - heroku container:login    
+    - docker tag lists-release registry.heroku.com/$APP_NAME/web
+    - docker push registry.heroku.com/$APP_NAME/web
+    - heroku container:release --app $APP_NAME web
